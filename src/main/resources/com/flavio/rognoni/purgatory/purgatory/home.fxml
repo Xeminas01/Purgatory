@@ -21,4 +21,9 @@
          <Font name="Verdana" size="15.0" />
       </font>
    </Button>
+   <Button fx:id="caBtn" layoutX="1132.0" layoutY="179.0" mnemonicParsing="false" onAction="#onCellularAutoma" style="-fx-background-color: yellow;" text="Cellula Automa">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
 </AnchorPane>

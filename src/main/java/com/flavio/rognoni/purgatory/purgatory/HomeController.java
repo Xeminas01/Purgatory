@@ -2,6 +2,7 @@ package com.flavio.rognoni.purgatory.purgatory;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.CellularAutomata2D;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.DFSGen;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -20,9 +21,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.net.URL;
-import java.util.ResourceBundle;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class HomeController implements Initializable {
 
@@ -31,6 +30,7 @@ public class HomeController implements Initializable {
     public Button stepBtn;
     public AnchorPane mazePanel;
     public Button fractalBtn;
+    public Button caBtn;
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
@@ -47,7 +47,7 @@ public class HomeController implements Initializable {
     public void setMaze(Maze maze) {
         this.maze = maze;
         this.cellDim = 720/Math.max(maze.h,maze.w);
-        System.out.println(cellDim);
+        //System.out.println(cellDim);
         this.rowsBox = new VBox();
         mazePanel.getChildren().add(rowsBox);
         this.columnBoxes = new HBox[maze.h];
@@ -126,7 +126,6 @@ public class HomeController implements Initializable {
     }
 
     public void onStep(ActionEvent event) {
-        startBtn.setVisible(false);
         var c = dfsGen.step();
         renderMaze(dfsGen.getMaze(),c);
     }
@@ -146,4 +145,31 @@ public class HomeController implements Initializable {
             System.out.println(e.getMessage());
         }
     }
+
+    public void onCellularAutoma(ActionEvent event) {
+        try{
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("cellularAutoma.fxml"));
+            Parent parent = fxmlLoader.load();
+            CellularAutomaController fractalController = fxmlLoader.getController();
+            CellularAutomata2D ca2d = new CellularAutomata2D(100,100,
+                    CellularAutomata2D.MOORE_TYPE,1, Set.of(0,1),
+                    "0,1,3,1;1,1,5-n,0;1,1,0,0",
+                    //Maze: "0,1,3,1;1,1,6-n,0;1,1,0,0" Mazectric: "0,1,3,1;1,1,5-n,0;1,1,0,0" Game of life: "1,1,0-1,0;1,1,4-n,0;0,1,3,1"
+                    new HashMap<>(){{
+                        put(1,CellularAutomata2D.randomState(100,100,0.5));
+                        //aliante "50,50;50,49;50,51;49,51;48,50" barca "50,50;49,49;49,51;48,50;48,49"
+                    }},
+                    0
+            );
+            fractalController.setCellularAutomata2D(ca2d);
+            Scene scene = new Scene(parent, 1280, 720);
+            Stage stage = (Stage) backgroundPane.getScene().getWindow();
+            stage.setTitle("The Cellular Automa!");
+            stage.setScene(scene);
+            stage.show();
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
 }
