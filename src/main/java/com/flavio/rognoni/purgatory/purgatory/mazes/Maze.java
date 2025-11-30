@@ -1,9 +1,19 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Maze {
@@ -156,6 +166,15 @@ public class Maze {
         return walls;
     }
 
+    public List<MazeSquare> getAllStartEnd(){
+        List<MazeSquare> walls = new ArrayList<>();
+        for(MazeSquare[] i : matrix)
+            for(MazeSquare j : i)
+                if(j.isStartEnd())
+                    walls.add(j);
+        return walls;
+    }
+
     public void setGridForIRK(){
         for(int i=0;i<h;i++){
             for(int j=0;j<w;j++){
@@ -168,6 +187,57 @@ public class Maze {
         }
     }
 
+    public MazeSquare atDistanceOf(double d){
+        if(d < 0.0 || d > 1.0) d = 1.0;
+        List<MazeSquare> startEnd = getAllStartEnd();
+        List<SquareDist> dI = distancesFrom(startEnd.get(0)),
+                dF = distancesFrom(startEnd.get(1));
+//        System.out.println(dI+"\n"+dF);
+//        System.out.println(dI.size()+"\n"+dF.size());
+        Collections.reverse(dF);
+        List<SquareMiddleDist> dists = new ArrayList<>();
+        for(SquareDist sd1 : dI)
+            for(SquareDist sd2 : dF)
+                if(sd1.square.equals(sd2.square))
+                    dists.add(new SquareMiddleDist(sd1.square,sd1.d,sd2.d));
+        Collections.sort(dists);
+        System.out.println(dists);
+        if(d == 0.0) return dists.get(0).square;
+        int idx = (int) ((double) dists.size() * d);
+        return dists.get(idx-1).square;
+    }
+
+    public List<SquareDist> distancesFrom(MazeSquare square){
+        return distancesFrom(square.x,square.y);
+    }
+
+    public List<SquareDist> distancesFrom(int x,int y){
+        List<SquareDist> d = new ArrayList<>(),
+                queue = new ArrayList<>();
+        Set<MazeSquare> visited = new HashSet<>();
+        queue.add(new SquareDist(getCellAt(x,y),0));
+        while(!queue.isEmpty()){
+            var cur = queue.remove(0);
+            if(!visited.contains(cur.square)){
+                visited.add(cur.square);
+                d.add(cur);
+                for(MazeSquare ms : viciniPath(cur.square)){
+                    if(!visited.contains(ms)){
+                        queue.add(new SquareDist(ms,cur.d+1));
+                    }
+                }
+            }
+        }
+        Collections.sort(d);
+        return d;
+    }
+
+    private MazeSquare localBridgeAt(double d){
+        //todo: implementare deve ritornare il path che convertito a wall crea la separazione a d% nella lista
+        if(d < 0.0 || d > 1.0) d = 1.0;
+        return null;
+    }
+
     @Override
     public String toString() {
         String s = "h:"+h+",w:"+w+"\n";
@@ -178,6 +248,61 @@ public class Maze {
             s+="\n";
         }
         return s;
+    }
+
+    public Maze copy() {
+        Maze m = new Maze(h,w);
+        for(int i=0;i<h;i++){
+            for(int j=0;j<w;j++){
+                var cell = matrix[i][j];
+                m.setTypeAt(i,j,cell.type);
+            }
+        }
+        return m;
+    }
+
+    public static void mazeToXML(Maze maze){
+        try{
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.newDocument();
+            Element element = doc.createElement("Maze");
+            doc.appendChild(element);
+            Attr hAttr = doc.createAttribute("h"),
+                    wAttr = doc.createAttribute("w");
+            hAttr.setValue(maze.h+"");
+            wAttr.setValue(maze.w+"");
+            element.setAttributeNode(hAttr);
+            element.setAttributeNode(wAttr);
+            //element.appendChild(doc.createTextNode("Maze x"));
+            for(MazeSquare[] i : maze.matrix){
+                for(MazeSquare j : i){
+                    Element sqEl = doc.createElement("MazeSquare");
+                    sqEl.setAttribute("x",j.x+"");
+                    sqEl.setAttribute("y",j.y+"");
+                    sqEl.setAttribute("type",j.type+"");
+                    element.appendChild(sqEl);
+                }
+            }
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION,"no");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(new File(
+                    "src/main/resources/com/flavio/rognoni/purgatory/purgatory/labirinti/"+
+                            new Date().getTime()+"_maze.xml"));
+            transformer.transform(source,result);
+            StreamResult consoleResult = new StreamResult(System.out);
+            transformer.transform(source,consoleResult);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public static Maze mazeFromXML(String path){ //todo: implementare l'import dei labirinti
+        return null;
     }
 
 }

@@ -2,6 +2,7 @@ package com.flavio.rognoni.purgatory.purgatory;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
+import com.flavio.rognoni.purgatory.purgatory.mazes.SquareDist;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.CellularAutomata2D;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.DFSGen;
 import javafx.application.Platform;
@@ -69,7 +70,7 @@ public class HomeController implements Initializable {
                 label.setMinHeight(cellDim);
                 label.setPrefHeight(cellDim);
                 label.setMaxHeight(cellDim);
-                label.setFont(new Font("Verdana",20));
+                label.setFont(new Font("Verdana",10));
                 if(cell.isLimit())
                     label.setStyle("-fx-background-color: red");
                 else if(cell.isWall())
@@ -110,6 +111,13 @@ public class HomeController implements Initializable {
         }
     }
 
+    private void renderDist(List<SquareDist> dists){
+        for(SquareDist dist : dists){
+            Label label = cellsMatrix[dist.square.x][dist.square.y];
+            label.setText(dist.d+"");
+        }
+    }
+
     public void onStart(ActionEvent event) {
         stepBtn.setVisible(false);
         timer = new Timer();
@@ -122,6 +130,11 @@ public class HomeController implements Initializable {
                     if(p == null || dfsGen.isGen()) {
                         timer.cancel();
                         System.out.println(maze.isAllReachable());
+                        renderDist(maze.distancesFrom(maze.getAllStartEnd().get(1)));
+                        var middle = maze.atDistanceOf(1.0);
+                        System.out.println(middle);
+                        cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: blue");
+                        Maze.mazeToXML(maze);
                     }
                 });
             }

@@ -1,16 +1,16 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
 
-import com.almasb.fxgl.pathfinding.maze.MazeCell;
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
 
 import java.util.*;
 
-public class WilsonGen { //loop-erased random walk
+public class WilsonGen { //loop-erased random walk (funziona male da rivedere)
 
     private final Maze maze;
     private final Random rand;
     private List<MazeSquare> stack;
+    private Set<MazeSquare> visited;
     private final MazeSquare startCell;
     private boolean isGen;
 
@@ -24,37 +24,39 @@ public class WilsonGen { //loop-erased random walk
         this.startCell = maze.getCellAt(1,1);
         this.stack = new ArrayList<>();
         stack.add(startCell);
+        this.visited = new HashSet<>();
+        this.visited.add(startCell);
     }
 
-    public void step(){ //un casino da rivedere
+    public void step(){
         if(isGen) return;
         if(maze.isAllReachable()){
             isGen = true;
             //maze.setTypeAt();
             return;
         }
-        System.out.println(stack);
+        //System.out.println(stack);
         if(stack.isEmpty()){
             var paths = maze.getAllPaths();
+            paths.removeAll(visited);
             var path = paths.get(rand.nextInt(paths.size()));
             stack.add(path);
         }else{
             var cell = stack.get(stack.size()-1);
-            var vicini = maze.viciniWall(cell);
-            System.out.println("vicini:"+vicini);
-            Map<MazeSquare,MazeSquare> map = new HashMap<>();
-            for(MazeSquare mc : vicini){
-                if(maze.viciniPath(mc).size() == 1)
-                    map.put(mc,maze.viciniPath(mc).get(0));
-            }
-            vicini = new ArrayList<>(map.keySet());
+            var vicini = maze.viciniNotLimit(cell);
             var next = vicini.get(rand.nextInt(vicini.size()));
-            maze.setTypeAt(next.x,next.y,MazeSquare.PATH);
-            System.out.println(next);
+            if(next.isWall())
+                maze.setTypeAt(next.x,next.y,MazeSquare.PATH);
+            next = maze.getCellAt(next.x,next.y);
             if(!stack.contains(next)){
                 stack.add(next);
+                if(visited.contains(next)){
+                    stack.clear();
+                }else{
+                    visited.add(next);
+                }
             }else{
-                stack.clear();
+                stack.remove(stack.size()-1);
             }
         }
     }

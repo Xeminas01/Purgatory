@@ -15,7 +15,7 @@ public class App extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("home.fxml"));
         Parent parent = fxmlLoader.load();
         HomeController homeController = fxmlLoader.getController();
-        homeController.setMaze(new Maze(50,50));
+        homeController.setMaze(new Maze(100,100));
         Scene scene = new Scene(parent, 1280, 720);
         stage.setTitle("Mazes!");
         stage.setScene(scene);
