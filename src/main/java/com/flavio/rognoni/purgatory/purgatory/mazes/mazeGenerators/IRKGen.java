@@ -69,4 +69,5 @@ public class IRKGen { //Iterative randomized Kruskal's algorithm (with sets)
     public boolean isGen() {
         return isGen;
     }
+
 }

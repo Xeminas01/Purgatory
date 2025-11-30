@@ -66,6 +66,12 @@ public class Maze {
                 .collect(Collectors.toList());
     }
 
+    public List<MazeSquare> viciniWall(MazeSquare pos){
+        return vicini(pos).stream()
+                .filter(MazeSquare::isWall)
+                .collect(Collectors.toList());
+    }
+
     public MazeSquare mostDistanceFrom(MazeSquare pos){
         int d = Integer.MIN_VALUE;
         MazeSquare mostDist = null;

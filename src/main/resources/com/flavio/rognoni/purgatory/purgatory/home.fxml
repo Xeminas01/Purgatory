@@ -31,4 +31,14 @@
          <Font name="Verdana" size="15.0" />
       </font>
    </Button>
+   <Button fx:id="irpBtn" layoutX="1176.0" layoutY="252.0" mnemonicParsing="false" onAction="#onIRP" style="-fx-background-color: yellow;" text="IRP">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
+   <Button fx:id="wilsonBtn" layoutX="1164.0" layoutY="292.0" mnemonicParsing="false" onAction="#onWilson" style="-fx-background-color: yellow;" text="Wilson">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
 </AnchorPane>

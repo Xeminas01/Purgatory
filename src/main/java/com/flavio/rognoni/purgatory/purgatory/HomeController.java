@@ -32,6 +32,8 @@ public class HomeController implements Initializable {
     public Button fractalBtn;
     public Button caBtn;
     public Button irkBtn;
+    public Button irpBtn;
+    public Button wilsonBtn;
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
@@ -184,6 +186,41 @@ public class HomeController implements Initializable {
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
             stage.setTitle("IRK Mazes!");
+            stage.setScene(scene);
+            stage.show();
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+
+    public void onIRP(ActionEvent event) {
+        try{
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("irp.fxml"));
+            Parent parent = fxmlLoader.load();
+            IRPController fractalController = fxmlLoader.getController();
+            Maze maze = new Maze(50,50);
+            fractalController.setMaze(maze);
+            Scene scene = new Scene(parent, 1280, 720);
+            Stage stage = (Stage) backgroundPane.getScene().getWindow();
+            stage.setTitle("IRK Mazes!");
+            stage.setScene(scene);
+            stage.show();
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void onWilson(ActionEvent event) {
+        try{
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("wilson.fxml"));
+            Parent parent = fxmlLoader.load();
+            WilsonController fractalController = fxmlLoader.getController();
+            Maze maze = new Maze(50,50);
+            fractalController.setMaze(maze);
+            Scene scene = new Scene(parent, 1280, 720);
+            Stage stage = (Stage) backgroundPane.getScene().getWindow();
+            stage.setTitle("Wilson Mazes!");
             stage.setScene(scene);
             stage.show();
         }catch(Exception e){
