@@ -232,6 +232,10 @@ public class CellularAutomata2D {
     }
 
     public Maze getMaze(){
+//        for(int i=0;i<h;i++)
+//            for(int j=0;j<w;j++)
+//                if(i == 0 || i == h-1 || j == 0 || j == w-1)
+//                    cells[i][j].setState(1);
         List<AutomataCell> cQueue = new ArrayList<>();
         var f0 = getFirst0();
         if(f0 == null) return null;
@@ -242,11 +246,11 @@ public class CellularAutomata2D {
             if(!pathCells.contains(cur)){
                 pathCells.add(cur);
                 var viciniM = viciniInMaze(cur);
-                var succPaths = viciniM.stream().filter(vM -> vM.state == 0).toList();
+                var succPaths = viciniM.stream().filter(vM -> vM.state == 0 && !pathCells.contains(vM)).toList();
                 if(succPaths.isEmpty()){
                     for(AutomataCell vM : viciniM){
                         var possibiliPath = new ArrayList<>(viciniInMaze(vM).stream()
-                                .filter(vvM -> vvM.state == 0).toList());
+                                .filter(vvM -> vvM.state == 0 && !pathCells.contains(vvM)).toList());
                         possibiliPath.remove(cur);
                         if(!possibiliPath.isEmpty()){
                             vM.setState(0);
@@ -271,6 +275,8 @@ public class CellularAutomata2D {
         maze.setTypeAt(f0.x+1,f0.y+1,MazeSquare.START_END);
         var mD = maze.mostDistanceFrom(maze.getCellAt(f0.x+1,f0.y+1));
         maze.setTypeAt(mD.x,mD.y,MazeSquare.START_END);
+        if(!maze.isAllReachable())
+            maze.fixMaze();
         return maze;
     }
 

@@ -49,17 +49,16 @@ public class CellularAutomaController implements Initializable {
 
     public void setCellularAutomata2D(CellularAutomata2D cellularAutomata2D) {
         this.cellularAutomata2D = cellularAutomata2D;
-        this.cellDim = 720/Math.max(cellularAutomata2D.h,cellularAutomata2D.w);
+        this.cellDim = 720/(Math.max(cellularAutomata2D.h,cellularAutomata2D.w)+2);
         this.rowsBox = new VBox();
         mazePanel.getChildren().add(rowsBox);
-        this.columnBoxes = new HBox[cellularAutomata2D.h];
-        this.cellsMatrix = new Label[cellularAutomata2D.h][cellularAutomata2D.w];
+        this.columnBoxes = new HBox[cellularAutomata2D.h+2];
+        this.cellsMatrix = new Label[cellularAutomata2D.h+2][cellularAutomata2D.w+2];
         var matrix = cellularAutomata2D.getStateMatrix();
-        for (int i = 0; i < cellularAutomata2D.h; i++) {
+        for (int i = 0; i < cellularAutomata2D.h + 2; i++) {
             HBox hBox = new HBox();
-            for (int j = 0; j < cellularAutomata2D.w; j++) {
+            for (int j = 0; j < cellularAutomata2D.w + 2; j++) {
                 Label label = new Label();
-                int cell = matrix[i][j];
                 label.setAlignment(Pos.CENTER);
 //                label.setLayoutX(i*cellDim+cellDim);
 //                label.setLayoutY(j*cellDim+cellDim);
@@ -70,10 +69,15 @@ public class CellularAutomaController implements Initializable {
                 label.setPrefHeight(cellDim);
                 label.setMaxHeight(cellDim);
                 label.setFont(new Font("Verdana",20));
-                if(cell == 0)
-                    label.setStyle("-fx-background-color: rgb(200,200,200)");
-                else if(cell == 1)
-                    label.setStyle("-fx-background-color: black");
+                if(i == 0 || i == cellularAutomata2D.h + 1 || j == 0 || j == cellularAutomata2D.w + 1){
+                    label.setStyle("-fx-background-color: red;");
+                }else{
+                    int cell = matrix[i-1][j-1];
+                    if(cell == 0)
+                        label.setStyle("-fx-background-color: rgb(200,200,200)");
+                    else if(cell == 1)
+                        label.setStyle("-fx-background-color: black");
+                }
                 hBox.getChildren().add(label);
                 cellsMatrix[i][j] = label;
             }
@@ -86,7 +90,7 @@ public class CellularAutomaController implements Initializable {
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix[i].length; j++) {
                 int cell = matrix[i][j];
-                Label label = cellsMatrix[i][j];
+                Label label = cellsMatrix[i+1][j+1];
                 if(cell == 0)
                     label.setStyle("-fx-background-color: rgb(200,200,200)");
                 else if(cell == 1)
@@ -125,7 +129,7 @@ public class CellularAutomaController implements Initializable {
                     cellularAutomata2D.step();
                     renderMaze(cellularAutomata2D.getStateMatrix());
                     timeTxt.setText("t="+cellularAutomata2D.getT());
-                    if(cellularAutomata2D.getT() == 100){
+                    if(cellularAutomata2D.getT() == 40){
                         timer.cancel();
                         var maze = cellularAutomata2D.getMaze();
                         renderMaze(maze);

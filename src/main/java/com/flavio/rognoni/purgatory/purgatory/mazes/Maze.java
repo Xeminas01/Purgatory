@@ -98,7 +98,29 @@ public class Maze {
                 path.addAll(viciniPath(curr));
             }
         }
+        System.out.println(Math.abs(visited.size()-paths.size()));
         return visited.size() == paths.size();
+    }
+
+    public void fixMaze(){
+        var walls = getAllWalls();
+        System.out.println(walls);
+        while(!isAllReachable()){
+            var wall = walls.remove(0);
+            System.out.println(wall+" "+viciniPath(wall));
+            if(viciniPath(wall).size() == 2) {
+                setTypeAt(wall.x,wall.y,MazeSquare.PATH);
+                System.out.println(matrix[wall.x][wall.y]);
+            }
+        }
+    }
+
+    public List<MazeSquare> getAllWalls(){
+        List<MazeSquare> walls = new ArrayList<>();
+        for(MazeSquare[] i : matrix)
+            for(MazeSquare j : i)
+                if(j.isWall()) walls.add(j);
+        return walls;
     }
 
     @Override

@@ -151,12 +151,12 @@ public class HomeController implements Initializable {
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("cellularAutoma.fxml"));
             Parent parent = fxmlLoader.load();
             CellularAutomaController fractalController = fxmlLoader.getController();
-            CellularAutomata2D ca2d = new CellularAutomata2D(100,100,
+            CellularAutomata2D ca2d = new CellularAutomata2D(50,50,
                     CellularAutomata2D.MOORE_TYPE,1, Set.of(0,1),
                     "0,1,3,1;1,1,5-n,0;1,1,0,0",
                     //Maze: "0,1,3,1;1,1,6-n,0;1,1,0,0" Mazectric: "0,1,3,1;1,1,5-n,0;1,1,0,0" Game of life: "1,1,0-1,0;1,1,4-n,0;0,1,3,1"
                     new HashMap<>(){{
-                        put(1,CellularAutomata2D.randomState(100,100,0.5));
+                        put(1,CellularAutomata2D.randomState(50,50,0.5));
                         //aliante "50,50;50,49;50,51;49,51;48,50" barca "50,50;49,49;49,51;48,50;48,49"
                     }},
                     0
