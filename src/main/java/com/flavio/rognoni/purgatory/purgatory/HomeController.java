@@ -31,6 +31,7 @@ public class HomeController implements Initializable {
     public AnchorPane mazePanel;
     public Button fractalBtn;
     public Button caBtn;
+    public Button irkBtn;
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
@@ -151,12 +152,13 @@ public class HomeController implements Initializable {
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("cellularAutoma.fxml"));
             Parent parent = fxmlLoader.load();
             CellularAutomaController fractalController = fxmlLoader.getController();
-            CellularAutomata2D ca2d = new CellularAutomata2D(50,50,
+            int dim = 40;
+            CellularAutomata2D ca2d = new CellularAutomata2D(dim,dim,
                     CellularAutomata2D.MOORE_TYPE,1, Set.of(0,1),
                     "0,1,3,1;1,1,5-n,0;1,1,0,0",
                     //Maze: "0,1,3,1;1,1,6-n,0;1,1,0,0" Mazectric: "0,1,3,1;1,1,5-n,0;1,1,0,0" Game of life: "1,1,0-1,0;1,1,4-n,0;0,1,3,1"
                     new HashMap<>(){{
-                        put(1,CellularAutomata2D.randomState(50,50,0.5));
+                        put(1,CellularAutomata2D.randomState(dim,dim,0.5));
                         //aliante "50,50;50,49;50,51;49,51;48,50" barca "50,50;49,49;49,51;48,50;48,49"
                     }},
                     0
@@ -165,6 +167,23 @@ public class HomeController implements Initializable {
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
             stage.setTitle("The Cellular Automa!");
+            stage.setScene(scene);
+            stage.show();
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void onIRK(ActionEvent event) {
+        try{
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("irk.fxml"));
+            Parent parent = fxmlLoader.load();
+            IRKController fractalController = fxmlLoader.getController();
+            Maze maze = new Maze(50,50);
+            fractalController.setMaze(maze);
+            Scene scene = new Scene(parent, 1280, 720);
+            Stage stage = (Stage) backgroundPane.getScene().getWindow();
+            stage.setTitle("IRK Mazes!");
             stage.setScene(scene);
             stage.show();
         }catch(Exception e){

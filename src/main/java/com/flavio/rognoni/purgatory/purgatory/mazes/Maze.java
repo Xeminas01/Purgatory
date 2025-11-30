@@ -54,6 +54,12 @@ public class Maze {
         return l;
     }
 
+    public List<MazeSquare> viciniNotLimit(MazeSquare pos){
+        return vicini(pos).stream()
+                .filter(p -> !p.isLimit())
+                .collect(Collectors.toList());
+    }
+
     public List<MazeSquare> viciniPath(MazeSquare pos){
         return vicini(pos).stream()
                 .filter(p -> p.isPath() || p.isStartEnd())
@@ -74,7 +80,7 @@ public class Maze {
         return mostDist;
     }
 
-    public boolean isAllReachable(){
+    public int unreacheablePaths(){
         List<MazeSquare> paths = new ArrayList<>(),
                 start = new ArrayList<>();
         for(MazeSquare[] i : matrix) {
@@ -86,7 +92,7 @@ public class Maze {
             }
         }
         if(paths.isEmpty() || start.isEmpty())
-            return false;
+            return -1;
         paths.addAll(start);
         Set<MazeSquare> visited = new HashSet<>();
         List<MazeSquare> path = new ArrayList<>();
@@ -98,19 +104,31 @@ public class Maze {
                 path.addAll(viciniPath(curr));
             }
         }
-        System.out.println(Math.abs(visited.size()-paths.size()));
-        return visited.size() == paths.size();
+        return Math.abs(visited.size()-paths.size());
     }
 
-    public void fixMaze(){
+    public boolean isAllReachable(){
+        return unreacheablePaths() == 0;
+    }
+
+    public void fixMaze(){ // funziona ma va ottimizzato (riconsiderare anche vecchi muri in ciclo while esterno?)
         var walls = getAllWalls();
         System.out.println(walls);
-        while(!isAllReachable()){
+        int best = unreacheablePaths();
+        while(!walls.isEmpty()){
             var wall = walls.remove(0);
-            System.out.println(wall+" "+viciniPath(wall));
-            if(viciniPath(wall).size() == 2) {
+            System.out.println(wall);
+            if(viciniPath(wall).size() >= 2) {
                 setTypeAt(wall.x,wall.y,MazeSquare.PATH);
-                System.out.println(matrix[wall.x][wall.y]);
+                //System.out.println(matrix[wall.x][wall.y]);
+                int delta = unreacheablePaths();
+                if(delta < best){
+                    System.out.println("best: "+best +" delta: "+delta);
+                    best = delta;
+                    if(best == 0) break;
+                }else{
+                    setTypeAt(wall.x,wall.y,MazeSquare.WALL);
+                }
             }
         }
     }
@@ -121,6 +139,27 @@ public class Maze {
             for(MazeSquare j : i)
                 if(j.isWall()) walls.add(j);
         return walls;
+    }
+
+    public List<MazeSquare> getAllPaths(){
+        List<MazeSquare> walls = new ArrayList<>();
+        for(MazeSquare[] i : matrix)
+            for(MazeSquare j : i)
+                if(j.isPath() || j.isStartEnd())
+                    walls.add(j);
+        return walls;
+    }
+
+    public void setGridForIRK(){
+        for(int i=0;i<h;i++){
+            for(int j=0;j<w;j++){
+                if(!matrix[i][j].isLimit()){
+                    if(i%2 == 1 && j%2 == 1){
+                        setTypeAt(i,j,MazeSquare.PATH);
+                    }
+                }
+            }
+        }
     }
 
     @Override
