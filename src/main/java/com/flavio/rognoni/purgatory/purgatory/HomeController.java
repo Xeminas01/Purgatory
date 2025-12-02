@@ -15,6 +15,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -35,17 +37,20 @@ public class HomeController implements Initializable {
     public Button irkBtn;
     public Button irpBtn;
     public Button wilsonBtn;
+    public Button dfsBtn;
+    public Button porteBtn;
+    public Button distBtn;
+    public Spinner<Double> percSpinner;
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
     private Maze maze;
     private int cellDim;
-    private DFSGen dfsGen;
-    private Timer timer;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-
+        //renderSpinner(percSpinner);
+        percSpinner.setEditable(true);
     }
 
     public void setMaze(Maze maze) {
@@ -86,13 +91,11 @@ public class HomeController implements Initializable {
             columnBoxes[i] = hBox;
         }
 
-        dfsGen = new DFSGen(this.maze,1,1);
-        dfsGen.start();
-        renderMaze(dfsGen.getMaze(),null);
+        renderMaze(maze);
 
     }
 
-    private void renderMaze(Maze maze, MazeSquare cur){
+    private void renderMaze(Maze maze){
         for (int i = 0; i < maze.h; i++) {
             for (int j = 0; j < maze.w; j++) {
                 MazeSquare cell = maze.getCellAt(i,j);
@@ -105,8 +108,6 @@ public class HomeController implements Initializable {
                     label.setStyle("-fx-background-color: rgb(128,128,128)");
                 else if(cell.isStartEnd())
                     label.setStyle("-fx-background-color: yellow");
-                if(cell.equals(cur))
-                    label.setStyle("-fx-background-color: green");
             }
         }
     }
@@ -116,34 +117,6 @@ public class HomeController implements Initializable {
             Label label = cellsMatrix[dist.square.x][dist.square.y];
             label.setText(dist.d+"");
         }
-    }
-
-    public void onStart(ActionEvent event) {
-        stepBtn.setVisible(false);
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Platform.runLater(() -> {
-                    var p = dfsGen.step();
-                    renderMaze(dfsGen.getMaze(),p);
-                    if(p == null || dfsGen.isGen()) {
-                        timer.cancel();
-                        System.out.println(maze.isAllReachable());
-                        renderDist(maze.distancesFrom(maze.getAllStartEnd().get(1)));
-                        var middle = maze.atDistanceOf(1.0);
-                        System.out.println(middle);
-                        cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: blue");
-                        Maze.mazeToXML(maze);
-                    }
-                });
-            }
-        },0,10);
-    }
-
-    public void onStep(ActionEvent event) {
-        var c = dfsGen.step();
-        renderMaze(dfsGen.getMaze(),c);
     }
 
     public void onFractal(ActionEvent event) {
@@ -239,6 +212,35 @@ public class HomeController implements Initializable {
         }catch(Exception e){
             System.out.println(e.getMessage());
         }
+    }
+
+    public void onDFS(ActionEvent event) {
+        try{
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("dfs.fxml"));
+            Parent parent = fxmlLoader.load();
+            DFSController fractalController = fxmlLoader.getController();
+            Maze maze = new Maze(200,200);
+            fractalController.setMaze(maze);
+            Scene scene = new Scene(parent, 1280, 720);
+            Stage stage = (Stage) backgroundPane.getScene().getWindow();
+            stage.setTitle("DFS Mazes!");
+            stage.setScene(scene);
+            stage.show();
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void onPorte(ActionEvent event) { //todo: implementare
+        System.out.println(percSpinner.getValue());
+    }
+
+    public void onDistanze(ActionEvent event) {
+        renderMaze(maze);
+        var middle = maze.atDistanceOf(percSpinner.getValue());
+        System.out.println(middle);
+        cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: blue");
+        //renderDist();
     }
 
 }

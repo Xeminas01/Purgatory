@@ -2,6 +2,7 @@ package com.flavio.rognoni.purgatory.purgatory;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
+import com.flavio.rognoni.purgatory.purgatory.mazes.SquareDist;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.DFSGen;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.IRKGen;
 import javafx.application.Platform;
@@ -14,10 +15,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class IRKController {
+public class DFSController {
 
     public AnchorPane backgroundPane;
     public Button startBtn;
@@ -28,7 +30,7 @@ public class IRKController {
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
     private Maze maze;
-    private IRKGen irkGen;
+    private DFSGen dfsGen;
     private Timer timer;
 
     public void setMaze(Maze maze) {
@@ -69,12 +71,13 @@ public class IRKController {
             columnBoxes[i] = hBox;
         }
 
-        irkGen = new IRKGen(this.maze);
-        renderMaze(irkGen.getMaze());
+        dfsGen = new DFSGen(this.maze);
+        dfsGen.start();
+        renderMaze(dfsGen.getMaze(),null);
 
     }
 
-    private void renderMaze(Maze maze){
+    private void renderMaze(Maze maze, MazeSquare cur){
         for (int i = 0; i < maze.h; i++) {
             for (int j = 0; j < maze.w; j++) {
                 MazeSquare cell = maze.getCellAt(i,j);
@@ -87,7 +90,16 @@ public class IRKController {
                     label.setStyle("-fx-background-color: rgb(128,128,128)");
                 else if(cell.isStartEnd())
                     label.setStyle("-fx-background-color: yellow");
+                if(cell.equals(cur))
+                    label.setStyle("-fx-background-color: green");
             }
+        }
+    }
+
+    private void renderDist(List<SquareDist> dists){
+        for(SquareDist dist : dists){
+            Label label = cellsMatrix[dist.square.x][dist.square.y];
+            label.setText(dist.d+"");
         }
     }
 
@@ -98,20 +110,25 @@ public class IRKController {
             @Override
             public void run() {
                 Platform.runLater(() -> {
-                    irkGen.step();
-                    renderMaze(irkGen.getMaze());
-                    if(irkGen.isGen()) {
+                    var p = dfsGen.step();
+                    renderMaze(dfsGen.getMaze(),p);
+                    if(p == null || dfsGen.isGen()) {
                         timer.cancel();
-                        System.out.println("reach: "+maze.isAllReachable());
+                        System.out.println(maze.isAllReachable());
+                        renderDist(maze.distancesFrom(maze.getAllStartEnd().get(1)));
+                        var middle = maze.atDistanceOf(1.0);
+                        System.out.println(middle);
+                        cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: blue");
+                        Maze.mazeToXML(maze);
                     }
                 });
             }
-        },0,50);
+        },0,10);
     }
 
     public void onStep(ActionEvent event) {
-        irkGen.step();
-        renderMaze(irkGen.getMaze());
+        var c = dfsGen.step();
+        renderMaze(dfsGen.getMaze(),c);
     }
 
 }

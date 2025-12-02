@@ -1,9 +1,7 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes;
 
 
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import org.w3c.dom.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -187,7 +185,7 @@ public class Maze {
         }
     }
 
-    public MazeSquare atDistanceOf(double d){
+    public MazeSquare atDistanceOf(double d){ //todo: fixare ordinamento per distanze
         if(d < 0.0 || d > 1.0) d = 1.0;
         List<MazeSquare> startEnd = getAllStartEnd();
         List<SquareDist> dI = distancesFrom(startEnd.get(0)),
@@ -301,8 +299,33 @@ public class Maze {
         }
     }
 
-    public static Maze mazeFromXML(String path){ //todo: implementare l'import dei labirinti
-        return null;
+    public static Maze mazeFromXML(String path){
+        try {
+            File file = new File("src/main/resources/com/flavio/rognoni/purgatory/" +
+                    "purgatory/labirinti/1764540968716_maze.xml"); //1764540968716_maze.xml //1764715136966_maze.xml
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(file);
+            doc.getDocumentElement().normalize();
+            Element root = (Element) doc.getElementsByTagName("Maze").item(0);
+            int h = Integer.parseInt(root.getAttribute("h")),
+                    w = Integer.parseInt(root.getAttribute("w"));
+            Maze maze = new Maze(h,w);
+            NodeList childs = root.getChildNodes();
+            for(int i=0;i<childs.getLength();i++){
+                if (childs.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                    Element ms = (Element) childs.item(i);
+                    int x = Integer.parseInt(ms.getAttribute("x")),
+                            y = Integer.parseInt(ms.getAttribute("y")),
+                            type = Integer.parseInt(ms.getAttribute("type"));
+                    maze.setTypeAt(x,y,type);
+                }
+            }
+            return maze;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }

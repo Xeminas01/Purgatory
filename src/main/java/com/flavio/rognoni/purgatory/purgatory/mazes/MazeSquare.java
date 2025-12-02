@@ -3,7 +3,9 @@ package com.flavio.rognoni.purgatory.purgatory.mazes;
 public class MazeSquare {
 
     public final int x,y,type;
-    public final static int LIMIT = 0, WALL = 1, PATH = 2, START_END = 3;
+    public final static int LIMIT = 0, WALL = 1, PATH = 2, START_END = 3,
+            PORTA = 4, INTERRUTTORE = 5, TESORO = 6, TRAPPOLA = 7,
+            MURI_INVISIBILI = 8, TELETRASPORTI = 9;
 
     public MazeSquare(int x, int y, int type){
         this.x = x;
