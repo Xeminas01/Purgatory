@@ -4,7 +4,6 @@ import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
 import com.flavio.rognoni.purgatory.purgatory.mazes.SquareDist;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.DFSGen;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.IRKGen;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
@@ -116,7 +115,7 @@ public class DFSController {
                         timer.cancel();
                         System.out.println(maze.isAllReachable());
                         renderDist(maze.distancesFrom(maze.getAllStartEnd().get(1)));
-                        var middle = maze.atDistanceOf(1.0);
+                        var middle = maze.middleDistanceStartEnd(1.0,10);
                         System.out.println(middle);
                         cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: blue");
                         Maze.mazeToXML(maze);

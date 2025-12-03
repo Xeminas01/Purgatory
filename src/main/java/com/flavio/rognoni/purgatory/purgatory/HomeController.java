@@ -4,10 +4,7 @@ import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
 import com.flavio.rognoni.purgatory.purgatory.mazes.SquareDist;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.CellularAutomata2D;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.DFSGen;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -16,7 +13,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -219,7 +215,7 @@ public class HomeController implements Initializable {
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("dfs.fxml"));
             Parent parent = fxmlLoader.load();
             DFSController fractalController = fxmlLoader.getController();
-            Maze maze = new Maze(200,200);
+            Maze maze = new Maze(20,30);
             fractalController.setMaze(maze);
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
@@ -232,12 +228,19 @@ public class HomeController implements Initializable {
     }
 
     public void onPorte(ActionEvent event) { //todo: implementare
-        System.out.println(percSpinner.getValue());
+        renderMaze(maze);
+        var doorSets = maze.doorSets();
+        System.out.println(doorSets.size()+" "+doorSets);
+        var doors = maze.findDoors(percSpinner.getValue(),doorSets.get(0));
+        System.out.println(doors.size()+" "+doors);
+        for(MazeSquare ms : doors){
+            cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: pink");
+        }
     }
 
     public void onDistanze(ActionEvent event) {
         renderMaze(maze);
-        var middle = maze.atDistanceOf(percSpinner.getValue());
+        var middle = maze.middleDistanceStartEnd(percSpinner.getValue(),10);
         System.out.println(middle);
         cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: blue");
         //renderDist();

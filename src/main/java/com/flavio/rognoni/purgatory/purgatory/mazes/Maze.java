@@ -74,6 +74,12 @@ public class Maze {
                 .collect(Collectors.toList());
     }
 
+    public List<MazeSquare> viciniOnlyPath(MazeSquare pos){
+        return vicini(pos).stream()
+                .filter(MazeSquare::isPath)
+                .collect(Collectors.toList());
+    }
+
     public List<MazeSquare> viciniWall(MazeSquare pos){
         return vicini(pos).stream()
                 .filter(MazeSquare::isWall)
@@ -164,6 +170,15 @@ public class Maze {
         return walls;
     }
 
+    public List<MazeSquare> getAllOnlyPaths(){
+        List<MazeSquare> walls = new ArrayList<>();
+        for(MazeSquare[] i : matrix)
+            for(MazeSquare j : i)
+                if(j.isPath())
+                    walls.add(j);
+        return walls;
+    }
+
     public List<MazeSquare> getAllStartEnd(){
         List<MazeSquare> walls = new ArrayList<>();
         for(MazeSquare[] i : matrix)
@@ -185,11 +200,14 @@ public class Maze {
         }
     }
 
-    public MazeSquare atDistanceOf(double d){ //todo: fixare ordinamento per distanze
+    public MazeSquare middleDistanceStartEnd(double d, int qty){
         if(d < 0.0 || d > 1.0) d = 1.0;
+        if(qty < 0 || qty > 10) qty = 5;
         List<MazeSquare> startEnd = getAllStartEnd();
         List<SquareDist> dI = distancesFrom(startEnd.get(0)),
                 dF = distancesFrom(startEnd.get(1));
+        dI.removeIf(sd -> sd.square.isStartEnd());
+        dF.removeIf(sd -> sd.square.isStartEnd());
 //        System.out.println(dI+"\n"+dF);
 //        System.out.println(dI.size()+"\n"+dF.size());
         Collections.reverse(dF);
@@ -198,7 +216,10 @@ public class Maze {
             for(SquareDist sd2 : dF)
                 if(sd1.square.equals(sd2.square))
                     dists.add(new SquareMiddleDist(sd1.square,sd1.d,sd2.d));
-        Collections.sort(dists);
+        if(dists.isEmpty()) return null;
+        dists.sort(Comparator.comparingInt(SquareMiddleDist::diff));
+        dists = dists.subList(0,Math.min(qty,dists.size()));
+        Collections.reverse(dists);
         System.out.println(dists);
         if(d == 0.0) return dists.get(0).square;
         int idx = (int) ((double) dists.size() * d);
@@ -230,10 +251,49 @@ public class Maze {
         return d;
     }
 
-    private MazeSquare localBridgeAt(double d){
+    public List<Set<MazeSquare>> doorSets(){
+        List<MazeSquare> allPaths = getAllOnlyPaths();
+        int d = allPaths.size();
+        Set<MazeSquare> visited = new HashSet<>();
+        List<Set<MazeSquare>> finalSets = new ArrayList<>();
+        while(visited.size() != d && !allPaths.isEmpty()){
+            Set<MazeSquare> set = new HashSet<>();
+            List<MazeSquare> queue = new ArrayList<>();
+            queue.add(allPaths.remove(0));
+            while(!queue.isEmpty()){
+                MazeSquare cur = queue.remove(0);
+                if(!visited.contains(cur)){
+                    visited.add(cur);
+                    set.add(cur);
+                    for(MazeSquare vicino : viciniOnlyPath(cur)){
+                        if(!visited.contains(vicino))
+                            queue.add(vicino);
+                    }
+                }
+            }
+            finalSets.add(set);
+        }
+        return finalSets;
+    }
+
+    public Set<MazeSquare> findDoors(double d,Set<MazeSquare> doorSet){
         //todo: implementare deve ritornare il path che convertito a wall crea la separazione a d% nella lista
         if(d < 0.0 || d > 1.0) d = 1.0;
-        return null;
+        List<SquareMiddleDist> doors = new ArrayList<>();
+        doorSet = doorSet.stream().filter(door -> {
+            var viciniP = viciniOnlyPath(door);
+            var viciniW = viciniWall(door);
+            if(viciniP.size() == 2 && viciniW.size() == 2){
+                return viciniP.get(0).x == viciniP.get(1).x ||
+                        viciniP.get(0).y == viciniP.get(1).y;
+            }else return false;
+        }).collect(Collectors.toSet());
+        System.out.println(doors);
+        System.out.println(doorSet);
+        return doorSet;
+//        if(d == 0.0) return doors.get(0).square;
+//        int idx = (int) ((double) doors.size() * d);
+//        return doors.get(idx-1).square;
     }
 
     @Override
@@ -302,7 +362,11 @@ public class Maze {
     public static Maze mazeFromXML(String path){
         try {
             File file = new File("src/main/resources/com/flavio/rognoni/purgatory/" +
-                    "purgatory/labirinti/1764540968716_maze.xml"); //1764540968716_maze.xml //1764715136966_maze.xml
+                    "purgatory/labirinti/1764540968716_maze.xml");
+            //1764540968716_maze.xml 20x20
+            // 1764715136966_maze.xml 200x200
+            // 1764541189706_maze.xml 100x100
+            // 1764713272395_maze.xml 50x50
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(file);
