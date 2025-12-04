@@ -188,6 +188,15 @@ public class Maze {
         return walls;
     }
 
+    public List<MazeSquare> getAllDoors(){
+        List<MazeSquare> walls = new ArrayList<>();
+        for(MazeSquare[] i : matrix)
+            for(MazeSquare j : i)
+                if(j.isDoor())
+                    walls.add(j);
+        return walls;
+    }
+
     public void setGridForIRK(){
         for(int i=0;i<h;i++){
             for(int j=0;j<w;j++){
@@ -252,14 +261,17 @@ public class Maze {
     }
 
     public List<Set<MazeSquare>> doorSets(){
-        List<MazeSquare> allPaths = getAllOnlyPaths();
-        int d = allPaths.size();
+        return doorSets(getAllOnlyPaths());
+    }
+
+    public List<Set<MazeSquare>> doorSets(List<MazeSquare> paths){
+        int d = paths.size();
         Set<MazeSquare> visited = new HashSet<>();
         List<Set<MazeSquare>> finalSets = new ArrayList<>();
-        while(visited.size() != d && !allPaths.isEmpty()){
+        while(visited.size() != d && !paths.isEmpty()){
             Set<MazeSquare> set = new HashSet<>();
             List<MazeSquare> queue = new ArrayList<>();
-            queue.add(allPaths.remove(0));
+            queue.add(paths.remove(0));
             while(!queue.isEmpty()){
                 MazeSquare cur = queue.remove(0);
                 if(!visited.contains(cur)){
@@ -271,16 +283,15 @@ public class Maze {
                     }
                 }
             }
-            finalSets.add(set);
+            if(!set.isEmpty())
+                finalSets.add(set);
         }
         return finalSets;
     }
 
-    public Set<MazeSquare> findDoors(double d,Set<MazeSquare> doorSet){
-        //todo: implementare deve ritornare il path che convertito a wall crea la separazione a d% nella lista
-        if(d < 0.0 || d > 1.0) d = 1.0;
+    public Set<MazeSquare> possibleDoors(Set<MazeSquare> pathSet){
         List<SquareMiddleDist> doors = new ArrayList<>();
-        doorSet = doorSet.stream().filter(door -> {
+        var doorSet = pathSet.stream().filter(door -> {
             var viciniP = viciniOnlyPath(door);
             var viciniW = viciniWall(door);
             if(viciniP.size() == 2 && viciniW.size() == 2){
@@ -291,9 +302,35 @@ public class Maze {
         System.out.println(doors);
         System.out.println(doorSet);
         return doorSet;
-//        if(d == 0.0) return doors.get(0).square;
-//        int idx = (int) ((double) doors.size() * d);
-//        return doors.get(idx-1).square;
+    }
+
+    public MazeSquare bestDoor(double d, Set<MazeSquare> doorSet,
+                               Set<MazeSquare> pathSet){
+        if(d < 0.0 || d > 1.0) d = 1.0;
+        var dSet = possibleDoors(doorSet);
+        List<SquareDist> sepa = new ArrayList<>();
+        int c = 0;
+        for(MazeSquare ms : dSet){
+            setTypeAt(ms.x,ms.y,MazeSquare.PORTA);
+            List<MazeSquare> lis = new ArrayList<>(pathSet);
+            lis.remove(ms);
+            var sets = doorSets(lis);
+            System.out.println(ms+" "+sets.size()+" "+c+"/"+dSet.size());
+            if(sets.size() == 2){
+                //System.out.println(sets);
+                sepa.add(new SquareDist(ms,Math.abs(sets.get(0).size()-sets.get(1).size())));
+            }
+            setTypeAt(ms.x,ms.y,MazeSquare.PATH);
+            c++;
+        }
+        if(!sepa.isEmpty()) {
+            Collections.sort(sepa);
+            Collections.reverse(sepa);
+        }else return null;
+        System.out.println(sepa);
+        if(d == 0.0) return sepa.get(0).square;
+        int idx = (int) ((double) sepa.size() * d);
+        return sepa.get(idx-1).square;
     }
 
     @Override
@@ -362,7 +399,7 @@ public class Maze {
     public static Maze mazeFromXML(String path){
         try {
             File file = new File("src/main/resources/com/flavio/rognoni/purgatory/" +
-                    "purgatory/labirinti/1764540968716_maze.xml");
+                    "purgatory/labirinti/1764541189706_maze.xml");
             //1764540968716_maze.xml 20x20
             // 1764715136966_maze.xml 200x200
             // 1764541189706_maze.xml 100x100

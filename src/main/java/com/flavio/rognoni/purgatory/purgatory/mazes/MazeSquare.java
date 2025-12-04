@@ -33,6 +33,10 @@ public class MazeSquare {
         return type == START_END;
     }
 
+    public boolean isDoor(){
+        return type == PORTA;
+    }
+
     public int manhattanDistance(MazeSquare pos){
         return Math.abs(x - pos.x) + Math.abs(y - pos.y);
     }
