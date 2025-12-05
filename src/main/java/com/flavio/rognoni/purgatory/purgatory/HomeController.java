@@ -4,15 +4,14 @@ import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
 import com.flavio.rognoni.purgatory.purgatory.mazes.SquareDist;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.CellularAutomata2D;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Spinner;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -37,16 +36,25 @@ public class HomeController implements Initializable {
     public Button porteBtn;
     public Button distBtn;
     public Spinner<Double> percSpinner;
+    public ChoiceBox<String> setChoice;
+    public Button addPortaBtn;
+    public ChoiceBox<String> rmDoorChoice;
+    public Button rmPortaBtn;
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
     private Maze maze;
     private int cellDim;
+    private MazeSquare porta;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         //renderSpinner(percSpinner);
         percSpinner.setEditable(true);
+        porta = null;
+        addPortaBtn.setVisible(false);
+        rmPortaBtn.setVisible(false);
+        rmDoorChoice.setVisible(false);
     }
 
     public void setMaze(Maze maze) {
@@ -89,6 +97,16 @@ public class HomeController implements Initializable {
 
         renderMaze(maze);
 
+        var l = new ArrayList<String>();
+        var pS = maze.pathSets();
+        for(int i=0;i<pS.size();i++)
+            l.add("Set<"+i+"> "+pS.get(i).size());
+        setChoice.setItems(FXCollections.observableArrayList(l));
+        setChoice.setOnAction(e -> {
+            renderSet(setChoice.getSelectionModel().getSelectedIndex());
+        });
+        setChoice.getSelectionModel().selectFirst();
+
     }
 
     private void renderMaze(Maze maze){
@@ -104,6 +122,8 @@ public class HomeController implements Initializable {
                     label.setStyle("-fx-background-color: rgb(128,128,128)");
                 else if(cell.isStartEnd())
                     label.setStyle("-fx-background-color: yellow");
+                else if(cell.isDoor())
+                    label.setStyle("-fx-background-color: purple");
             }
         }
     }
@@ -112,6 +132,18 @@ public class HomeController implements Initializable {
         for(SquareDist dist : dists){
             Label label = cellsMatrix[dist.square.x][dist.square.y];
             label.setText(dist.d+"");
+        }
+    }
+
+    private void renderSet(int idx){
+        if(idx < 0) return;
+        renderMaze(maze);
+        var set = maze.pathSets().get(idx);
+        for(MazeSquare ms : set){
+            if(!ms.isStartEnd())
+                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: coral");
+            else
+                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: cyan");
         }
     }
 
@@ -229,63 +261,74 @@ public class HomeController implements Initializable {
 
     public void onPorte(ActionEvent event) {
         renderMaze(maze);
-        int nPaths = maze.getAllPaths().size();
-        var pathSets = maze.pathSets();
-        System.out.println(pathSets.size()+" "+pathSets);
-        var doorSet = maze.doorSet(pathSets.get(0));
-        if(doorSet == null) return;
-        System.out.println(doorSet.size()+" "+doorSet);
-//        for(MazeSquare ms : doorSet){
-//            cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: pink");
+        porta = maze.bestDoor(percSpinner.getValue(),
+                maze.pathSets().get(setChoice.getSelectionModel().getSelectedIndex()));
+        if(porta != null){
+            cellsMatrix[porta.x][porta.y].setStyle("-fx-background-color: pink");
+            addPortaBtn.setVisible(true);
+            addPortaBtn.setText("Add Porta in ("+porta.x+","+porta.y+")");
+        }else{
+            addPortaBtn.setVisible(false);
+            Alert alert = new Alert(Alert.AlertType.ERROR,"Set troppo piccolo deve avere almeno 30 celle");
+            alert.show();
+        }
+//        int nPaths = maze.getAllPaths().size();
+//        var pathSets = maze.pathSets();
+//        System.out.println(pathSets.size()+" "+pathSets);
+//        var doorSet = maze.doorSet(pathSets.get(0));
+//        if(doorSet == null) return;
+//        System.out.println(doorSet.size()+" "+doorSet);
+////        for(MazeSquare ms : doorSet){
+////            cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: pink");
+////        }
+//        var door = maze.bestDoor(percSpinner.getValue(),pathSets.get(0));
+//        if(door == null){
+//            System.out.println("no porte per questo set è troppo piccolo!");
+//            return;
 //        }
-        var door = maze.bestDoor(percSpinner.getValue(),pathSets.get(0));
-        if(door == null){
-            System.out.println("no porte per questo set è troppo piccolo!");
-            return;
-        }
-        maze.setTypeAt(door.x,door.y,MazeSquare.PORTA);
-        pathSets = maze.pathSets();
-        System.out.println(door);
-        int c = 0;
-        for(Set<MazeSquare> set : pathSets){
-            System.out.println("|set|="+set.size()+" set:"+set);
-            for(MazeSquare ms : set){
-                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+((c%2==0) ? "green" : "skyblue"));
-            }
-            c++;
-        }
-        cellsMatrix[door.x][door.y].setStyle("-fx-background-color: purple");
-        doorSet = maze.doorSet(pathSets.get(0));
-        if(doorSet == null) return;
-        System.out.println(doorSet.size()+" "+doorSet);
-//        for(MazeSquare ms : doorSet){
-//            cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: pink");
+//        maze.setTypeAt(door.x,door.y,MazeSquare.PORTA);
+//        pathSets = maze.pathSets();
+//        System.out.println(door);
+//        int c = 0;
+//        for(Set<MazeSquare> set : pathSets){
+//            System.out.println("|set|="+set.size()+" set:"+set);
+//            for(MazeSquare ms : set){
+//                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+((c%2==0) ? "green" : "skyblue"));
+//            }
+//            c++;
 //        }
-        var sdoor = maze.bestDoor(percSpinner.getValue(),pathSets.get(0));
-        if(sdoor == null){
-            System.out.println("no porte per questo set è troppo piccolo!");
-            return;
-        }
-        cellsMatrix[sdoor.x][sdoor.y].setStyle("-fx-background-color: magenta");
-        maze.setTypeAt(sdoor.x,sdoor.y,MazeSquare.PORTA);
-        pathSets = maze.pathSets();
-        String[] colors = {"green","skyblue","coral"},
-                colors2 = {"lime","cyan","firebrick"};
-        c = 0;
-        for(Set<MazeSquare> set : pathSets){
-            System.out.println("|set|="+set.size()+" set:"+set);
-            String color = colors[c%colors.length],color2 = colors2[c%colors.length];
-            System.out.println(color);
-            for(MazeSquare ms : set){
-                if(!ms.isStartEnd())
-                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+color);
-                else
-                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+color2);
-            }
-            c++;
-        }
-        System.out.println("porte create: "+maze.getAllDoors());
-        System.out.println(nPaths+" "+maze.getAllPaths().size());
+//        cellsMatrix[door.x][door.y].setStyle("-fx-background-color: purple");
+//        doorSet = maze.doorSet(pathSets.get(0));
+//        if(doorSet == null) return;
+//        System.out.println(doorSet.size()+" "+doorSet);
+////        for(MazeSquare ms : doorSet){
+////            cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: pink");
+////        }
+//        var sdoor = maze.bestDoor(percSpinner.getValue(),pathSets.get(0));
+//        if(sdoor == null){
+//            System.out.println("no porte per questo set è troppo piccolo!");
+//            return;
+//        }
+//        cellsMatrix[sdoor.x][sdoor.y].setStyle("-fx-background-color: magenta");
+//        maze.setTypeAt(sdoor.x,sdoor.y,MazeSquare.PORTA);
+//        pathSets = maze.pathSets();
+//        String[] colors = {"green","skyblue","coral"},
+//                colors2 = {"lime","cyan","firebrick"};
+//        c = 0;
+//        for(Set<MazeSquare> set : pathSets){
+//            System.out.println("|set|="+set.size()+" set:"+set);
+//            String color = colors[c%colors.length],color2 = colors2[c%colors.length];
+//            System.out.println(color);
+//            for(MazeSquare ms : set){
+//                if(!ms.isStartEnd())
+//                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+color);
+//                else
+//                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+color2);
+//            }
+//            c++;
+//        }
+//        System.out.println("porte create: "+maze.getAllDoors());
+//        System.out.println(nPaths+" "+maze.getAllPaths().size());
     }
 
     public void onDistanze(ActionEvent event) {
@@ -294,6 +337,62 @@ public class HomeController implements Initializable {
         System.out.println(middle);
         cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: blue");
         //renderDist();
+    }
+
+    public void onAddPorta(ActionEvent event) {
+        if(porta != null && maze.getCellAt(porta.x, porta.y).type != MazeSquare.PORTA){
+            maze.setTypeAt(porta.x,porta.y,MazeSquare.PORTA);
+            var porte = maze.getAllDoors();
+            renderMaze(maze);
+            var l = new ArrayList<String>();
+            for(MazeSquare ms : porte)
+                l.add("("+ms.x+","+ms.y+")");
+            rmDoorChoice.setItems(FXCollections.observableArrayList(l));
+            rmDoorChoice.setVisible(true);
+            rmDoorChoice.getSelectionModel().selectFirst();
+            rmPortaBtn.setVisible(true);
+            l.clear();
+            var pS = maze.pathSets();
+            for(int i=0;i<pS.size();i++)
+                l.add("Set<"+i+"> "+pS.get(i).size());
+            setChoice.setItems(FXCollections.observableArrayList(l));
+            setChoice.setOnAction(e -> {
+                renderSet(setChoice.getSelectionModel().getSelectedIndex());
+            });
+            setChoice.getSelectionModel().selectFirst();
+            addPortaBtn.setVisible(false);
+        }
+    }
+
+    public void onRmPorta(ActionEvent event) {
+        String ch = rmDoorChoice.getValue();
+        int x = Integer.parseInt(ch.split(",")[0].replace("(","")),
+                y = Integer.parseInt(ch.split(",")[1].replace(")",""));
+        var door = maze.getCellAt(x,y);
+        if(door.isDoor()){
+            maze.setTypeAt(door.x,door.y,MazeSquare.PATH);
+            renderMaze(maze);
+            var porte = maze.getAllDoors();
+            var l = new ArrayList<String>();
+            for(MazeSquare ms : porte)
+                l.add("("+ms.x+","+ms.y+")");
+            rmDoorChoice.setItems(FXCollections.observableArrayList(l));
+            rmDoorChoice.setVisible(true);
+            rmDoorChoice.getSelectionModel().selectFirst();
+            l.clear();
+            var pS = maze.pathSets();
+            for(int i=0;i<pS.size();i++)
+                l.add("Set<"+i+"> "+pS.get(i).size());
+            setChoice.setItems(FXCollections.observableArrayList(l));
+            setChoice.setOnAction(e -> {
+                renderSet(setChoice.getSelectionModel().getSelectedIndex());
+            });
+            setChoice.getSelectionModel().selectFirst();
+            if(porte.isEmpty()){
+                rmDoorChoice.setVisible(false);
+                rmPortaBtn.setVisible(false);
+            }
+        }
     }
 
 }
