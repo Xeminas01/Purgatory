@@ -229,19 +229,25 @@ public class HomeController implements Initializable {
 
     public void onPorte(ActionEvent event) {
         renderMaze(maze);
-        var pathSets = maze.doorSets();
+        int nPaths = maze.getAllPaths().size();
+        var pathSets = maze.pathSets();
         System.out.println(pathSets.size()+" "+pathSets);
-        var doorSet = maze.possibleDoors(pathSets.get(0));
+        var doorSet = maze.doorSet(pathSets.get(0));
+        if(doorSet == null) return;
         System.out.println(doorSet.size()+" "+doorSet);
 //        for(MazeSquare ms : doorSet){
 //            cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: pink");
 //        }
-        var door = maze.bestDoor(percSpinner.getValue(),doorSet,pathSets.get(0));
+        var door = maze.bestDoor(percSpinner.getValue(),pathSets.get(0));
+        if(door == null){
+            System.out.println("no porte per questo set è troppo piccolo!");
+            return;
+        }
         maze.setTypeAt(door.x,door.y,MazeSquare.PORTA);
-        var ds = maze.doorSets();
+        pathSets = maze.pathSets();
         System.out.println(door);
         int c = 0;
-        for(Set<MazeSquare> set : ds){
+        for(Set<MazeSquare> set : pathSets){
             System.out.println("|set|="+set.size()+" set:"+set);
             for(MazeSquare ms : set){
                 cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+((c%2==0) ? "green" : "skyblue"));
@@ -249,25 +255,37 @@ public class HomeController implements Initializable {
             c++;
         }
         cellsMatrix[door.x][door.y].setStyle("-fx-background-color: purple");
-        doorSet = maze.possibleDoors(ds.get(0));
+        doorSet = maze.doorSet(pathSets.get(0));
+        if(doorSet == null) return;
         System.out.println(doorSet.size()+" "+doorSet);
 //        for(MazeSquare ms : doorSet){
 //            cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: pink");
 //        }
-        var sdoor = maze.bestDoor(percSpinner.getValue(),doorSet,ds.get(0));
+        var sdoor = maze.bestDoor(percSpinner.getValue(),pathSets.get(0));
+        if(sdoor == null){
+            System.out.println("no porte per questo set è troppo piccolo!");
+            return;
+        }
         cellsMatrix[sdoor.x][sdoor.y].setStyle("-fx-background-color: magenta");
         maze.setTypeAt(sdoor.x,sdoor.y,MazeSquare.PORTA);
-        ds = maze.doorSets();
-        String[] colors = {"green","skyblue","coral"};
-        for(Set<MazeSquare> set : ds){
+        pathSets = maze.pathSets();
+        String[] colors = {"green","skyblue","coral"},
+                colors2 = {"lime","cyan","firebrick"};
+        c = 0;
+        for(Set<MazeSquare> set : pathSets){
             System.out.println("|set|="+set.size()+" set:"+set);
+            String color = colors[c%colors.length],color2 = colors2[c%colors.length];
+            System.out.println(color);
             for(MazeSquare ms : set){
-                String color = colors[c%colors.length];
-                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+color);
+                if(!ms.isStartEnd())
+                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+color);
+                else
+                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+color2);
             }
             c++;
         }
         System.out.println("porte create: "+maze.getAllDoors());
+        System.out.println(nPaths+" "+maze.getAllPaths().size());
     }
 
     public void onDistanze(ActionEvent event) {

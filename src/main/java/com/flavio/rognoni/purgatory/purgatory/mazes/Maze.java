@@ -74,12 +74,6 @@ public class Maze {
                 .collect(Collectors.toList());
     }
 
-    public List<MazeSquare> viciniOnlyPath(MazeSquare pos){
-        return vicini(pos).stream()
-                .filter(MazeSquare::isPath)
-                .collect(Collectors.toList());
-    }
-
     public List<MazeSquare> viciniWall(MazeSquare pos){
         return vicini(pos).stream()
                 .filter(MazeSquare::isWall)
@@ -170,15 +164,6 @@ public class Maze {
         return walls;
     }
 
-    public List<MazeSquare> getAllOnlyPaths(){
-        List<MazeSquare> walls = new ArrayList<>();
-        for(MazeSquare[] i : matrix)
-            for(MazeSquare j : i)
-                if(j.isPath())
-                    walls.add(j);
-        return walls;
-    }
-
     public List<MazeSquare> getAllStartEnd(){
         List<MazeSquare> walls = new ArrayList<>();
         for(MazeSquare[] i : matrix)
@@ -260,11 +245,11 @@ public class Maze {
         return d;
     }
 
-    public List<Set<MazeSquare>> doorSets(){
-        return doorSets(getAllOnlyPaths());
+    public List<Set<MazeSquare>> pathSets(){
+        return pathSets(getAllPaths());
     }
 
-    public List<Set<MazeSquare>> doorSets(List<MazeSquare> paths){
+    public List<Set<MazeSquare>> pathSets(List<MazeSquare> paths){
         int d = paths.size();
         Set<MazeSquare> visited = new HashSet<>();
         List<Set<MazeSquare>> finalSets = new ArrayList<>();
@@ -277,7 +262,7 @@ public class Maze {
                 if(!visited.contains(cur)){
                     visited.add(cur);
                     set.add(cur);
-                    for(MazeSquare vicino : viciniOnlyPath(cur)){
+                    for(MazeSquare vicino : viciniPath(cur)){
                         if(!visited.contains(vicino))
                             queue.add(vicino);
                     }
@@ -289,32 +274,33 @@ public class Maze {
         return finalSets;
     }
 
-    public Set<MazeSquare> possibleDoors(Set<MazeSquare> pathSet){
-        List<SquareMiddleDist> doors = new ArrayList<>();
+    public Set<MazeSquare> doorSet(Set<MazeSquare> pathSet){
+        if(pathSet.size() < 30) return null;
         var doorSet = pathSet.stream().filter(door -> {
-            var viciniP = viciniOnlyPath(door);
+            var viciniP = viciniPath(door);
             var viciniW = viciniWall(door);
             if(viciniP.size() == 2 && viciniW.size() == 2){
                 return viciniP.get(0).x == viciniP.get(1).x ||
                         viciniP.get(0).y == viciniP.get(1).y;
             }else return false;
         }).collect(Collectors.toSet());
-        System.out.println(doors);
+        getAllStartEnd().forEach(doorSet::remove);
         System.out.println(doorSet);
         return doorSet;
     }
 
-    public MazeSquare bestDoor(double d, Set<MazeSquare> doorSet,
-                               Set<MazeSquare> pathSet){
+    public MazeSquare bestDoor(double d, Set<MazeSquare> pathSet){
+        if(pathSet == null) return null;
         if(d < 0.0 || d > 1.0) d = 1.0;
-        var dSet = possibleDoors(doorSet);
+        var dSet = doorSet(pathSet);
+        if(dSet == null) return null;
         List<SquareDist> sepa = new ArrayList<>();
         int c = 0;
         for(MazeSquare ms : dSet){
             setTypeAt(ms.x,ms.y,MazeSquare.PORTA);
             List<MazeSquare> lis = new ArrayList<>(pathSet);
             lis.remove(ms);
-            var sets = doorSets(lis);
+            var sets = pathSets(lis);
             System.out.println(ms+" "+sets.size()+" "+c+"/"+dSet.size());
             if(sets.size() == 2){
                 //System.out.println(sets);
@@ -399,11 +385,12 @@ public class Maze {
     public static Maze mazeFromXML(String path){
         try {
             File file = new File("src/main/resources/com/flavio/rognoni/purgatory/" +
-                    "purgatory/labirinti/1764541189706_maze.xml");
-            //1764540968716_maze.xml 20x20
+                    "purgatory/labirinti/1764936824966_maze.xml");
+            // 1764540968716_maze.xml 20x20
             // 1764715136966_maze.xml 200x200
             // 1764541189706_maze.xml 100x100
             // 1764713272395_maze.xml 50x50
+            // 1764936824966_maze.xml 20 x 30
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(file);
