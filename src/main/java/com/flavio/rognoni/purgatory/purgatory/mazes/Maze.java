@@ -1,7 +1,6 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes;
 
 
-import kotlin.ranges.IntProgression;
 import org.w3c.dom.*;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -192,6 +191,24 @@ public class Maze {
         return walls;
     }
 
+    public List<MazeSquare> getAllObjects(){
+        List<MazeSquare> walls = new ArrayList<>();
+        for(MazeSquare[] i : matrix)
+            for(MazeSquare j : i)
+                if(j.isSwitch() || j.isTreasure() || j.isTrap())
+                    walls.add(j);
+        return walls;
+    }
+
+    public List<MazeSquare> getAllInvWalls(){
+        List<MazeSquare> walls = new ArrayList<>();
+        for(MazeSquare[] i : matrix)
+            for(MazeSquare j : i)
+                if(j.isInvWall())
+                    walls.add(j);
+        return walls;
+    }
+
     public void setGridForIRK(){
         for(int i=0;i<h;i++){
             for(int j=0;j<w;j++){
@@ -204,7 +221,10 @@ public class Maze {
         }
     }
 
+    //middleDistancePointToPoint
+
     public MazeSquare middleDistanceStartEnd(double d, int qty){
+        if(!isAllReachable()) return null;
         if(d < 0.0 || d > 1.0) d = 1.0;
         if(qty < 0 || qty > 10) qty = 5;
         List<MazeSquare> startEnd = getAllStartEnd();
@@ -229,6 +249,8 @@ public class Maze {
         int idx = (int) ((double) dists.size() * d);
         return dists.get(idx-1).square;
     }
+
+    //isSetAllConnected
 
     public List<SquareDist> distancesFrom(MazeSquare square){
         return distancesFrom(square.x,square.y);
@@ -284,7 +306,7 @@ public class Maze {
         return finalSets;
     }
 
-    public Set<MazeSquare> doorSet(Set<MazeSquare> pathSet){
+    public Set<MazeSquare> oppWall2Set(Set<MazeSquare> pathSet){
         if(pathSet.size() < 30) return null;
         var doorSet = pathSet.stream().filter(door -> {
             var viciniP = viciniPath(door);
@@ -302,7 +324,7 @@ public class Maze {
     public MazeSquare bestDoor(double d, Set<MazeSquare> pathSet){
         if(pathSet == null) return null;
         if(d < 0.0 || d > 1.0) d = 1.0;
-        var dSet = doorSet(pathSet);
+        var dSet = oppWall2Set(pathSet);
         if(dSet == null) return null;
         List<SquareDist> sepa = new ArrayList<>();
         int c = 0;
@@ -329,39 +351,36 @@ public class Maze {
         return sepa.get(idx-1).square;
     }
 
-    public Set<MazeSquare> ittSet(Set<MazeSquare> pathSet){
+    public Set<MazeSquare> wall3Set(Set<MazeSquare> pathSet){
         if(pathSet.size() < 30) return null;
-        var doorSet = pathSet.stream().filter(door -> {
+        var ittSet = pathSet.stream().filter(door -> {
             var viciniP = viciniPath(door);
             var viciniW = viciniWall(door);
             return viciniP.size() == 1 && viciniW.size() == 3;
         }).collect(Collectors.toSet());
-        getAllStartEnd().forEach(doorSet::remove);
-        System.out.println(doorSet);
-        return doorSet;
+        getAllStartEnd().forEach(ittSet::remove);
+        return ittSet;
     }
 
     public List<MazeSquare> bestITT(Set<MazeSquare> pathSet,int n,int type){ // sta per interruttori, tesori, trappole
         if(type < MazeSquare.INTERRUTTORE || type > MazeSquare.TRAPPOLA)
             return null;
-        var ittSet = pathSet.stream().filter(path -> {
-            var viciniP = viciniPath(path);
-            var viciniW = viciniWall(path);
-            return viciniP.size() == 1 && viciniW.size() == 3;
-        }).collect(Collectors.toSet());
-        getAllStartEnd().forEach(ittSet::remove);
-        System.out.println("ittSet: "+ittSet);
-        n = Math.min(n,ittSet.size()/30);
+        var ittSet = wall3Set(pathSet);
+        if(ittSet == null || ittSet.isEmpty())
+            return null;
+        System.out.println("wall3Set: "+ittSet.size()+" "+ittSet);
+        n = Math.min(n,ittSet.size());
         Random rand = new Random();
         var ittL = new ArrayList<>(ittSet);
         var objCells = new ArrayList<MazeSquare>();
-        var bestCells = new ArrayList<>(objCells);
         for(int i=0;i<n;i++)
             objCells.add(ittL.remove(rand.nextInt(ittL.size())));
+        var bestCells = new ArrayList<>(objCells);
+        System.out.println(objCells+" "+bestCells);
         if(objCells.size() <= 1){
             return objCells;
         }else{
-            int diff = Integer.MAX_VALUE;
+            int diff = Integer.MIN_VALUE, patience = 100;
             while(true){
                 var l = new ArrayList<Integer>();
                 for(int i=0;i<objCells.size()-1;i++)
@@ -370,8 +389,21 @@ public class Maze {
                 int nDiff = 0;
                 for(int i=0;i<l.size()-1;i++)
                     nDiff += Math.abs(l.get(i)-l.get(i+1));
-                if(nDiff >= diff){
-                    break;
+                System.out.println(nDiff + " " + objCells);
+                if(nDiff <= diff){
+                    patience--;
+                    if(patience <= 0)
+                        break;
+                    else{
+                        if(!ittL.isEmpty()){
+                            var randRm = objCells.remove(rand.nextInt(objCells.size()));
+                            var randAdd = ittL.remove(rand.nextInt(ittL.size()));
+                            objCells.add(randAdd);
+                            ittL.add(randRm);
+                        }else{
+                            break;
+                        }
+                    }
                 }else{
                     diff = nDiff;
                     bestCells.clear();
@@ -389,6 +421,20 @@ public class Maze {
         }
         return bestCells;
     }
+
+    public List<MazeSquare> randomInvWalls(Set<MazeSquare> pathSet,int n){
+        var opp2Set = oppWall2Set(pathSet);
+        if(opp2Set == null) return null;
+        n = Math.min(n,opp2Set.size());
+        List<MazeSquare> l = new ArrayList<>(opp2Set),
+                ris = new ArrayList<>();
+        Random rand = new Random();
+        for(int i=0;i<n;i++)
+            ris.add(l.remove(rand.nextInt(l.size())));
+        return ris;
+    }
+
+    //teleports
 
     @Override
     public String toString() {
@@ -456,7 +502,7 @@ public class Maze {
     public static Maze mazeFromXML(String path){
         try {
             File file = new File("src/main/resources/com/flavio/rognoni/purgatory/" +
-                    "purgatory/labirinti/1764540968716_maze.xml");
+                    "purgatory/labirinti/1764713272395_maze.xml");
             // 1764540968716_maze.xml 20x20
             // 1764715136966_maze.xml 200x200
             // 1764541189706_maze.xml 100x100

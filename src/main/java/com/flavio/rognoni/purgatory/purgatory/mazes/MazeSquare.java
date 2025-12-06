@@ -37,6 +37,26 @@ public class MazeSquare {
         return type == PORTA;
     }
 
+    public boolean isSwitch(){
+        return type == INTERRUTTORE;
+    }
+
+    public boolean isTreasure(){
+        return type == TESORO;
+    }
+
+    public boolean isTrap(){
+        return type == TRAPPOLA;
+    }
+
+    public boolean isInvWall(){
+        return type == MURI_INVISIBILI;
+    }
+
+    public boolean isTeleport(){
+        return type == TELETRASPORTI;
+    }
+
     public int manhattanDistance(MazeSquare pos){
         return Math.abs(x - pos.x) + Math.abs(y - pos.y);
     }
