@@ -63,4 +63,9 @@
          <Font name="Verdana" size="15.0" />
       </font>
    </Button>
+   <Button fx:id="ittBtn" layoutX="1178.0" layoutY="542.0" mnemonicParsing="false" onAction="#onITT" style="-fx-background-color: green;" text="ITT" textFill="WHITE">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
 </AnchorPane>

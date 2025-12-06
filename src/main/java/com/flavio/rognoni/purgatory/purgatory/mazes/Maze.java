@@ -1,6 +1,7 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes;
 
 
+import kotlin.ranges.IntProgression;
 import org.w3c.dom.*;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -182,6 +183,15 @@ public class Maze {
         return walls;
     }
 
+    public List<MazeSquare> getAllObjectOf(int type){
+        List<MazeSquare> walls = new ArrayList<>();
+        for(MazeSquare[] i : matrix)
+            for(MazeSquare j : i)
+                if(j.type == type)
+                    walls.add(j);
+        return walls;
+    }
+
     public void setGridForIRK(){
         for(int i=0;i<h;i++){
             for(int j=0;j<w;j++){
@@ -319,6 +329,67 @@ public class Maze {
         return sepa.get(idx-1).square;
     }
 
+    public Set<MazeSquare> ittSet(Set<MazeSquare> pathSet){
+        if(pathSet.size() < 30) return null;
+        var doorSet = pathSet.stream().filter(door -> {
+            var viciniP = viciniPath(door);
+            var viciniW = viciniWall(door);
+            return viciniP.size() == 1 && viciniW.size() == 3;
+        }).collect(Collectors.toSet());
+        getAllStartEnd().forEach(doorSet::remove);
+        System.out.println(doorSet);
+        return doorSet;
+    }
+
+    public List<MazeSquare> bestITT(Set<MazeSquare> pathSet,int n,int type){ // sta per interruttori, tesori, trappole
+        if(type < MazeSquare.INTERRUTTORE || type > MazeSquare.TRAPPOLA)
+            return null;
+        var ittSet = pathSet.stream().filter(path -> {
+            var viciniP = viciniPath(path);
+            var viciniW = viciniWall(path);
+            return viciniP.size() == 1 && viciniW.size() == 3;
+        }).collect(Collectors.toSet());
+        getAllStartEnd().forEach(ittSet::remove);
+        System.out.println("ittSet: "+ittSet);
+        n = Math.min(n,ittSet.size()/30);
+        Random rand = new Random();
+        var ittL = new ArrayList<>(ittSet);
+        var objCells = new ArrayList<MazeSquare>();
+        var bestCells = new ArrayList<>(objCells);
+        for(int i=0;i<n;i++)
+            objCells.add(ittL.remove(rand.nextInt(ittL.size())));
+        if(objCells.size() <= 1){
+            return objCells;
+        }else{
+            int diff = Integer.MAX_VALUE;
+            while(true){
+                var l = new ArrayList<Integer>();
+                for(int i=0;i<objCells.size()-1;i++)
+                    for(int j=1;j<objCells.size();j++)
+                        l.add(objCells.get(i).manhattanDistance(objCells.get(j)));
+                int nDiff = 0;
+                for(int i=0;i<l.size()-1;i++)
+                    nDiff += Math.abs(l.get(i)-l.get(i+1));
+                if(nDiff >= diff){
+                    break;
+                }else{
+                    diff = nDiff;
+                    bestCells.clear();
+                    bestCells.addAll(objCells);
+                    if(!ittL.isEmpty()){
+                        var randRm = objCells.remove(rand.nextInt(objCells.size()));
+                        var randAdd = ittL.remove(rand.nextInt(ittL.size()));
+                        objCells.add(randAdd);
+                        ittL.add(randRm);
+                    }else{
+                        break;
+                    }
+                }
+            }
+        }
+        return bestCells;
+    }
+
     @Override
     public String toString() {
         String s = "h:"+h+",w:"+w+"\n";
@@ -385,7 +456,7 @@ public class Maze {
     public static Maze mazeFromXML(String path){
         try {
             File file = new File("src/main/resources/com/flavio/rognoni/purgatory/" +
-                    "purgatory/labirinti/1764936824966_maze.xml");
+                    "purgatory/labirinti/1764540968716_maze.xml");
             // 1764540968716_maze.xml 20x20
             // 1764715136966_maze.xml 200x200
             // 1764541189706_maze.xml 100x100

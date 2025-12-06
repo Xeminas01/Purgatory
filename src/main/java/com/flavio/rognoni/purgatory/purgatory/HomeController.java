@@ -40,6 +40,7 @@ public class HomeController implements Initializable {
     public Button addPortaBtn;
     public ChoiceBox<String> rmDoorChoice;
     public Button rmPortaBtn;
+    public Button ittBtn;
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
@@ -393,6 +394,22 @@ public class HomeController implements Initializable {
                 rmPortaBtn.setVisible(false);
             }
         }
+    }
+
+    public void onITT(ActionEvent event) {
+        renderMaze(maze);
+        var set = maze.pathSets().get(setChoice.getSelectionModel().getSelectedIndex());
+        var ittSet = maze.ittSet(set);
+        for(MazeSquare ms : ittSet){
+            cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: blue");
+        }
+//        int n = 3;
+//        var itt = maze.bestITT(set,3,MazeSquare.INTERRUTTORE);
+//        if(itt != null && !itt.isEmpty()){
+//            for(MazeSquare ms : itt){
+//                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: blue");
+//            }
+//        }
     }
 
 }
