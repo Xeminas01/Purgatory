@@ -209,6 +209,15 @@ public class Maze {
         return walls;
     }
 
+    public List<MazeSquare> getAllTeles(){
+        List<MazeSquare> walls = new ArrayList<>();
+        for(MazeSquare[] i : matrix)
+            for(MazeSquare j : i)
+                if(j.isTeleport())
+                    walls.add(j);
+        return walls;
+    }
+
     public void setGridForIRK(){
         for(int i=0;i<h;i++){
             for(int j=0;j<w;j++){
@@ -308,15 +317,9 @@ public class Maze {
 
     public Set<MazeSquare> oppWall2Set(Set<MazeSquare> pathSet){
         if(pathSet.size() < 30) return null;
-        var doorSet = pathSet.stream().filter(door -> {
-            var viciniP = viciniPath(door);
-            var viciniW = viciniWall(door);
-            if(viciniP.size() == 2 && viciniW.size() == 2){
-                return viciniP.get(0).x == viciniP.get(1).x ||
-                        viciniP.get(0).y == viciniP.get(1).y;
-            }else return false;
-        }).collect(Collectors.toSet());
-        getAllStartEnd().forEach(doorSet::remove);
+        var doorSet = pathSet.stream().filter(this::isOppWall2)
+                .collect(Collectors.toSet());
+        doorSet.removeIf(MazeSquare::isStartEnd);
         System.out.println(doorSet);
         return doorSet;
     }
@@ -353,12 +356,9 @@ public class Maze {
 
     public Set<MazeSquare> wall3Set(Set<MazeSquare> pathSet){
         if(pathSet.size() < 30) return null;
-        var ittSet = pathSet.stream().filter(door -> {
-            var viciniP = viciniPath(door);
-            var viciniW = viciniWall(door);
-            return viciniP.size() == 1 && viciniW.size() == 3;
-        }).collect(Collectors.toSet());
-        getAllStartEnd().forEach(ittSet::remove);
+        var ittSet = pathSet.stream().filter(this::isWall3)
+                .collect(Collectors.toSet());
+        ittSet.removeIf(MazeSquare::isStartEnd);
         return ittSet;
     }
 
@@ -434,7 +434,51 @@ public class Maze {
         return ris;
     }
 
-    //teleports
+    public MazeSquare[] randomTeleport(Set<MazeSquare> pathSetA,
+                                           Set<MazeSquare> pathSetB){
+        if(isIntersection(pathSetA,pathSetB)) return null;
+        MazeSquare[] teleports = new MazeSquare[2];
+        Random rand = new Random();
+        var wall3A = wall3Set(pathSetA);
+        var wall3B = wall3Set(pathSetB);
+        if(wall3A == null || wall3A.isEmpty() ||
+                wall3B == null || wall3B.isEmpty()) return null;
+        var wall3AL = new ArrayList<>(wall3A);
+        var wall3BL = new ArrayList<>(wall3B);
+        teleports[0] = wall3AL.get(rand.nextInt(wall3AL.size()));
+        teleports[1] = wall3BL.get(rand.nextInt(wall3BL.size()));
+        return teleports;
+    }
+
+    private boolean isIntersection(Set<MazeSquare> pathSetA,
+                                   Set<MazeSquare> pathSetB){
+        Set<MazeSquare> set = new HashSet<>(pathSetA);
+        set.retainAll(pathSetB);
+        return !set.isEmpty();
+    }
+
+    public boolean isOppWall2(int x,int y){
+        return isOppWall2(getCellAt(x,y));
+    }
+
+    public boolean isOppWall2(MazeSquare ms){
+        var viciniP = viciniPath(ms);
+        var viciniW = viciniWall(ms);
+        if(viciniP.size() == 2 && viciniW.size() == 2){
+            return viciniP.get(0).x == viciniP.get(1).x ||
+                    viciniP.get(0).y == viciniP.get(1).y;
+        }else return false;
+    }
+
+    public boolean isWall3(int x,int y){
+        return isWall3(getCellAt(x,y));
+    }
+
+    public boolean isWall3(MazeSquare ms){
+        var viciniP = viciniPath(ms);
+        var viciniW = viciniWall(ms);
+        return viciniP.size() == 1 && viciniW.size() == 3;
+    }
 
     @Override
     public String toString() {

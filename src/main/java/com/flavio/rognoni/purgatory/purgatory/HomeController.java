@@ -48,6 +48,15 @@ public class HomeController implements Initializable {
     public Button rmIWBtn;
     public Spinner<Integer> iwSpinner;
     public Button iwBtn;
+    public ComboBox<String> cellTypeChoice;
+    public Button putTypeInBtn;
+    public Spinner<Integer> xSpinner;
+    public Spinner<Integer> ySpinner;
+    public Button addTeleBtn;
+    public ChoiceBox<String> rmTeleChoice;
+    public Button rmTeleBtn;
+    public Button teleBtn;
+    public ChoiceBox<String> setChoice1;
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
@@ -55,6 +64,7 @@ public class HomeController implements Initializable {
     private int cellDim;
     private MazeSquare porta;
     private List<MazeSquare> objs,iws;
+    private MazeSquare[] teles;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -84,6 +94,15 @@ public class HomeController implements Initializable {
         addInvWallsBtn.setVisible(false);
         rmIWsChoice.setVisible(false);
         rmIWBtn.setVisible(false);
+        teles = null;
+        addTeleBtn.setVisible(false);
+        rmTeleChoice.setVisible(false);
+        rmTeleBtn.setVisible(false);
+        l.clear();
+        l.add("Muro");l.add("Path");l.add("SE");l.add("Porta");l.add("Interruttore");
+        l.add("Tesoro");l.add("Trap");l.add("InvW");l.add("Tele");
+        cellTypeChoice.setItems(FXCollections.observableArrayList(l));
+        cellTypeChoice.getSelectionModel().selectFirst();
         mazePanel.setStyle("-fx-background-color: transparent");
     }
 
@@ -126,16 +145,9 @@ public class HomeController implements Initializable {
         }
 
         renderMaze(maze);
-
-        var l = new ArrayList<String>();
-        var pS = maze.pathSets();
-        for(int i=0;i<pS.size();i++)
-            l.add("Set<"+i+"> "+pS.get(i).size());
-        setChoice.setItems(FXCollections.observableArrayList(l));
-        setChoice.setOnAction(e -> {
-            renderSet(setChoice.getSelectionModel().getSelectedIndex());
-        });
-        setChoice.getSelectionModel().selectFirst();
+        resetSetChoice();
+        renderSpinner(xSpinner,1,maze.h-2);
+        renderSpinner(ySpinner,1,maze.w-2);
 
     }
 
@@ -175,15 +187,22 @@ public class HomeController implements Initializable {
         }
     }
 
-    private void renderSet(int idx){
+    private void renderSet(int idx,boolean choice){
         if(idx < 0) return;
         renderMaze(maze);
         var set = maze.pathSets().get(idx);
         for(MazeSquare ms : set){
-            if(!ms.isStartEnd())
-                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: coral");
-            else
-                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: cyan");
+            if(choice){
+                if(!ms.isStartEnd())
+                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: coral");
+                else
+                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: cyan");
+            }else{
+                if(!ms.isStartEnd())
+                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: RoyalBlue");
+                else
+                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: magenta");
+            }
         }
     }
 
@@ -422,9 +441,82 @@ public class HomeController implements Initializable {
             l.add("Set<"+i+"> "+pS.get(i).size());
         setChoice.setItems(FXCollections.observableArrayList(l));
         setChoice.setOnAction(e -> {
-            renderSet(setChoice.getSelectionModel().getSelectedIndex());
+            renderSet(setChoice.getSelectionModel().getSelectedIndex(),true);
         });
+        setChoice1.setItems(FXCollections.observableArrayList(l));
+        setChoice1.setOnAction(e -> {
+            renderSet(setChoice1.getSelectionModel().getSelectedIndex(),false);
+        });
+        setChoice1.getSelectionModel().selectFirst();
         setChoice.getSelectionModel().selectFirst();
+    }
+
+    public void onTele(ActionEvent event) {
+        renderMaze(maze);
+        var sets = maze.pathSets();
+        var setA = sets.get(setChoice.getSelectionModel().getSelectedIndex());
+        var setB = sets.get(setChoice1.getSelectionModel().getSelectedIndex());
+        var ts = maze.randomTeleport(setA,setB);
+        if(ts != null){
+            teles = ts;
+            for(MazeSquare ms : ts)
+                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: Aquamarine");
+            addTeleBtn.setVisible(true);
+        }else{
+            Alert alert = new Alert(Alert.AlertType.ERROR,"I Set hanno intersezione");
+            alert.show();
+        }
+    }
+
+    public void onAddTele(ActionEvent event) {
+        if(teles != null && teles.length == 2)
+            setSquares(new ArrayList<>(Arrays.asList(teles)),
+                    MazeSquare.TELETRASPORTI,rmTeleChoice,addTeleBtn,rmTeleBtn);
+    }
+
+    public void onRmTele(ActionEvent event) {
+        String ch = rmTeleChoice.getValue();
+        int x = Integer.parseInt(ch.split(",")[0].replace("(","")),
+                y = Integer.parseInt(ch.split(",")[1].replace(")",""));
+        var obj = maze.getCellAt(x,y);
+        if(obj.isTeleport()) {
+            maze.setTypeAt(obj.x,obj.y,MazeSquare.PATH);
+            renderMaze(maze);
+            var objs = maze.getAllTeles();
+            var l = new ArrayList<String>();
+            for(MazeSquare ms : objs)
+                l.add("("+ms.x+","+ms.y+")");
+            rmTeleChoice.setItems(FXCollections.observableArrayList(l));
+            rmTeleChoice.setVisible(true);
+            rmTeleChoice.getSelectionModel().selectFirst();
+            resetSetChoice();
+            if(objs.isEmpty()){
+                rmTeleChoice.setVisible(false);
+                rmTeleBtn.setVisible(false);
+            }
+        }
+    }
+
+    public void onPutTypeIn(ActionEvent event) {
+        int x = xSpinner.getValue(),
+                y = ySpinner.getValue();
+        var cell = maze.getCellAt(x,y);
+        System.out.println(cell);
+        int type = cellTypeChoice.getSelectionModel().getSelectedIndex()+1;
+        switch(type){
+            case MazeSquare.WALL,MazeSquare.PATH,MazeSquare.START_END -> {
+                maze.setTypeAt(cell.x,cell.y,type);
+            }
+            case MazeSquare.PORTA,MazeSquare.MURI_INVISIBILI -> {
+                if(maze.isOppWall2(cell)) maze.setTypeAt(cell.x,cell.y,type);
+                else ;//alert
+            }
+            case MazeSquare.INTERRUTTORE,MazeSquare.TESORO,MazeSquare.TRAPPOLA,MazeSquare.TELETRASPORTI -> {
+                if(maze.isWall3(cell)) maze.setTypeAt(cell.x,cell.y,type);
+                else ;//alert
+            }
+        }
+        renderMaze(maze);
     }
 
     public void onGenMaze(ActionEvent event) {
@@ -538,6 +630,18 @@ public class HomeController implements Initializable {
                 }
             }
         }
+    }
+
+    private void renderSpinner(Spinner<Integer> spinner,int lower,int upper){
+        spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(lower,upper,lower,1));
+        spinner.getEditor().textProperty().addListener((e, old, newV) -> {
+            try{
+                Integer.parseInt(newV);
+            }catch (Exception ex){
+                spinner.getEditor().textProperty().setValue(String.valueOf(lower));
+            }
+        });
+        spinner.getEditor().setAlignment(Pos.CENTER);
     }
 
 }
