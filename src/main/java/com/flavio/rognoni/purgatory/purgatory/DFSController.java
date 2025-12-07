@@ -1,9 +1,11 @@
 package com.flavio.rognoni.purgatory.purgatory;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
+import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
 import com.flavio.rognoni.purgatory.purgatory.mazes.SquareDist;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.DFSGen;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCell;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
@@ -28,11 +30,11 @@ public class DFSController {
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
-    private Maze maze;
+    private Maze2 maze;
     private DFSGen dfsGen;
     private Timer timer;
 
-    public void setMaze(Maze maze) {
+    public void setMaze(Maze2 maze) {
         this.maze = maze;
         this.cellDim = 720/Math.max(maze.h,maze.w);
         //System.out.println(cellDim);
@@ -44,7 +46,7 @@ public class DFSController {
             HBox hBox = new HBox();
             for (int j = 0; j < maze.w; j++) {
                 Label label = new Label();
-                MazeSquare cell = maze.getCellAt(i,j);
+                MazeCell cell = maze.cellAt(i,j);
                 label.setAlignment(Pos.CENTER);
 //                label.setLayoutX(i*cellDim+cellDim);
 //                label.setLayoutY(j*cellDim+cellDim);
@@ -55,14 +57,7 @@ public class DFSController {
                 label.setPrefHeight(cellDim);
                 label.setMaxHeight(cellDim);
                 label.setFont(new Font("Verdana",20));
-                if(cell.isLimit())
-                    label.setStyle("-fx-background-color: red");
-                else if(cell.isWall())
-                    label.setStyle("-fx-background-color: black");
-                else if(cell.isPath())
-                    label.setStyle("-fx-background-color: rgb(128,128,128)");
-                else if(cell.isStartEnd())
-                    label.setStyle("-fx-background-color: yellow");
+                label.setStyle("-fx-background-color: "+cell.color());
                 hBox.getChildren().add(label);
                 cellsMatrix[i][j] = label;
             }
@@ -76,19 +71,12 @@ public class DFSController {
 
     }
 
-    private void renderMaze(Maze maze, MazeSquare cur){
+    private void renderMaze(Maze2 maze, MazeCell cur){
         for (int i = 0; i < maze.h; i++) {
             for (int j = 0; j < maze.w; j++) {
-                MazeSquare cell = maze.getCellAt(i,j);
+                MazeCell cell = maze.cellAt(i,j);
                 Label label = cellsMatrix[i][j];
-                if(cell.isLimit())
-                    label.setStyle("-fx-background-color: red");
-                else if(cell.isWall())
-                    label.setStyle("-fx-background-color: black");
-                else if(cell.isPath())
-                    label.setStyle("-fx-background-color: rgb(128,128,128)");
-                else if(cell.isStartEnd())
-                    label.setStyle("-fx-background-color: yellow");
+                label.setStyle("-fx-background-color: "+cell.color());
                 if(cell.equals(cur))
                     label.setStyle("-fx-background-color: green");
             }
@@ -114,11 +102,11 @@ public class DFSController {
                     if(p == null || dfsGen.isGen()) {
                         timer.cancel();
                         System.out.println(maze.isAllReachable());
-                        renderDist(maze.distancesFrom(maze.getAllStartEnd().get(1)));
-                        var middle = maze.middleDistanceStartEnd(1.0,10);
-                        System.out.println(middle);
-                        cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: blue");
-                        Maze.mazeToXML(maze);
+                        //renderDist(maze.distancesFrom(maze.getAllStartEnd().get(1)));
+                        //var middle = maze.middleDistanceStartEnd(1.0,10);
+                        //System.out.println(middle);
+                        //cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: blue");
+                        //Maze.mazeToXML(maze);
                     }
                 });
             }

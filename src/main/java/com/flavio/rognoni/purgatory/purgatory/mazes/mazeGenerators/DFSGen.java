@@ -1,43 +1,47 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
+import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.InizioFine;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCell;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Percorso;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class DFSGen {
 
-    private final Maze maze;
-    private final Set<MazeSquare> visti;
-    private final List<MazeSquare> stack;
+    private final Maze2 maze;
+    private final Set<MazeCell> visti;
+    private final List<MazeCell> stack;
     private final Random rand;
-    private final MazeSquare initCell;
+    private final MazeCell initCell;
     private boolean isGen;
 
-    public DFSGen(Maze maze, int x, int y) {
+    public DFSGen(Maze2 maze, int x, int y) {
         this.maze = maze;
         this.visti = new HashSet<>();
         this.stack = new ArrayList<>();
         this.rand = new Random();
-        var iCell = maze.getCellAt(x,y);
-        if(iCell != null && !iCell.isLimit())
+        var iCell = maze.cellAt(x,y);
+        if(iCell != null && !iCell.type().isLimite())
             this.initCell = iCell;
         else
-            this.initCell = maze.getDeafultInit();
+            this.initCell = maze.defaultInit();
         this.isGen = false;
     }
 
-    public DFSGen(Maze maze) {
+    public DFSGen(Maze2 maze) {
         this(maze,maze.h-2,1);
     }
 
     public void generate(){
-        maze.setTypeAt(maze.h-2, 1,MazeSquare.PATH);
+        maze.cells[maze.h-2][1] = new Percorso(maze.h-2,1);
         stack.add(initCell);
         visti.add(initCell);
         while(!stack.isEmpty()){
-            MazeSquare curr = stack.get(stack.size()-1);
+            MazeCell curr = stack.get(stack.size()-1);
             //System.out.println("curr: "+curr+" "+viciniNoLimit(curr));
             var viciniPossibili = viciniPossibili(curr,viciniNoLimit(curr));
             //System.out.println("vicini possibili: "+viciniPossibili);
@@ -45,37 +49,35 @@ public class DFSGen {
                 stack.remove(stack.size()-1);
             }else{
                 var next = viciniPossibili.get(rand.nextInt(viciniPossibili.size()));
-                maze.setTypeAt(next.x,next.y,MazeSquare.PATH);
+                maze.cells[next.x][next.y] = new Percorso(next.x,next.y);
                 visti.add(next);
                 stack.add(next);
             }
         }
-        MazeSquare mostDist = maze.mostDistanceFrom(initCell);
-        maze.setTypeAt(mostDist.x,mostDist.y,MazeSquare.START_END);
-        maze.setTypeAt(initCell.x,initCell.y,MazeSquare.START_END);
+        MazeCell mostDist = maze.furthestFromManhattan(initCell);
+        maze.cells[mostDist.x][mostDist.y] = new InizioFine(mostDist.x,mostDist.y,false);
+        maze.cells[initCell.x][initCell.y] = new InizioFine(initCell.x,initCell.y,true);
     }
 
     public void start(){
-        maze.setTypeAt(initCell.x,initCell.y,MazeSquare.PATH);
-        MazeSquare start = maze.getCellAt(initCell.x,initCell.y);
+        maze.cells[initCell.x][initCell.y] = new Percorso(initCell.x,initCell.y);
+        MazeCell start = maze.cellAt(initCell.x,initCell.y);
         stack.add(start);
         visti.add(start);
     }
 
-    public MazeSquare step(){
+    public MazeCell step(){
         if(isGen) return null;
         if(stack.isEmpty()) {
             isGen = true;
-            System.out.println("cerco fine");
-            System.out.println(maze);
-            MazeSquare mostDist = maze.mostDistanceFrom(initCell);
-            maze.setTypeAt(mostDist.x,mostDist.y,MazeSquare.START_END);
-            maze.setTypeAt(initCell.x,initCell.y,MazeSquare.START_END);
+            MazeCell mostDist = maze.furthestFromManhattan(initCell);
+            maze.cells[mostDist.x][mostDist.y] = new InizioFine(mostDist.x,mostDist.y,false);
+            maze.cells[initCell.x][initCell.y] = new InizioFine(initCell.x,initCell.y,true);
             System.out.println(maze);
             return null;
         }
         //System.out.println(stack);
-        MazeSquare curr = stack.get(stack.size()-1);
+        MazeCell curr = stack.get(stack.size()-1);
         //System.out.println("curr: "+curr+" "+viciniNoLimit(curr));
         var viciniPossibili = viciniPossibili(curr,viciniNoLimit(curr));
         //System.out.println("vicini possibili: "+viciniPossibili);
@@ -83,28 +85,28 @@ public class DFSGen {
             stack.remove(stack.size()-1);
         }else{
             var next = viciniPossibili.get(rand.nextInt(viciniPossibili.size()));
-            maze.setTypeAt(next.x,next.y,MazeSquare.PATH);
+            maze.cells[next.x][next.y] = new Percorso(next.x,next.y);
             visti.add(next);
             stack.add(next);
         }
         return curr;
     }
 
-    private List<MazeSquare> viciniNoLimit(MazeSquare pos){
-        return maze.vicini(pos).stream()
-                .filter(p -> !p.isLimit() && !visti.contains(p))
-                .collect(Collectors.toList());
+    private List<MazeCell> viciniNoLimit(MazeCell pos){
+        var v = maze.vicini(pos);
+        v.removeIf(vic -> vic.type().isLimite() || visti.contains(vic));
+        return v;
     }
 
-    private List<MazeSquare> viciniPossibili(MazeSquare source,List<MazeSquare> vicini){
-        List<MazeSquare> vp = new ArrayList<>();
-        for(MazeSquare p : vicini){
+    private List<MazeCell> viciniPossibili(MazeCell source,List<MazeCell> vicini){
+        List<MazeCell> vp = new ArrayList<>();
+        for(MazeCell p : vicini){
             var prossimi = maze.vicini(p);
             prossimi.remove(source);
             //System.out.println(p+" "+prossimi);
             int s = prossimi.size();
             prossimi = prossimi.stream().filter(
-                            pr -> !pr.isPath())
+                            pr -> !pr.type().isPercorso())
                     .collect(Collectors.toList());
             if(prossimi.size() == s){
                 vp.add(p);
@@ -113,7 +115,7 @@ public class DFSGen {
         return vp;
     }
 
-    public Maze getMaze() {
+    public Maze2 getMaze() {
         return maze;
     }
 

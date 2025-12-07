@@ -1,6 +1,7 @@
 package com.flavio.rognoni.purgatory.purgatory;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
+import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
 import com.flavio.rognoni.purgatory.purgatory.mazes.SquareDist;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.CellularAutomata2D;
@@ -484,7 +485,7 @@ public class HomeController implements Initializable {
                     FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("dfs.fxml"));
                     Parent parent = fxmlLoader.load();
                     DFSController fractalController = fxmlLoader.getController();
-                    Maze maze = new Maze(20,30);
+                    Maze2 maze = new Maze2(100,100);
                     fractalController.setMaze(maze);
                     Scene scene = new Scene(parent, 1280, 720);
                     Stage stage = (Stage) backgroundPane.getScene().getWindow();
@@ -493,6 +494,7 @@ public class HomeController implements Initializable {
                     stage.show();
                 }catch(Exception e){
                     System.out.println(e.getMessage());
+                    e.printStackTrace();
                 }
             }
             case FRACTAL_GEN -> {
