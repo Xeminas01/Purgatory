@@ -80,6 +80,12 @@ public class Maze {
                 .collect(Collectors.toList());
     }
 
+    public List<MazeSquare> viciniWallOrLimit(MazeSquare pos){
+        return vicini(pos).stream()
+                .filter(ms -> ms.isWall() || ms.isLimit())
+                .collect(Collectors.toList());
+    }
+
     public MazeSquare mostDistanceFrom(MazeSquare pos){
         int d = Integer.MIN_VALUE;
         MazeSquare mostDist = null;
@@ -324,15 +330,17 @@ public class Maze {
         return doorSet;
     }
 
-    public MazeSquare bestDoor(double d, Set<MazeSquare> pathSet){
+    public MazeSquare bestWallOrDoorOrIW(double d, Set<MazeSquare> pathSet, int type){
         if(pathSet == null) return null;
+        if(type != MazeSquare.WALL && type != MazeSquare.PORTA &&
+                type != MazeSquare.MURI_INVISIBILI) return null;
         if(d < 0.0 || d > 1.0) d = 1.0;
         var dSet = oppWall2Set(pathSet);
         if(dSet == null) return null;
         List<SquareDist> sepa = new ArrayList<>();
         int c = 0;
         for(MazeSquare ms : dSet){
-            setTypeAt(ms.x,ms.y,MazeSquare.PORTA);
+            setTypeAt(ms.x,ms.y,type);
             List<MazeSquare> lis = new ArrayList<>(pathSet);
             lis.remove(ms);
             var sets = pathSets(lis);
@@ -422,8 +430,10 @@ public class Maze {
         return bestCells;
     }
 
-    public List<MazeSquare> randomInvWalls(Set<MazeSquare> pathSet,int n){
+    public List<MazeSquare> randomMuriOrPorteOrIW(Set<MazeSquare> pathSet, int n, int type){
         var opp2Set = oppWall2Set(pathSet);
+        if(type != MazeSquare.WALL && type != MazeSquare.PORTA &&
+                type != MazeSquare.MURI_INVISIBILI) return null;
         if(opp2Set == null) return null;
         n = Math.min(n,opp2Set.size());
         List<MazeSquare> l = new ArrayList<>(opp2Set),
@@ -463,7 +473,7 @@ public class Maze {
 
     public boolean isOppWall2(MazeSquare ms){
         var viciniP = viciniPath(ms);
-        var viciniW = viciniWall(ms);
+        var viciniW = viciniWallOrLimit(ms);
         if(viciniP.size() == 2 && viciniW.size() == 2){
             return viciniP.get(0).x == viciniP.get(1).x ||
                     viciniP.get(0).y == viciniP.get(1).y;
@@ -476,7 +486,7 @@ public class Maze {
 
     public boolean isWall3(MazeSquare ms){
         var viciniP = viciniPath(ms);
-        var viciniW = viciniWall(ms);
+        var viciniW = viciniWallOrLimit(ms);
         return viciniP.size() == 1 && viciniW.size() == 3;
     }
 

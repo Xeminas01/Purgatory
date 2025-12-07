@@ -2,6 +2,7 @@ package com.flavio.rognoni.purgatory.purgatory;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.CellularAutomata2D;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCellType;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -20,8 +21,10 @@ public class Script {
 //            );
 //            //System.out.println(ca2d.vicini(0,0));
 //            System.out.println(ca2d);
-            Maze maze = Maze.mazeFromXML("");
-            System.out.println(maze);
+//            Maze maze = Maze.mazeFromXML("");
+//            System.out.println(maze);
+            MazeCellType type = MazeCellType.LIMITE;
+            System.out.println(type.isMuro());
         }catch (Exception e){
 
         }

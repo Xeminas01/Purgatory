@@ -103,6 +103,8 @@ public class HomeController implements Initializable {
         l.add("Tesoro");l.add("Trap");l.add("InvW");l.add("Tele");
         cellTypeChoice.setItems(FXCollections.observableArrayList(l));
         cellTypeChoice.getSelectionModel().selectFirst();
+        xSpinner.setEditable(true);
+        ySpinner.setEditable(true);
         mazePanel.setStyle("-fx-background-color: transparent");
     }
 
@@ -208,8 +210,9 @@ public class HomeController implements Initializable {
 
     public void onPorte(ActionEvent event) {
         renderMaze(maze);
-        porta = maze.bestDoor(percSpinner.getValue(),
-                maze.pathSets().get(setChoice.getSelectionModel().getSelectedIndex()));
+        porta = maze.bestWallOrDoorOrIW(percSpinner.getValue(),
+                maze.pathSets().get(setChoice.getSelectionModel().getSelectedIndex()),
+                MazeSquare.PORTA);
         if(porta != null){
             cellsMatrix[porta.x][porta.y].setStyle("-fx-background-color: pink");
             addPortaBtn.setVisible(true);
@@ -219,63 +222,6 @@ public class HomeController implements Initializable {
             Alert alert = new Alert(Alert.AlertType.ERROR,"Set troppo piccolo deve avere almeno 30 celle");
             alert.show();
         }
-//        int nPaths = maze.getAllPaths().size();
-//        var pathSets = maze.pathSets();
-//        System.out.println(pathSets.size()+" "+pathSets);
-//        var oppWall2Set = maze.oppWall2Set(pathSets.get(0));
-//        if(oppWall2Set == null) return;
-//        System.out.println(oppWall2Set.size()+" "+oppWall2Set);
-////        for(MazeSquare ms : oppWall2Set){
-////            cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: pink");
-////        }
-//        var door = maze.bestDoor(percSpinner.getValue(),pathSets.get(0));
-//        if(door == null){
-//            System.out.println("no porte per questo set è troppo piccolo!");
-//            return;
-//        }
-//        maze.setTypeAt(door.x,door.y,MazeSquare.PORTA);
-//        pathSets = maze.pathSets();
-//        System.out.println(door);
-//        int c = 0;
-//        for(Set<MazeSquare> set : pathSets){
-//            System.out.println("|set|="+set.size()+" set:"+set);
-//            for(MazeSquare ms : set){
-//                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+((c%2==0) ? "green" : "skyblue"));
-//            }
-//            c++;
-//        }
-//        cellsMatrix[door.x][door.y].setStyle("-fx-background-color: purple");
-//        oppWall2Set = maze.oppWall2Set(pathSets.get(0));
-//        if(oppWall2Set == null) return;
-//        System.out.println(oppWall2Set.size()+" "+oppWall2Set);
-////        for(MazeSquare ms : oppWall2Set){
-////            cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: pink");
-////        }
-//        var sdoor = maze.bestDoor(percSpinner.getValue(),pathSets.get(0));
-//        if(sdoor == null){
-//            System.out.println("no porte per questo set è troppo piccolo!");
-//            return;
-//        }
-//        cellsMatrix[sdoor.x][sdoor.y].setStyle("-fx-background-color: magenta");
-//        maze.setTypeAt(sdoor.x,sdoor.y,MazeSquare.PORTA);
-//        pathSets = maze.pathSets();
-//        String[] colors = {"green","skyblue","coral"},
-//                colors2 = {"lime","cyan","firebrick"};
-//        c = 0;
-//        for(Set<MazeSquare> set : pathSets){
-//            System.out.println("|set|="+set.size()+" set:"+set);
-//            String color = colors[c%colors.length],color2 = colors2[c%colors.length];
-//            System.out.println(color);
-//            for(MazeSquare ms : set){
-//                if(!ms.isStartEnd())
-//                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+color);
-//                else
-//                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: "+color2);
-//            }
-//            c++;
-//        }
-//        System.out.println("porte create: "+maze.getAllDoors());
-//        System.out.println(nPaths+" "+maze.getAllPaths().size());
     }
 
     public void onDistanze(ActionEvent event) {
@@ -377,12 +323,12 @@ public class HomeController implements Initializable {
         renderMaze(maze);
         var set = maze.pathSets().get(setChoice.getSelectionModel().getSelectedIndex());
         int n = iwSpinner.getValue();
-        var invWalls = maze.randomInvWalls(set,n);
+        var invWalls = maze.randomMuriOrPorteOrIW(set,n,MazeSquare.MURI_INVISIBILI);
         if(invWalls != null){
             iws.clear();
             iws.addAll(invWalls);
             for(MazeSquare ms : invWalls){
-                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: SlateGray");
+                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: MistyRose");
             }
             addInvWallsBtn.setVisible(true);
         }
@@ -509,14 +455,23 @@ public class HomeController implements Initializable {
             }
             case MazeSquare.PORTA,MazeSquare.MURI_INVISIBILI -> {
                 if(maze.isOppWall2(cell)) maze.setTypeAt(cell.x,cell.y,type);
-                else ;//alert
+                else{
+                    Alert alert = new Alert(Alert.AlertType.ERROR,
+                            "Invalid cell for Porta or Muro Invisibile",ButtonType.OK);
+                    alert.show();
+                }
             }
             case MazeSquare.INTERRUTTORE,MazeSquare.TESORO,MazeSquare.TRAPPOLA,MazeSquare.TELETRASPORTI -> {
                 if(maze.isWall3(cell)) maze.setTypeAt(cell.x,cell.y,type);
-                else ;//alert
+                else{
+                    Alert alert = new Alert(Alert.AlertType.ERROR,
+                            "Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto",ButtonType.OK);
+                    alert.show();
+                }
             }
         }
         renderMaze(maze);
+        resetSetChoice();
     }
 
     public void onGenMaze(ActionEvent event) {

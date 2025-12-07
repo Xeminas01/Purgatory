@@ -18,4 +18,5 @@ public class SquareDist implements Comparable<SquareDist>{
     public int compareTo(SquareDist o) {
         return Integer.compare(d,o.d);
     }
+
 }
