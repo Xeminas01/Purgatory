@@ -16,4 +16,10 @@ public class Limite extends MazeCell {
     @Override
     public MazeCell copy() { return new Limite(x,y); }
 
+    @Override
+    public MazeCell copyOf(int x, int y) {
+        return new Limite(x,y);
+    }
+
+
 }

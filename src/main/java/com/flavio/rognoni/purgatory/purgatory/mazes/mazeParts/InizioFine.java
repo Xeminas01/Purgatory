@@ -21,6 +21,11 @@ public class InizioFine extends MazeCell{
     @Override
     public MazeCell copy() { return new InizioFine(x,y,isStart); }
 
+    @Override
+    public MazeCell copyOf(int x, int y) {
+        return new InizioFine(x,y,isStart);
+    }
+
     public MazeCell invertInizioFine(){ return new InizioFine(x,y,!isStart); }
 
     @Override

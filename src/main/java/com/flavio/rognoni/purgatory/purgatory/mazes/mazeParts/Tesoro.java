@@ -41,6 +41,11 @@ public class Tesoro extends MazeCell {
     public MazeCell copy() { return new Tesoro(x,y,oggetto,taken); }
 
     @Override
+    public MazeCell copyOf(int x, int y) {
+        return new Tesoro(x,y,oggetto,taken);
+    }
+
+    @Override
     public String toString() {
         return super.toString()+"{"+((taken) ? "preso" : "non preso")+"}{"+oggetto+"}";
     }

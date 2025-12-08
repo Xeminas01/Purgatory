@@ -36,6 +36,11 @@ public class Trappola extends MazeCell {
     public MazeCell copy() { return new Trappola(x,y,danni,activated); }
 
     @Override
+    public MazeCell copyOf(int x, int y) {
+        return new Trappola(x,y,danni,activated);
+    }
+
+    @Override
     public String toString() {
         return super.toString()+"{"+((activated) ? "attivata" : "non attivata")+"}{"+danni+"}";
     }

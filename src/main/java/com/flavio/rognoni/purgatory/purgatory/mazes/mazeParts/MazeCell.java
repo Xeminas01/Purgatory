@@ -13,6 +13,7 @@ public abstract class MazeCell {
     public abstract boolean isWalkable();
     public abstract String color();
     public abstract MazeCell copy();
+    public abstract MazeCell copyOf(int x,int y);
 
     public int manhattanDistance(MazeCell cell){
         return Math.abs(x - cell.x) + Math.abs(y - cell.y);

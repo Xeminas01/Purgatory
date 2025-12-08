@@ -58,6 +58,7 @@ public class HomeController implements Initializable {
     public Button rmTeleBtn;
     public Button teleBtn;
     public ChoiceBox<String> setChoice1;
+    public Spinner<Integer> hSpinner,wSpinner,sxSpinner,sySpinner;
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
@@ -106,6 +107,10 @@ public class HomeController implements Initializable {
         cellTypeChoice.getSelectionModel().selectFirst();
         xSpinner.setEditable(true);
         ySpinner.setEditable(true);
+        renderSpinner(hSpinner, Maze2.MIN_DIM, Maze2.MAX_DIM);
+        renderSpinner(wSpinner, Maze2.MIN_DIM, Maze2.MAX_DIM);
+        renderSpinner(sxSpinner, 1, Maze2.MAX_DIM-2);
+        renderSpinner(sySpinner, 1, Maze2.MAX_DIM-2);
         mazePanel.setStyle("-fx-background-color: transparent");
     }
 
@@ -480,13 +485,25 @@ public class HomeController implements Initializable {
                 MazeGenType.values()[genMazeChoice
                         .getSelectionModel().getSelectedIndex()];
         switch(genType){
-            case DFS_GEN -> {
+            case DFS_GEN, FRACTAL_GEN -> {
                 try{
                     FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("dfs.fxml"));
                     Parent parent = fxmlLoader.load();
                     DFSController fractalController = fxmlLoader.getController();
-                    Maze2 maze = new Maze2(100,100);
-                    fractalController.setMaze(maze);
+                    int h = hSpinner.getValue(), w = wSpinner.getValue(),
+                            sx = sxSpinner.getValue(), sy = sySpinner.getValue();
+                    if(sx > h-2 || sy > w-2){
+                        GUIMethods.showError("Invalid start point >h-2 or >w-2");
+                        return;
+                    }
+                    if(genType == MazeGenType.FRACTAL_GEN){
+                        int rounds = (int) (Math.log(h)/Math.log(2));
+                        h = (int) (Math.pow(2,rounds) + 2);
+                        w = h;
+                        System.out.println(h+"x"+w+" "+rounds);
+                    }
+                    Maze2 maze = new Maze2(h,w);
+                    fractalController.setMaze(maze,sx,sy,genType);
                     Scene scene = new Scene(parent, 1280, 720);
                     Stage stage = (Stage) backgroundPane.getScene().getWindow();
                     stage.setTitle("DFS Mazes!");
@@ -497,21 +514,21 @@ public class HomeController implements Initializable {
                     e.printStackTrace();
                 }
             }
-            case FRACTAL_GEN -> {
-                try{
-                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("fractal.fxml"));
-                    Parent parent = fxmlLoader.load();
-                    FractalController fractalController = fxmlLoader.getController();
-                    fractalController.setMaze(6);
-                    Scene scene = new Scene(parent, 1280, 720);
-                    Stage stage = (Stage) backgroundPane.getScene().getWindow();
-                    stage.setTitle("Fractal Mazes!");
-                    stage.setScene(scene);
-                    stage.show();
-                }catch(Exception e){
-                    System.out.println(e.getMessage());
-                }
-            }
+//            case FRACTAL_GEN -> {
+//                try{
+//                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("fractal.fxml"));
+//                    Parent parent = fxmlLoader.load();
+//                    FractalController fractalController = fxmlLoader.getController();
+//                    fractalController.setMaze(6);
+//                    Scene scene = new Scene(parent, 1280, 720);
+//                    Stage stage = (Stage) backgroundPane.getScene().getWindow();
+//                    stage.setTitle("Fractal Mazes!");
+//                    stage.setScene(scene);
+//                    stage.show();
+//                }catch(Exception e){
+//                    System.out.println(e.getMessage());
+//                }
+//            }
             case CELLULAR_GEN -> {
                 try{
                     FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("cellularAutoma.fxml"));
@@ -590,6 +607,7 @@ public class HomeController implements Initializable {
     }
 
     private void renderSpinner(Spinner<Integer> spinner,int lower,int upper){
+        spinner.setEditable(true);
         spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(lower,upper,lower,1));
         spinner.getEditor().textProperty().addListener((e, old, newV) -> {
             try{

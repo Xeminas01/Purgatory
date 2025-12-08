@@ -55,12 +55,12 @@
          <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
       </valueFactory>
    </Spinner>
-   <Button fx:id="genMazeBtn" layoutX="69.0" layoutY="78.0" mnemonicParsing="false" onAction="#onGenMaze" style="-fx-background-color: yellow;" text="Generate Maze">
+   <Button fx:id="genMazeBtn" layoutX="69.0" layoutY="156.0" mnemonicParsing="false" onAction="#onGenMaze" style="-fx-background-color: yellow;" text="Generate Maze">
       <font>
          <Font name="Verdana" size="15.0" />
       </font>
    </Button>
-   <ComboBox fx:id="genMazeChoice" layoutX="60.0" layoutY="39.0" prefWidth="150.0" />
+   <ComboBox fx:id="genMazeChoice" layoutX="61.0" layoutY="116.0" prefWidth="150.0" />
    <Button fx:id="addInvWallsBtn" layoutX="1098.0" layoutY="447.0" mnemonicParsing="false" onAction="#onAddIWs" style="-fx-background-color: green;" text="Add IWs" textFill="WHITE">
       <font>
          <Font name="Verdana" size="15.0" />
@@ -83,7 +83,7 @@
       </font>
    </Button>
    <ComboBox fx:id="cellTypeChoice" layoutX="60.0" layoutY="341.0" prefWidth="150.0" />
-   <Button fx:id="putTypeInBtn" layoutX="69.0" layoutY="432.0" mnemonicParsing="false" onAction="#onPutTypeIn" style="-fx-background-color: yellow;" text="Metti * in (x,y)">
+   <Button fx:id="putTypeInBtn" layoutX="69.0" layoutY="432.0" mnemonicParsing="false" onAction="#onPutTypeIn" style="-fx-background-color: green;" text="Metti * in (x,y)" textFill="WHITE">
       <font>
          <Font name="Verdana" size="15.0" />
       </font>
@@ -115,4 +115,44 @@
       </font>
    </Button>
    <ChoiceBox fx:id="setChoice1" layoutX="1139.0" layoutY="542.0" prefHeight="25.0" prefWidth="96.0" />
+   <Spinner fx:id="hSpinner" layoutX="63.0" layoutY="40.0" prefHeight="25.0" prefWidth="60.0">
+      <valueFactory>
+         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+      </valueFactory>
+   </Spinner>
+   <Spinner fx:id="wSpinner" layoutX="176.0" layoutY="40.0" prefHeight="25.0" prefWidth="60.0">
+      <valueFactory>
+         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+      </valueFactory>
+   </Spinner>
+   <Spinner fx:id="sxSpinner" layoutX="63.0" layoutY="75.0" prefHeight="25.0" prefWidth="60.0">
+      <valueFactory>
+         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+      </valueFactory>
+   </Spinner>
+   <Spinner fx:id="sySpinner" layoutX="176.0" layoutY="75.0" prefHeight="25.0" prefWidth="60.0">
+      <valueFactory>
+         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+      </valueFactory>
+   </Spinner>
+   <Label layoutX="39.0" layoutY="40.0" text="h">
+      <font>
+         <Font name="Verdana" size="20.0" />
+      </font>
+   </Label>
+   <Label layoutX="153.0" layoutY="40.0" text="w">
+      <font>
+         <Font name="Verdana" size="20.0" />
+      </font>
+   </Label>
+   <Label layoutX="34.0" layoutY="75.0" text="sx">
+      <font>
+         <Font name="Verdana" size="20.0" />
+      </font>
+   </Label>
+   <Label layoutX="150.0" layoutY="75.0" text="sy">
+      <font>
+         <Font name="Verdana" size="20.0" />
+      </font>
+   </Label>
 </AnchorPane>

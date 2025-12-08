@@ -46,6 +46,13 @@ public class Porta extends MazeCell{
                 new Porta(x,y,open,interruttori);
     }
 
+    @Override
+    public MazeCell copyOf(int x, int y) {
+        return (type == PORTA_A_CHIAVI) ?
+                new Porta(x,y,open,nChiavi) :
+                new Porta(x,y,open,interruttori);
+    }
+
     public int doorType(){ return type; }
 
     public boolean isOpen() { return open; }

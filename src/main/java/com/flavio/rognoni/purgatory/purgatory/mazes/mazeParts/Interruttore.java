@@ -31,4 +31,9 @@ public class Interruttore extends MazeCell {
     @Override
     public MazeCell copy() { return new Interruttore(x,y,on); }
 
+    @Override
+    public MazeCell copyOf(int x, int y) {
+        return new Interruttore(x,y,on);
+    }
+
 }

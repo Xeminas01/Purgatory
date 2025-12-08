@@ -1,7 +1,9 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
+import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,7 +11,7 @@ import java.util.stream.Collectors;
 public class FractalTessellationGen {
 
     public final int rounds,dim;
-    private final MazeSquare[][] matrix;
+    private final MazeCell[][] matrix;
     private final Random rand;
     private boolean generato;
     private int gStep;
@@ -17,17 +19,17 @@ public class FractalTessellationGen {
     public FractalTessellationGen(int rounds) {
         this.rounds = rounds;
         this.dim = (int) (Math.pow(2,rounds) + 2);
-        this.matrix = new MazeSquare[dim][dim];
+        this.matrix = new MazeCell[dim][dim];
         for (int i = 0; i < dim; i++) {
             for (int j = 0; j < dim; j++) {
                 if(i == 0 || i == dim-1 || j == 0 || j == dim-1) {
-                    matrix[i][j] = new MazeSquare(i,j,MazeSquare.LIMIT);
+                    matrix[i][j] = new Limite(i,j);
                 }else{
-                    matrix[i][j] = new MazeSquare(i,j,MazeSquare.WALL);
+                    matrix[i][j] = new Muro(i,j);
                 }
             }
         }
-        matrix[1][1] = new MazeSquare(1,1,MazeSquare.PATH);
+        matrix[1][1] = new Percorso(1,1);
         rand = new Random();
         generato = false;
         gStep = 0;
@@ -64,16 +66,16 @@ public class FractalTessellationGen {
     }
 
     private void removeWallsOnCoord(int stepCol){
-        List<MazeSquare> wallsVU = new ArrayList<>(),
+        List<MazeCell> wallsVU = new ArrayList<>(),
                 wallsVD = new ArrayList<>(),
                 wallsHR = new ArrayList<>(),
                 wallsHL = new ArrayList<>();
         for(int i=1;i<=stepCol*2;i++){
-            if(matrix[i][stepCol].isWall()) {
+            if(matrix[i][stepCol].type().isMuro()) {
                 if(i<stepCol) wallsVU.add(matrix[i][stepCol]);
                 else if(i>stepCol) wallsVD.add(matrix[i][stepCol]);
             }
-            if(matrix[stepCol][i].isWall()) {
+            if(matrix[stepCol][i].type().isMuro()) {
                 if(i<stepCol) wallsHL.add(matrix[stepCol][i]);
                 else if(i>stepCol) wallsHR.add(matrix[stepCol][i]);
             }
@@ -82,7 +84,7 @@ public class FractalTessellationGen {
         wallsVD = removableWalls(wallsVD);
         wallsHR = removableWalls(wallsHR);
         wallsHL = removableWalls(wallsHL);
-        List<MazeSquare> rmWalls = new ArrayList<>();
+        List<MazeCell> rmWalls = new ArrayList<>();
         rmWalls.add(wallsVU.get(rand.nextInt(wallsVU.size())));
         rmWalls.add(wallsVD.get(rand.nextInt(wallsVD.size())));
         rmWalls.add(wallsHR.get(rand.nextInt(wallsHR.size())));
@@ -90,27 +92,28 @@ public class FractalTessellationGen {
         Collections.shuffle(rmWalls);
         for(int i=0;i<3;i++){
             var rmW = rmWalls.get(i);
-            matrix[rmW.x][rmW.y] = new MazeSquare(rmW.x,rmW.y,MazeSquare.PATH);
+            matrix[rmW.x][rmW.y] = new Percorso(rmW.x,rmW.y);
         }
     }
 
-    private List<MazeSquare> removableWalls(List<MazeSquare> walls){
+    private List<MazeCell> removableWalls(List<MazeCell> walls){
         return walls.stream().filter(this::isRemovable)
                 .collect(Collectors.toList());
     }
 
-    private boolean isRemovable(MazeSquare w){
-        List<MazeSquare> vicini = new ArrayList<>();
+    private boolean isRemovable(MazeCell w){
+        List<MazeCell> vicini = new ArrayList<>();
         vicini.add(matrix[w.x+1][w.y]);
         vicini.add(matrix[w.x-1][w.y]);
         vicini.add(matrix[w.x][w.y+1]);
         vicini.add(matrix[w.x][w.y-1]);
-        vicini = vicini.stream().filter(MazeSquare::isPath)
+        vicini = vicini.stream().filter(
+                cell -> cell.type().isPercorso())
                 .collect(Collectors.toList());
         return vicini.size() >= 2;
     }
 
-    public MazeSquare[][] getMatrix() {
+    public MazeCell[][] getMatrix() {
         return matrix;
     }
 
@@ -118,15 +121,18 @@ public class FractalTessellationGen {
         return generato;
     }
 
-    public Maze getMaze() {
-        Maze maze = new Maze(dim,dim);
-        for(int i=0;i<dim;i++)
-            for(int j=0;j<dim;j++)
-                maze.setTypeAt(i,j,matrix[i][j].type);
-        maze.setTypeAt(1,1,MazeSquare.START_END);
-        var further = maze.mostDistanceFrom(maze.getCellAt(1,1));
-        maze.setTypeAt(further.x,further.y,MazeSquare.START_END);
-        return maze;
+    public Maze2 getMaze() {
+        try{
+            Maze2 maze = new Maze2(dim,dim);
+            for(int i=0;i<dim;i++)
+                System.arraycopy(matrix[i], 0, maze.cells[i], 0, dim);
+            maze.cells[1][1] = new InizioFine(1,1,true);
+            var further = maze.furthestFromManhattan(maze.cellAt(1,1));
+            maze.cells[further.x][further.y] = new InizioFine(further.x,further.y,false);
+            return maze;
+        }catch (Exception e){
+            return null;
+        }
     }
 
     @Override

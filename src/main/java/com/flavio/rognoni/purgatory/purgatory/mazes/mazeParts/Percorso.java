@@ -16,4 +16,9 @@ public class Percorso extends MazeCell{
     @Override
     public MazeCell copy() { return new Percorso(x,y); }
 
+    @Override
+    public MazeCell copyOf(int x, int y) {
+        return new Percorso(x,y);
+    }
+
 }

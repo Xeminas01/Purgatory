@@ -24,6 +24,11 @@ public class Teletrasporto extends MazeCell {
     public MazeCell copy() { return new Teletrasporto(x,y,endPoint); }
 
     @Override
+    public MazeCell copyOf(int x, int y) {
+        return new Teletrasporto(x,y,null);
+    }
+
+    @Override
     public String toString() {
         return super.toString()+"{endPoint:"+endPoint.x+","+endPoint.y+"}";
     }

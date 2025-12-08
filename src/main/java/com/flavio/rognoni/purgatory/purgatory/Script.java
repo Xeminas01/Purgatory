@@ -22,12 +22,15 @@ public class Script {
 //            for(byte b = Byte.MIN_VALUE;b < Byte.MAX_VALUE;b++){
 //                System.out.println("1 XOR "+b+" "+(a ^ b));
 //            }
-            boolean[] ground = {false,true};
-            for(int i=0;i<ground.length;i++){
-                for(int j=0;j<ground.length;j++){
-                    boolean a = ground[i], b = ground[j];
-                    System.out.println("a="+a+"|b="+b+"|a IFF b="+iff(a,b));
-                }
+//            boolean[] ground = {false,true};
+//            for(int i=0;i<ground.length;i++){
+//                for(int j=0;j<ground.length;j++){
+//                    boolean a = ground[i], b = ground[j];
+//                    System.out.println("a="+a+"|b="+b+"|a IFF b="+iff(a,b));
+//                }
+//            }
+            for(int i=1;i<=1024;i++){
+                System.out.println((int) (Math.log(i)/Math.log(2)));
             }
         }catch (Exception e){
 
