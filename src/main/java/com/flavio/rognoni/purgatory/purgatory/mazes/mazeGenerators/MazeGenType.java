@@ -15,4 +15,12 @@ public enum MazeGenType {
 
     public String getNome() { return nome; }
 
+    public int millis(){
+        switch(this){
+            case DFS_GEN -> { return 10; }
+            case FRACTAL_GEN -> { return 1000; }
+            default -> { return 100; }
+        }
+    }
+
 }

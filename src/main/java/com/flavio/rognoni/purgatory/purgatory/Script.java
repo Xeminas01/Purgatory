@@ -30,7 +30,7 @@ public class Script {
 //                }
 //            }
             for(int i=1;i<=1024;i++){
-                System.out.println((int) (Math.log(i)/Math.log(2)));
+                System.out.println(i+" "+(Math.log(i)/Math.log(4)));
             }
         }catch (Exception e){
 

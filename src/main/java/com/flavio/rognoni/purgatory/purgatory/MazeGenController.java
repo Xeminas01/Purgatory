@@ -14,6 +14,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -26,7 +27,7 @@ import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class DFSController implements Initializable {
+public class MazeGenController implements Initializable {
 
     public AnchorPane backgroundPane;
     public Button startBtn;
@@ -35,6 +36,10 @@ public class DFSController implements Initializable {
     public Button saveBtn;
     public Button stopBtn;
     public Button backBtn;
+    public Button resetBtn;
+    public Label timeTxt;
+    public Button randomStateBtn;
+    public ChoiceBox<Double> densityChoice;
     private int cellDim;
     private VBox rowsBox;
     private HBox[] columnBoxes;
@@ -44,14 +49,20 @@ public class DFSController implements Initializable {
     private FractalTessellationGen fractalTessellationGen;
     private MazeGenType genType;
     private Timer timer;
+    private boolean gen;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         stopBtn.setVisible(false);
         saveBtn.setVisible(false);
+        resetBtn.setVisible(false);
+        randomStateBtn.setVisible(false);
+        densityChoice.setVisible(false);
+        gen = false;
     }
 
     public void setMaze(Maze2 maze, int sx, int sy, MazeGenType genType) {
+
         this.maze = maze;
         this.genType = genType;
         this.cellDim = 720/Math.max(maze.h,maze.w);
@@ -81,18 +92,25 @@ public class DFSController implements Initializable {
             columnBoxes[i] = hBox;
         }
 
-        if(genType == MazeGenType.DFS_GEN){
-            dfsGen = new DFSGen(this.maze,sx,sy);
-            dfsGen.start();
-            renderMaze(dfsGen.getMaze(),null);
-        }else{
-            int rounds = maze.h - 2;
-            rounds = (int) (Math.log(rounds)/Math.log(2));
-            System.out.println(rounds);
-            fractalTessellationGen = new FractalTessellationGen(rounds);
-            renderMaze(fractalTessellationGen.getMaze(),null);
-        }
+        setGenerator(sx,sy);
 
+    }
+
+    private void setGenerator(int sx, int sy){
+        switch(genType){
+            case DFS_GEN -> {
+                dfsGen = new DFSGen(this.maze,sx,sy);
+                dfsGen.start();
+                renderMaze(dfsGen.getMaze(),null);
+            }
+            case FRACTAL_GEN -> {
+                int rounds = maze.h - 2;
+                rounds = (int) (Math.log(rounds)/Math.log(2));
+                System.out.println(rounds);
+                fractalTessellationGen = new FractalTessellationGen(rounds,sx,sy);
+                renderMaze(fractalTessellationGen.getMaze(),null);
+            }
+        }
     }
 
     private void renderMaze(Maze2 maze, MazeCell cur){
@@ -118,63 +136,72 @@ public class DFSController implements Initializable {
             @Override
             public void run() {
                 Platform.runLater(() -> {
-                    if(genType == MazeGenType.DFS_GEN){
-                        var p = dfsGen.step();
-                        renderMaze(dfsGen.getMaze(),p);
-                        if(p == null || dfsGen.isGen()) {
-                            timer.cancel();
-                            if(maze.isAllReachable()){
-                                System.out.println("all reachable");
-                                saveBtn.setVisible(true);
-                                startBtn.setVisible(false);
-                                stopBtn.setVisible(false);
-                                stepBtn.setVisible(false);
-                                backBtn.setVisible(true);
-                            }
-                        }
-                    }else if(genType == MazeGenType.FRACTAL_GEN){
-                        fractalTessellationGen.step();
-                        renderMaze(fractalTessellationGen.getMaze(),null);
-                        if(fractalTessellationGen.isGenerato()) {
-                            timer.cancel();
-                            maze = fractalTessellationGen.getMaze();
-                            if(maze.isAllReachable()){
-                                System.out.println("all reachable");
-                                saveBtn.setVisible(true);
-                                startBtn.setVisible(false);
-                                stopBtn.setVisible(false);
-                                stepBtn.setVisible(false);
-                                backBtn.setVisible(true);
-                            }
-                        }
-                    }
+                    timeTask();
                 });
             }
-        },0,10);
+        },0,genType.millis());
+    }
+
+    private void timeTask(){
+        if(gen) return;
+        int t = 0;
+        switch(genType){
+            case DFS_GEN -> {
+                renderMaze(dfsGen.getMaze(),dfsGen.step());
+                t = dfsGen.getT();
+                gen = dfsGen.isGen();
+                if(gen) {
+                    timer.cancel();
+                    setIsGenerated();
+                }
+            }
+            case FRACTAL_GEN -> {
+                fractalTessellationGen.step();
+                t = fractalTessellationGen.getT();
+                maze = fractalTessellationGen.getMaze();
+                renderMaze(maze,null);
+                gen = fractalTessellationGen.isGenerato();
+                if(gen) {
+                    timer.cancel();
+                    setIsGenerated();
+                }
+            }
+        }
+        timeTxt.setText("t="+t);
     }
 
     public void onStep(ActionEvent event) {
-        if(genType == MazeGenType.DFS_GEN){
-            var c = dfsGen.step();
-            renderMaze(dfsGen.getMaze(),c);
-            if(dfsGen.isGen() && maze.isAllReachable()){
-                saveBtn.setVisible(true);
-                startBtn.setVisible(false);
-                stopBtn.setVisible(false);
-                stepBtn.setVisible(false);
-                backBtn.setVisible(true);
+        if(gen) return;
+        int t = 0;
+        switch(genType){
+            case DFS_GEN -> {
+                renderMaze(dfsGen.getMaze(),dfsGen.step());
+                t = dfsGen.getT();
+                gen = dfsGen.isGen();
+                if(gen)
+                    setIsGenerated();
             }
-        }else if(genType == MazeGenType.FRACTAL_GEN){
-            fractalTessellationGen.step();
-            renderMaze(fractalTessellationGen.getMaze(),null);
-            if(fractalTessellationGen.isGenerato() && maze.isAllReachable()){
-                System.out.println("all reachable");
-                saveBtn.setVisible(true);
-                startBtn.setVisible(false);
-                stopBtn.setVisible(false);
-                stepBtn.setVisible(false);
-                backBtn.setVisible(true);
+            case FRACTAL_GEN -> {
+                fractalTessellationGen.step();
+                t = fractalTessellationGen.getT();
+                maze = fractalTessellationGen.getMaze();
+                renderMaze(maze,null);
+                gen = fractalTessellationGen.isGenerato();
+                if(gen)
+                    setIsGenerated();
             }
+        }
+        timeTxt.setText("t="+t);
+    }
+
+    private void setIsGenerated(){
+        if(maze.isAllReachable()){
+            System.out.println("all reachable");
+            saveBtn.setVisible(true);
+            startBtn.setVisible(false);
+            stopBtn.setVisible(false);
+            stepBtn.setVisible(false);
+            backBtn.setVisible(true);
         }
     }
 
@@ -208,4 +235,9 @@ public class DFSController implements Initializable {
         }
     }
 
+    public void onReset(ActionEvent event) {
+    }
+
+    public void onRandom(ActionEvent event) {
+    }
 }

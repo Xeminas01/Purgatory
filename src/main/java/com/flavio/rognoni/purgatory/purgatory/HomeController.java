@@ -487,20 +487,20 @@ public class HomeController implements Initializable {
         switch(genType){
             case DFS_GEN, FRACTAL_GEN -> {
                 try{
-                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("dfs.fxml"));
+                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("mazeGen.fxml"));
                     Parent parent = fxmlLoader.load();
-                    DFSController fractalController = fxmlLoader.getController();
+                    MazeGenController fractalController = fxmlLoader.getController();
                     int h = hSpinner.getValue(), w = wSpinner.getValue(),
                             sx = sxSpinner.getValue(), sy = sySpinner.getValue();
-                    if(sx > h-2 || sy > w-2){
-                        GUIMethods.showError("Invalid start point >h-2 or >w-2");
-                        return;
-                    }
                     if(genType == MazeGenType.FRACTAL_GEN){
                         int rounds = (int) (Math.log(h)/Math.log(2));
                         h = (int) (Math.pow(2,rounds) + 2);
                         w = h;
                         System.out.println(h+"x"+w+" "+rounds);
+                    }
+                    if(sx > h-2 || sy > w-2){
+                        GUIMethods.showError("Invalid start point >h-2 or >w-2");
+                        return;
                     }
                     Maze2 maze = new Maze2(h,w);
                     fractalController.setMaze(maze,sx,sy,genType);

@@ -18,6 +18,7 @@ public class DFSGen {
     private final Random rand;
     private final MazeCell initCell;
     private boolean isGen;
+    private int t;
 
     public DFSGen(Maze2 maze, int x, int y) {
         this.maze = maze;
@@ -30,6 +31,7 @@ public class DFSGen {
         else
             this.initCell = maze.defaultInit();
         this.isGen = false;
+        this.t = 0;
     }
 
     public DFSGen(Maze2 maze) {
@@ -53,6 +55,7 @@ public class DFSGen {
                 visti.add(next);
                 stack.add(next);
             }
+            t++;
         }
         MazeCell mostDist = maze.furthestFromManhattan(initCell);
         maze.cells[mostDist.x][mostDist.y] = new InizioFine(mostDist.x,mostDist.y,false);
@@ -89,6 +92,7 @@ public class DFSGen {
             visti.add(next);
             stack.add(next);
         }
+        t++;
         return curr;
     }
 
@@ -123,4 +127,5 @@ public class DFSGen {
         return isGen;
     }
 
+    public int getT() { return t; }
 }
