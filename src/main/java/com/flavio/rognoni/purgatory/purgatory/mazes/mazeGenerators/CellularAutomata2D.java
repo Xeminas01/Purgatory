@@ -1,7 +1,11 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
 
-import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
+import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
 import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.InizioFine;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCellType;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Muro;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Percorso;
 
 import java.util.*;
 
@@ -231,53 +235,47 @@ public class CellularAutomata2D {
         this.initState = initState;
     }
 
-    public Maze getMaze(){
-//        for(int i=0;i<h;i++)
-//            for(int j=0;j<w;j++)
-//                if(i == 0 || i == h-1 || j == 0 || j == w-1)
-//                    cells[i][j].setState(1);
-        List<AutomataCell> cQueue = new ArrayList<>();
-        var f0 = getFirst0();
-        if(f0 == null) return null;
-        cQueue.add(f0);
-        Set<AutomataCell> pathCells = new HashSet<>();
-        while(!cQueue.isEmpty()){
-            AutomataCell cur = cQueue.remove(0);
-            if(!pathCells.contains(cur)){
-                pathCells.add(cur);
-                var viciniM = viciniInMaze(cur);
-                var succPaths = viciniM.stream().filter(vM -> vM.state == 0 && !pathCells.contains(vM)).toList();
-                if(succPaths.isEmpty()){
-                    for(AutomataCell vM : viciniM){
-                        var possibiliPath = new ArrayList<>(viciniInMaze(vM).stream()
-                                .filter(vvM -> vvM.state == 0 && !pathCells.contains(vvM)).toList());
-                        possibiliPath.remove(cur);
-                        if(!possibiliPath.isEmpty()){
-                            vM.setState(0);
-                            cQueue.add(vM);
-                            break;
-                        }
-                    }
-                }else{
-                    for(AutomataCell vM : succPaths)
-                        if(!pathCells.contains(vM))
-                            cQueue.add(vM);
+    public Maze2 getMazeRender(){
+        try{
+            Maze2 maze = new Maze2(h+2,w+2);
+            for(int i=0;i<h;i++) {
+                for(int j=0;j<w;j++){
+                    if(cells[i][j].state == 0) maze.cells[i+1][j+1] = new Percorso(i+1,j+1);
+                    else maze.cells[i+1][j+1] = new Muro(i+1,j+1);
                 }
             }
+            return maze;
+        }catch (Exception e){
+            return null;
         }
-        Maze maze = new Maze(h+2,w+2);
-        for(int i=0;i<h;i++) {
-            for(int j=0;j<w;j++){
-                maze.setTypeAt(i+1,j+1,(cells[i][j].state == 0) ?
-                        MazeSquare.PATH : MazeSquare.WALL);
+    }
+
+    public Maze2 getMaze(int x,int y){
+        try{
+            Maze2 maze = getMazeRender();
+            var v = maze.viciniFilter(maze.cells[x][y], MazeCellType.PERCORSO);
+            if(!v.isEmpty()){
+                x = v.get(0).x;
+                y = v.get(0).y;
+            }else{
+                var gf0 = getFirst0();
+                if(gf0 != null){
+                    x = gf0.x+1;
+                    y = gf0.y+1;
+                }else{
+                    x = 1;
+                    y = 1;
+                }
             }
+            maze.cells[x][y] = new InizioFine(x,y,true);
+            var mD = maze.furthestFromManhattan(maze.cells[x][y]);
+            maze.cells[mD.x][mD.y] = new InizioFine(mD.x,mD.y,false);
+            if(!maze.isAllReachable())
+                maze.fixMaze();
+            return maze;
+        }catch (Exception e){
+            return null;
         }
-        maze.setTypeAt(f0.x+1,f0.y+1,MazeSquare.START_END);
-        var mD = maze.mostDistanceFrom(maze.getCellAt(f0.x+1,f0.y+1));
-        maze.setTypeAt(mD.x,mD.y,MazeSquare.START_END);
-        if(!maze.isAllReachable())
-            maze.fixMaze();
-        return maze;
     }
 
     private AutomataCell getFirst0(){
@@ -425,6 +423,23 @@ public class CellularAutomata2D {
             return 0;
         }
 
+    }
+
+    public static CellularAutomata2D mazectric(int h,int w){
+        try{
+            return new CellularAutomata2D(h,w,
+                    CellularAutomata2D.MOORE_TYPE,1, Set.of(0,1),
+                    "0,1,3,1;1,1,5-n,0;1,1,0,0",
+                    //Maze: "0,1,3,1;1,1,6-n,0;1,1,0,0" Mazectric: "0,1,3,1;1,1,5-n,0;1,1,0,0" Game of life: "1,1,0-1,0;1,1,4-n,0;0,1,3,1"
+                    new HashMap<>(){{
+                        put(1,CellularAutomata2D.randomState(h,w,0.5));
+                        //aliante "50,50;50,49;50,51;49,51;48,50" barca "50,50;49,49;49,51;48,50;48,49"
+                    }},
+                    0
+            );
+        }catch(Exception e){
+            return null;
+        }
     }
 
 }

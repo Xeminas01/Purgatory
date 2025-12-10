@@ -54,6 +54,15 @@ public class Maze2 {
         return l;
     }
 
+    public List<MazeCell> getAllNotOfTypes(MazeCellType ...types){
+        var l = new ArrayList<MazeCell>();
+        for(MazeCell[] i : cells)
+            for(MazeCell p : i)
+                if(MazeCellType.isNotOneOfTheTypes(p.type(),types))
+                    l.add(p);
+        return l;
+    }
+
     public List<MazeCell> getAllWalkable(boolean walkable){
         var l = new ArrayList<MazeCell>();
         for(MazeCell[] i : cells)
@@ -75,6 +84,12 @@ public class Maze2 {
     public List<MazeCell> viciniFilter(MazeCell cell,MazeCellType ...types){
         return new ArrayList<>(vicini(cell).stream()
                 .filter(p -> MazeCellType.isOneOfTheTypes(p.type(),types))
+                .toList());
+    }
+
+    public List<MazeCell> viciniNotFilter(MazeCell cell,MazeCellType ...types){
+        return new ArrayList<>(vicini(cell).stream()
+                .filter(p -> MazeCellType.isNotOneOfTheTypes(p.type(),types))
                 .toList());
     }
 
@@ -121,19 +136,21 @@ public class Maze2 {
     }
 
     public void fixMaze(){ //funziona che sistema il labirinto in fase di creazione con l'automa cellulare
-        var walls = getAllOfTypes(MazeCellType.MURO);
         int best = unreachablePaths();
-        while(!walls.isEmpty()){
-            var wall = walls.remove(0);
-            if(viciniWalkable(wall,true).size() >= 2){
-                cells[wall.x][wall.y] = new Percorso(wall.x,wall.y);
-                int delta = unreachablePaths();
-                if(delta < best){
-                    System.out.println("best: "+best +" delta: "+delta);
-                    best = delta;
-                    if(best == 0) break;
-                }else
-                    cells[wall.x][wall.y] = new Muro(wall.x,wall.y);
+        while(best != 0){
+            var walls = getAllOfTypes(MazeCellType.MURO);
+            while(!walls.isEmpty()){
+                var wall = walls.remove(0);
+                if(viciniWalkable(wall,true).size() >= 2){
+                    cells[wall.x][wall.y] = new Percorso(wall.x,wall.y);
+                    int delta = unreachablePaths();
+                    if(delta < best){
+                        System.out.println("best: "+best +" delta: "+delta);
+                        best = delta;
+                        if(best == 0) break;
+                    }else
+                        cells[wall.x][wall.y] = new Muro(wall.x,wall.y);
+                }
             }
         }
     }

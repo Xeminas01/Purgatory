@@ -2,9 +2,7 @@ package com.flavio.rognoni.purgatory.purgatory;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.DFSGen;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.FractalTessellationGen;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.MazeGenType;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.*;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCell;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -36,10 +34,7 @@ public class MazeGenController implements Initializable {
     public Button saveBtn;
     public Button stopBtn;
     public Button backBtn;
-    public Button resetBtn;
     public Label timeTxt;
-    public Button randomStateBtn;
-    public ChoiceBox<Double> densityChoice;
     private int cellDim;
     private VBox rowsBox;
     private HBox[] columnBoxes;
@@ -47,6 +42,9 @@ public class MazeGenController implements Initializable {
     private Maze2 maze;
     private DFSGen dfsGen;
     private FractalTessellationGen fractalTessellationGen;
+    private CellularGen cellularGen;
+    private IRKGen irkGen;
+    private IRPGen irpGen;
     private MazeGenType genType;
     private Timer timer;
     private boolean gen;
@@ -55,9 +53,6 @@ public class MazeGenController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         stopBtn.setVisible(false);
         saveBtn.setVisible(false);
-        resetBtn.setVisible(false);
-        randomStateBtn.setVisible(false);
-        densityChoice.setVisible(false);
         gen = false;
     }
 
@@ -109,6 +104,18 @@ public class MazeGenController implements Initializable {
                 System.out.println(rounds);
                 fractalTessellationGen = new FractalTessellationGen(rounds,sx,sy);
                 renderMaze(fractalTessellationGen.getMaze(),null);
+            }
+            case CELLULAR_GEN -> {
+                cellularGen = new CellularGen(this.maze,sx,sy);
+                renderMaze(this.maze,null);
+            }
+            case I_R_KRUSKAL_GEN -> {
+                irkGen = new IRKGen(this.maze,sx,sy);
+                renderMaze(this.maze,null);
+            }
+            case I_R_PRIM_GEM -> {
+                irpGen = new IRPGen(this.maze,sx,sy);
+                renderMaze(this.maze,null);
             }
         }
     }
@@ -166,6 +173,39 @@ public class MazeGenController implements Initializable {
                     setIsGenerated();
                 }
             }
+            case CELLULAR_GEN -> {
+                cellularGen.step();
+                t = cellularGen.getT();
+                maze = cellularGen.getMaze();
+                renderMaze(maze,null);
+                gen = cellularGen.isGen();
+                if(gen){
+                    timer.cancel();
+                    setIsGenerated();
+                }
+            }
+            case I_R_KRUSKAL_GEN -> {
+                irkGen.step();
+                t = irkGen.getT();
+                maze = irkGen.getMaze();
+                renderMaze(maze,null);
+                gen = irkGen.isGen();
+                if(gen){
+                    timer.cancel();
+                    setIsGenerated();
+                }
+            }
+            case I_R_PRIM_GEM -> {
+                irpGen.step();
+                t = irpGen.getT();
+                maze = irpGen.getMaze();
+                renderMaze(maze,null);
+                gen = irpGen.isGen();
+                if(gen){
+                    timer.cancel();
+                    setIsGenerated();
+                }
+            }
         }
         timeTxt.setText("t="+t);
     }
@@ -187,6 +227,33 @@ public class MazeGenController implements Initializable {
                 maze = fractalTessellationGen.getMaze();
                 renderMaze(maze,null);
                 gen = fractalTessellationGen.isGenerato();
+                if(gen)
+                    setIsGenerated();
+            }
+            case CELLULAR_GEN -> {
+                cellularGen.step();
+                t = cellularGen.getT();
+                maze = cellularGen.getMaze();
+                renderMaze(maze,null);
+                gen = cellularGen.isGen();
+                if(gen)
+                    setIsGenerated();
+            }
+            case I_R_KRUSKAL_GEN -> {
+                irkGen.step();
+                t = irkGen.getT();
+                maze = irkGen.getMaze();
+                renderMaze(maze,null);
+                gen = irkGen.isGen();
+                if(gen)
+                    setIsGenerated();
+            }
+            case I_R_PRIM_GEM -> {
+                irpGen.step();
+                t = irpGen.getT();
+                maze = irpGen.getMaze();
+                renderMaze(maze,null);
+                gen = irpGen.isGen();
                 if(gen)
                     setIsGenerated();
             }
@@ -235,9 +302,4 @@ public class MazeGenController implements Initializable {
         }
     }
 
-    public void onReset(ActionEvent event) {
-    }
-
-    public void onRandom(ActionEvent event) {
-    }
 }

@@ -32,4 +32,8 @@ public enum MazeCellType {
         return Arrays.asList(types).contains(type);
     }
 
+    public static boolean isNotOneOfTheTypes(MazeCellType type, MazeCellType ...types){
+        return !Arrays.asList(types).contains(type);
+    }
+
 }

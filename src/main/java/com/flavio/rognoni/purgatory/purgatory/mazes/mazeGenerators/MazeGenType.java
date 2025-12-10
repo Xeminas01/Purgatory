@@ -17,7 +17,7 @@ public enum MazeGenType {
 
     public int millis(){
         switch(this){
-            case DFS_GEN -> { return 10; }
+            case DFS_GEN,I_R_KRUSKAL_GEN,I_R_PRIM_GEM -> { return 10; }
             case FRACTAL_GEN -> { return 1000; }
             default -> { return 100; }
         }

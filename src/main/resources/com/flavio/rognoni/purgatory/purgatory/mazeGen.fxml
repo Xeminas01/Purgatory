@@ -31,21 +31,9 @@
          <Font name="Verdana" size="15.0" />
       </font>
    </Button>
-    <Button fx:id="resetBtn" layoutX="1168.0" layoutY="173.0" mnemonicParsing="false" onAction="#onReset" style="-fx-background-color: green;" text="Reset" textFill="WHITE">
-        <font>
-            <Font name="Verdana" size="15.0" />
-        </font>
-    </Button>
-    <Label fx:id="timeTxt" alignment="CENTER" layoutX="1168.0" layoutY="226.0" prefHeight="25.0" prefWidth="63.0" text="t=0">
+    <Label fx:id="timeTxt" alignment="CENTER" layoutX="1133.0" layoutY="176.0" prefHeight="25.0" prefWidth="134.0" text="t=0">
         <font>
             <Font name="Verdana" size="20.0" />
         </font>
     </Label>
-    <Button fx:id="randomStateBtn" layoutX="1158.0" layoutY="263.0" mnemonicParsing="false" onAction="#onRandom" style="-fx-background-color: green;" text="Random" textFill="WHITE">
-        <font>
-            <Font name="Verdana" size="15.0" />
-        </font>
-    </Button>
-    <ChoiceBox fx:id="densityChoice" layoutX="1158.0" layoutY="307.0" prefHeight="25.0" prefWidth="82.0" />
-    <ChoiceBox layoutX="1159.0" layoutY="348.0" prefHeight="25.0" prefWidth="82.0" />
 </AnchorPane>

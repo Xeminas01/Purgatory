@@ -485,7 +485,7 @@ public class HomeController implements Initializable {
                 MazeGenType.values()[genMazeChoice
                         .getSelectionModel().getSelectedIndex()];
         switch(genType){
-            case DFS_GEN, FRACTAL_GEN -> {
+            case DFS_GEN, FRACTAL_GEN, CELLULAR_GEN, I_R_KRUSKAL_GEN, I_R_PRIM_GEM -> {
                 try{
                     FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("mazeGen.fxml"));
                     Parent parent = fxmlLoader.load();
@@ -529,64 +529,64 @@ public class HomeController implements Initializable {
 //                    System.out.println(e.getMessage());
 //                }
 //            }
-            case CELLULAR_GEN -> {
-                try{
-                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("cellularAutoma.fxml"));
-                    Parent parent = fxmlLoader.load();
-                    CellularAutomaController fractalController = fxmlLoader.getController();
-                    int dim = 40;
-                    CellularAutomata2D ca2d = new CellularAutomata2D(dim,dim,
-                            CellularAutomata2D.MOORE_TYPE,1, Set.of(0,1),
-                            "0,1,3,1;1,1,5-n,0;1,1,0,0",
-                            //Maze: "0,1,3,1;1,1,6-n,0;1,1,0,0" Mazectric: "0,1,3,1;1,1,5-n,0;1,1,0,0" Game of life: "1,1,0-1,0;1,1,4-n,0;0,1,3,1"
-                            new HashMap<>(){{
-                                put(1,CellularAutomata2D.randomState(dim,dim,0.5));
-                                //aliante "50,50;50,49;50,51;49,51;48,50" barca "50,50;49,49;49,51;48,50;48,49"
-                            }},
-                            0
-                    );
-                    fractalController.setCellularAutomata2D(ca2d);
-                    Scene scene = new Scene(parent, 1280, 720);
-                    Stage stage = (Stage) backgroundPane.getScene().getWindow();
-                    stage.setTitle("The Cellular Automa Maze!");
-                    stage.setScene(scene);
-                    stage.show();
-                }catch(Exception e){
-                    System.out.println(e.getMessage());
-                }
-            }
-            case I_R_KRUSKAL_GEN -> {
-                try{
-                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("irk.fxml"));
-                    Parent parent = fxmlLoader.load();
-                    IRKController fractalController = fxmlLoader.getController();
-                    Maze maze = new Maze(50,50);
-                    fractalController.setMaze(maze);
-                    Scene scene = new Scene(parent, 1280, 720);
-                    Stage stage = (Stage) backgroundPane.getScene().getWindow();
-                    stage.setTitle("IRK Mazes!");
-                    stage.setScene(scene);
-                    stage.show();
-                }catch(Exception e){
-                    System.out.println(e.getMessage());
-                }
-            }
-            case I_R_PRIM_GEM -> {
-                try{
-                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("irp.fxml"));
-                    Parent parent = fxmlLoader.load();
-                    IRPController fractalController = fxmlLoader.getController();
-                    Maze maze = new Maze(50,50);
-                    fractalController.setMaze(maze);
-                    Scene scene = new Scene(parent, 1280, 720);
-                    Stage stage = (Stage) backgroundPane.getScene().getWindow();
-                    stage.setTitle("IRP Mazes!");
-                    stage.setScene(scene);
-                    stage.show();
-                }catch(Exception e){
-                    System.out.println(e.getMessage());
-                }
-            }
+//            case CELLULAR_GEN -> {
+//                try{
+//                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("cellularAutoma.fxml"));
+//                    Parent parent = fxmlLoader.load();
+//                    CellularAutomaController fractalController = fxmlLoader.getController();
+//                    int dim = 40;
+//                    CellularAutomata2D ca2d = new CellularAutomata2D(dim,dim,
+//                            CellularAutomata2D.MOORE_TYPE,1, Set.of(0,1),
+//                            "0,1,3,1;1,1,5-n,0;1,1,0,0",
+//                            //Maze: "0,1,3,1;1,1,6-n,0;1,1,0,0" Mazectric: "0,1,3,1;1,1,5-n,0;1,1,0,0" Game of life: "1,1,0-1,0;1,1,4-n,0;0,1,3,1"
+//                            new HashMap<>(){{
+//                                put(1,CellularAutomata2D.randomState(dim,dim,0.5));
+//                                //aliante "50,50;50,49;50,51;49,51;48,50" barca "50,50;49,49;49,51;48,50;48,49"
+//                            }},
+//                            0
+//                    );
+//                    fractalController.setCellularAutomata2D(ca2d);
+//                    Scene scene = new Scene(parent, 1280, 720);
+//                    Stage stage = (Stage) backgroundPane.getScene().getWindow();
+//                    stage.setTitle("The Cellular Automa Maze!");
+//                    stage.setScene(scene);
+//                    stage.show();
+//                }catch(Exception e){
+//                    System.out.println(e.getMessage());
+//                }
+//            }
+//            case I_R_KRUSKAL_GEN -> {
+//                try{
+//                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("irk.fxml"));
+//                    Parent parent = fxmlLoader.load();
+//                    IRKController fractalController = fxmlLoader.getController();
+//                    Maze maze = new Maze(50,50);
+//                    fractalController.setMaze(maze);
+//                    Scene scene = new Scene(parent, 1280, 720);
+//                    Stage stage = (Stage) backgroundPane.getScene().getWindow();
+//                    stage.setTitle("IRK Mazes!");
+//                    stage.setScene(scene);
+//                    stage.show();
+//                }catch(Exception e){
+//                    System.out.println(e.getMessage());
+//                }
+//            }
+//            case I_R_PRIM_GEM -> {
+//                try{
+//                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("irp.fxml"));
+//                    Parent parent = fxmlLoader.load();
+//                    IRPController fractalController = fxmlLoader.getController();
+//                    Maze maze = new Maze(50,50);
+//                    fractalController.setMaze(maze);
+//                    Scene scene = new Scene(parent, 1280, 720);
+//                    Stage stage = (Stage) backgroundPane.getScene().getWindow();
+//                    stage.setTitle("IRP Mazes!");
+//                    stage.setScene(scene);
+//                    stage.show();
+//                }catch(Exception e){
+//                    System.out.println(e.getMessage());
+//                }
+//            }
             case WILSON_GEN -> {
                 try{
                     FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("wilson.fxml"));
