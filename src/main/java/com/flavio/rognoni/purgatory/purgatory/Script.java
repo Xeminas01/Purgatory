@@ -1,5 +1,7 @@
 package com.flavio.rognoni.purgatory.purgatory;
 
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Porta;
+
 public class Script {
 
     public static void main(String[] args){
@@ -29,9 +31,10 @@ public class Script {
 //                    System.out.println("a="+a+"|b="+b+"|a IFF b="+iff(a,b));
 //                }
 //            }
-            for(int i=1;i<=1024;i++){
-                System.out.println(i+" "+(Math.log(i)/Math.log(4)));
-            }
+//            for(int i=1;i<=1024;i++){
+//                System.out.println(i+" "+(Math.log(i)/Math.log(4)));
+//            }
+            System.out.println(Porta.class.getSimpleName());
         }catch (Exception e){
 
         }

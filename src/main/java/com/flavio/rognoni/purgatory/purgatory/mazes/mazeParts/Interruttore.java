@@ -1,5 +1,8 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 public class Interruttore extends MazeCell {
 
     private boolean on;
@@ -34,6 +37,25 @@ public class Interruttore extends MazeCell {
     @Override
     public MazeCell copyOf(int x, int y) {
         return new Interruttore(x,y,on);
+    }
+
+    @Override
+    public Element toXMLElement(Document doc) {
+        Element el = doc.createElement(this.getClass().getSimpleName());
+        el.setAttribute("x",""+x);
+        el.setAttribute("y",""+y);
+        el.setAttribute("on",""+on);
+        return el;
+    }
+
+    public static MazeCell fromXMLElement(Element e) {
+        if(e.getTagName().equals(Interruttore.class.getSimpleName())){
+            int x = Integer.parseInt(e.getAttribute("x")),
+                    y = Integer.parseInt(e.getAttribute("y"));
+            boolean on = Boolean.parseBoolean(e.getAttribute("on"));
+            return new Interruttore(x,y,on);
+        }
+        else return null;
     }
 
 }

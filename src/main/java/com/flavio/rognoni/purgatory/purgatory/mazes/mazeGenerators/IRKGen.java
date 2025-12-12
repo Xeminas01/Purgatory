@@ -1,8 +1,6 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
-import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
-import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.InizioFine;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCell;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCellType;
@@ -12,7 +10,7 @@ import java.util.*;
 
 public class IRKGen { //Iterative randomized Kruskal's algorithm (with sets)
 
-    private final Maze2 maze;
+    private final Maze maze;
     private final Random rand;
     private final List<Set<MazeCell>> sets;
     private final List<MazeCell> walls;
@@ -20,7 +18,7 @@ public class IRKGen { //Iterative randomized Kruskal's algorithm (with sets)
     private boolean gen;
     private int t;
 
-    public IRKGen(Maze2 maze,int x,int y){
+    public IRKGen(Maze maze, int x, int y){
         this.maze = maze;
         this.sets = new ArrayList<>();
         this.maze.setGridForIRK();
@@ -76,7 +74,7 @@ public class IRKGen { //Iterative randomized Kruskal's algorithm (with sets)
         }
     }
 
-    public Maze2 getMaze() { return maze; }
+    public Maze getMaze() { return maze; }
 
     public boolean isGen() { return gen; }
 

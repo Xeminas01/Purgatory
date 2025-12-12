@@ -1,8 +1,6 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
-import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
-import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.InizioFine;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCell;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCellType;
@@ -12,7 +10,7 @@ import java.util.*;
 
 public class IRPGen { //Iterative randomized Prim's algorithm (without stack, without sets)
 
-    private final Maze2 maze;
+    private final Maze maze;
     private final Random rand;
     private final List<MazeCell> walls;
     private final Set<MazeCell> visited;
@@ -20,7 +18,7 @@ public class IRPGen { //Iterative randomized Prim's algorithm (without stack, wi
     private boolean gen;
     private int t;
 
-    public IRPGen(Maze2 maze,int x,int y){
+    public IRPGen(Maze maze, int x, int y){
         this.maze = maze;
         this.rand = new Random();
         this.gen = false;
@@ -67,7 +65,7 @@ public class IRPGen { //Iterative randomized Prim's algorithm (without stack, wi
         }
     }
 
-    public Maze2 getMaze() {
+    public Maze getMaze() {
         return maze;
     }
 

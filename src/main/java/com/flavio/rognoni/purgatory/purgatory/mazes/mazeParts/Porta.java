@@ -1,5 +1,9 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class Porta extends MazeCell{
@@ -94,6 +98,50 @@ public class Porta extends MazeCell{
     public String toString() {
         String s = (type == PORTA_A_CHIAVI) ? "chiavi:"+nChiavi : "interruttori:"+interruttori;
         return super.toString()+"{"+((open) ? "aperta" : " chiusa")+"}{"+s+"}";
+    }
+
+    @Override
+    public Element toXMLElement(Document doc) {
+        Element el = doc.createElement(this.getClass().getSimpleName());
+        el.setAttribute("x",""+x);
+        el.setAttribute("y",""+y);
+        el.setAttribute("open",""+open);
+        el.setAttribute("type",""+type);
+        el.setAttribute("chiavi",""+nChiavi);
+        el.setAttribute("interruttori",getInterruttoriStr());
+        return el;
+    }
+
+    private String getInterruttoriStr(){
+        String s = "";
+        for(Interruttore i : interruttori)
+            s += i.x+","+i.y+";";
+        if(!s.isEmpty())
+            s = s.substring(0,s.length()-1);
+        return s;
+    }
+
+    public static MazeCell fromXMLElement(Element e) {
+        if(e.getTagName().equals(Porta.class.getSimpleName())){
+            int x = Integer.parseInt(e.getAttribute("x")),
+                    y = Integer.parseInt(e.getAttribute("y")),
+                    type = Integer.parseInt(e.getAttribute("type"));
+            boolean open = Boolean.parseBoolean(e.getAttribute("open"));
+            if(type == PORTA_A_CHIAVI){
+                int chiavi = Integer.parseInt(e.getAttribute("chiavi"));
+                return new Porta(x,y,open,chiavi);
+            }else{
+                List<Interruttore> interruttori = new ArrayList<>();
+                for(String i : e.getAttribute("interruttori").split(";")){
+                    String[] coords = i.split(",");
+                    interruttori.add(new Interruttore(
+                            Integer.parseInt(coords[0]),Integer.parseInt(coords[1]),false));
+                }
+                return new Porta(x,y,open,interruttori);
+            }
+        }
+        else
+            return null;
     }
 
 }

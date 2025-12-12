@@ -1,7 +1,6 @@
 package com.flavio.rognoni.purgatory.purgatory;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
-import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.*;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCell;
 import javafx.application.Platform;
@@ -12,7 +11,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -39,12 +37,13 @@ public class MazeGenController implements Initializable {
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
-    private Maze2 maze;
+    private Maze maze;
     private DFSGen dfsGen;
     private FractalTessellationGen fractalTessellationGen;
     private CellularGen cellularGen;
     private IRKGen irkGen;
     private IRPGen irpGen;
+    private WilsonGen wilsonGen;
     private MazeGenType genType;
     private Timer timer;
     private boolean gen;
@@ -56,7 +55,7 @@ public class MazeGenController implements Initializable {
         gen = false;
     }
 
-    public void setMaze(Maze2 maze, int sx, int sy, MazeGenType genType) {
+    public void setMaze(Maze maze, int sx, int sy, MazeGenType genType) {
 
         this.maze = maze;
         this.genType = genType;
@@ -117,10 +116,14 @@ public class MazeGenController implements Initializable {
                 irpGen = new IRPGen(this.maze,sx,sy);
                 renderMaze(this.maze,null);
             }
+            case WILSON_GEN -> {
+                wilsonGen = new WilsonGen(this.maze,sx,sy);
+                renderMaze(this.maze,null);
+            }
         }
     }
 
-    private void renderMaze(Maze2 maze, MazeCell cur){
+    private void renderMaze(Maze maze, MazeCell cur){
         if(maze == null) return;
         for (int i = 0; i < maze.h; i++) {
             for (int j = 0; j < maze.w; j++) {
@@ -206,6 +209,17 @@ public class MazeGenController implements Initializable {
                     setIsGenerated();
                 }
             }
+            case WILSON_GEN -> {
+                wilsonGen.step();
+                t = wilsonGen.getT();
+                maze = wilsonGen.getMaze();
+                renderMaze(maze,null);
+                gen = wilsonGen.isGen();
+                if(gen){
+                    timer.cancel();
+                    setIsGenerated();
+                }
+            }
         }
         timeTxt.setText("t="+t);
     }
@@ -257,6 +271,15 @@ public class MazeGenController implements Initializable {
                 if(gen)
                     setIsGenerated();
             }
+            case WILSON_GEN -> {
+                wilsonGen.step();
+                t = wilsonGen.getT();
+                maze = wilsonGen.getMaze();
+                renderMaze(maze,null);
+                gen = wilsonGen.isGen();
+                if(gen)
+                    setIsGenerated();
+            }
         }
         timeTxt.setText("t="+t);
     }
@@ -273,7 +296,7 @@ public class MazeGenController implements Initializable {
     }
 
     public void onSave(ActionEvent event) {
-        //Maze.mazeToXML(maze);
+        Maze.mazeToXML(maze);
     }
 
     public void onStop(ActionEvent event) {
@@ -289,7 +312,8 @@ public class MazeGenController implements Initializable {
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("home.fxml"));
             Parent parent = fxmlLoader.load();
             HomeController homeController = fxmlLoader.getController();
-            Maze maze = Maze.mazeFromXML("");
+            Maze maze = Maze.mazeFromXML("src/main/resources/com/flavio/rognoni/purgatory/"+
+                    "purgatory/labirinti/10x10 DFS 12-12-2025 13_02_21_maze.xml");
             if(maze != null)
                 homeController.setMaze(maze);
             Scene scene = new Scene(parent, 1280, 720);

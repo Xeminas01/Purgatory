@@ -1,7 +1,6 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
 
-import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
-import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
+import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.InizioFine;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCellType;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Muro;
@@ -235,9 +234,9 @@ public class CellularAutomata2D {
         this.initState = initState;
     }
 
-    public Maze2 getMazeRender(){
+    public Maze getMazeRender(){
         try{
-            Maze2 maze = new Maze2(h+2,w+2);
+            Maze maze = new Maze(h+2,w+2,MazeGenType.CELLULAR_GEN);
             for(int i=0;i<h;i++) {
                 for(int j=0;j<w;j++){
                     if(cells[i][j].state == 0) maze.cells[i+1][j+1] = new Percorso(i+1,j+1);
@@ -250,9 +249,9 @@ public class CellularAutomata2D {
         }
     }
 
-    public Maze2 getMaze(int x,int y){
+    public Maze getMaze(int x, int y){
         try{
-            Maze2 maze = getMazeRender();
+            Maze maze = getMazeRender();
             var v = maze.viciniFilter(maze.cells[x][y], MazeCellType.PERCORSO);
             if(!v.isEmpty()){
                 x = v.get(0).x;

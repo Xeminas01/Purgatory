@@ -1,8 +1,6 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
-import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
-import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.InizioFine;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCell;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Percorso;
@@ -12,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class DFSGen {
 
-    private final Maze2 maze;
+    private final Maze maze;
     private final Set<MazeCell> visti;
     private final List<MazeCell> stack;
     private final Random rand;
@@ -20,7 +18,7 @@ public class DFSGen {
     private boolean isGen;
     private int t;
 
-    public DFSGen(Maze2 maze, int x, int y) {
+    public DFSGen(Maze maze, int x, int y) {
         this.maze = maze;
         this.visti = new HashSet<>();
         this.stack = new ArrayList<>();
@@ -34,7 +32,7 @@ public class DFSGen {
         this.t = 0;
     }
 
-    public DFSGen(Maze2 maze) {
+    public DFSGen(Maze maze) {
         this(maze,maze.h-2,1);
     }
 
@@ -119,7 +117,7 @@ public class DFSGen {
         return vp;
     }
 
-    public Maze2 getMaze() {
+    public Maze getMaze() {
         return maze;
     }
 

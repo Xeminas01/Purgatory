@@ -1,5 +1,8 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 public abstract class MazeCell {
 
     public final int x,y;
@@ -14,6 +17,7 @@ public abstract class MazeCell {
     public abstract String color();
     public abstract MazeCell copy();
     public abstract MazeCell copyOf(int x,int y);
+    public abstract Element toXMLElement(Document doc);
 
     public int manhattanDistance(MazeCell cell){
         return Math.abs(x - cell.x) + Math.abs(y - cell.y);
@@ -38,5 +42,25 @@ public abstract class MazeCell {
 
     @Override
     public int hashCode() { return 0; }
+
+    public static MazeCell fromXMLElement(Element e){
+        try{
+            switch(e.getTagName()){
+                case "Limite" -> { return Limite.fromXMLElement(e); }
+                case "Muro" -> { return Muro.fromXMLElement(e); }
+                case "Percorso" -> { return Percorso.fromXMLElement(e); }
+                case "InizioFine" -> { return InizioFine.fromXMLElement(e); }
+                case "Porta" -> { return Porta.fromXMLElement(e); }
+                case "Interruttore" -> { return Interruttore.fromXMLElement(e); }
+                case "Tesoro" -> { return Tesoro.fromXMLElement(e); }
+                case "Trappola" -> { return Trappola.fromXMLElement(e); }
+                case "MuroInvisibile" -> { return MuroInvisibile.fromXMLElement(e); }
+                case "Teletrasporto" -> { return Teletrasporto.fromXMLElement(e); }
+                default -> { return null; }
+            }
+        }catch (Exception ex){
+            return null;
+        }
+    }
 
 }

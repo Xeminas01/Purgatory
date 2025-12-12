@@ -1,8 +1,6 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
-import com.flavio.rognoni.purgatory.purgatory.mazes.Maze2;
-import com.flavio.rognoni.purgatory.purgatory.mazes.MazeSquare;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.*;
 
 import java.util.*;
@@ -131,9 +129,9 @@ public class FractalTessellationGen {
         return generato;
     }
 
-    public Maze2 getMaze() {
+    public Maze getMaze() {
         try{
-            Maze2 maze = new Maze2(dim,dim);
+            Maze maze = new Maze(dim,dim,MazeGenType.FRACTAL_GEN);
             for(int i=0;i<dim;i++)
                 System.arraycopy(matrix[i], 0, maze.cells[i], 0, dim);
             if(generato){

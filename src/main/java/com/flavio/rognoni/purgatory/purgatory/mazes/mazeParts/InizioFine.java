@@ -1,5 +1,8 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 public class InizioFine extends MazeCell{
 
     public final boolean isStart;
@@ -31,6 +34,25 @@ public class InizioFine extends MazeCell{
     @Override
     public String toString() {
         return super.toString()+"{"+((isStart) ? "inizio" : "fine")+"}";
+    }
+
+    @Override
+    public Element toXMLElement(Document doc) {
+        Element el = doc.createElement(this.getClass().getSimpleName());
+        el.setAttribute("x",""+x);
+        el.setAttribute("y",""+y);
+        el.setAttribute("start",""+isStart);
+        return el;
+    }
+
+    public static MazeCell fromXMLElement(Element e) {
+        if(e.getTagName().equals(InizioFine.class.getSimpleName())){
+            int x = Integer.parseInt(e.getAttribute("x")),
+                    y = Integer.parseInt(e.getAttribute("y"));
+            boolean start = Boolean.parseBoolean(e.getAttribute("start"));
+            return new InizioFine(x,y,start);
+        }
+        else return null;
     }
 
 }

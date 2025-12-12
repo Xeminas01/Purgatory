@@ -1,6 +1,7 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes;
 
-
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.MazeGenType;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.*;
 import org.w3c.dom.*;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -11,378 +12,322 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Maze {
 
     public final int h,w;
-    public final MazeSquare[][] matrix;
+    public final MazeGenType genType;
+    public final MazeCell[][] cells;
+    public final List<Set<MazeCell>> walkSets;
+    private final Random rand = new Random();
 
-    public Maze(int h,int w){
+    public static final int MIN_DIM = 10, MAX_DIM = 1000;
+
+    public Maze(int h, int w, MazeGenType type) throws Exception{
+        if(h < MIN_DIM || h > MAX_DIM)
+            throw new Exception("Invalid rows too less or too many [10,1000]");
+        if(w < MIN_DIM || w > MAX_DIM)
+            throw new Exception("Invalid columns too less or too many [10,1000]");
         this.h = h;
         this.w = w;
-        this.matrix = new MazeSquare[h][w];
-        for(int i=0;i<h;i++){
-            for(int j=0;j<w;j++){
-                matrix[i][j]=new MazeSquare(i,j,
-                        (isLimit(i,j)) ? MazeSquare.LIMIT : MazeSquare.WALL);
-            }
-        }
-    }
-
-    public MazeSquare getCellAt(int x, int y){
-        if(x < 0 || x >= h) return null;
-        if(y < 0 || y >= w) return null;
-        return matrix[x][y];
-    }
-
-    public MazeSquare getDeafultInit(){
-        return matrix[h-2][1];
-    }
-
-    public void setTypeAt(int x,int y,int type){
-        matrix[x][y] = matrix[x][y].changeType(type);
-    }
-
-    public boolean isLimit(MazeSquare pos){
-        return isLimit(pos.x,pos.y);
+        this.genType = type;
+        this.cells = new MazeCell[h][w];
+        for(int i=0;i<h;i++)
+            for(int j=0;j<w;j++)
+                cells[i][j] = (isLimit(i,j)) ? new Limite(i,j) : new Muro(i,j);
+        this.walkSets = new ArrayList<>();
+        walkSets();
     }
 
     public boolean isLimit(int x,int y){
         return x == 0 || y == 0 || x == h-1 || y == w-1;
     }
 
-    public List<MazeSquare> vicini(MazeSquare pos){
-        List<MazeSquare> l = new ArrayList<>();
-        if(pos.x + 1 < h) l.add(matrix[pos.x+1][pos.y]);
-        if(pos.x - 1 >= 0) l.add(matrix[pos.x-1][pos.y]);
-        if(pos.y + 1 < w) l.add(matrix[pos.x][pos.y+1]);
-        if(pos.y - 1 >= 0) l.add(matrix[pos.x][pos.y-1]);
+    public boolean isLimit(MazeCell cell){
+        return isLimit(cell.x,cell.y) && cell.type().isLimite();
+    }
+
+    public MazeCell cellAt(int x,int y){
+        if(x < 0 || x >= h) return null;
+        if(y < 0 || y >= w) return null;
+        return cells[x][y];
+    }
+
+    public MazeCell defaultInit(){ return cells[h-2][1]; }
+
+    public List<MazeCell> getAllOfTypes(MazeCellType ...types){
+        var l = new ArrayList<MazeCell>();
+        for(MazeCell[] i : cells)
+            for(MazeCell p : i)
+                if(MazeCellType.isOneOfTheTypes(p.type(),types))
+                    l.add(p);
         return l;
     }
 
-    public List<MazeSquare> viciniNotLimit(MazeSquare pos){
-        return vicini(pos).stream()
-                .filter(p -> !p.isLimit())
-                .collect(Collectors.toList());
+    public List<MazeCell> getAllNotOfTypes(MazeCellType ...types){
+        var l = new ArrayList<MazeCell>();
+        for(MazeCell[] i : cells)
+            for(MazeCell p : i)
+                if(MazeCellType.isNotOneOfTheTypes(p.type(),types))
+                    l.add(p);
+        return l;
     }
 
-    public List<MazeSquare> viciniPath(MazeSquare pos){
-        return vicini(pos).stream()
-                .filter(p -> p.isPath() || p.isStartEnd())
-                .collect(Collectors.toList());
+    public List<MazeCell> getAllWalkable(boolean walkable){
+        var l = new ArrayList<MazeCell>();
+        for(MazeCell[] i : cells)
+            for(MazeCell p : i)
+                if(p.isWalkable() == walkable)
+                    l.add(p);
+        return l;
     }
 
-    public List<MazeSquare> viciniWall(MazeSquare pos){
-        return vicini(pos).stream()
-                .filter(MazeSquare::isWall)
-                .collect(Collectors.toList());
+    public List<MazeCell> vicini(MazeCell cell){
+        List<MazeCell> v = new ArrayList<>();
+        if(cell.x + 1 < h) v.add(cells[cell.x+1][cell.y]);
+        if(cell.x - 1 >= 0) v.add(cells[cell.x-1][cell.y]);
+        if(cell.y + 1 < w) v.add(cells[cell.x][cell.y+1]);
+        if(cell.y - 1 >= 0) v.add(cells[cell.x][cell.y-1]);
+        return v;
     }
 
-    public List<MazeSquare> viciniWallOrLimit(MazeSquare pos){
-        return vicini(pos).stream()
-                .filter(ms -> ms.isWall() || ms.isLimit())
-                .collect(Collectors.toList());
+    public List<MazeCell> viciniFilter(MazeCell cell,MazeCellType ...types){
+        return new ArrayList<>(vicini(cell).stream()
+                .filter(p -> MazeCellType.isOneOfTheTypes(p.type(),types))
+                .toList());
     }
 
-    public MazeSquare mostDistanceFrom(MazeSquare pos){
+    public List<MazeCell> viciniNotFilter(MazeCell cell,MazeCellType ...types){
+        return new ArrayList<>(vicini(cell).stream()
+                .filter(p -> MazeCellType.isNotOneOfTheTypes(p.type(),types))
+                .toList());
+    }
+
+    public List<MazeCell> viciniWalkable(MazeCell cell,boolean walkable){
+        return new ArrayList<>(vicini(cell).stream()
+                .filter(p -> p.isWalkable() == walkable)
+                .toList());
+    }
+
+    public MazeCell furthestFromManhattan(MazeCell cell){
         int d = Integer.MIN_VALUE;
-        MazeSquare mostDist = null;
-        for(MazeSquare[] i : matrix){
-            for(MazeSquare p : i){
-                if(p.isPath() && pos.manhattanDistance(p) >= d){
-                    d = pos.manhattanDistance(p);
-                    mostDist = p;
+        MazeCell furthest = null;
+        for(MazeCell[] i : cells) {
+            for(MazeCell p : i) {
+                if(p.isWalkable()){
+                    int dist = cell.manhattanDistance(p);
+                    if(dist >= d){
+                        d = dist;
+                        furthest = p;
+                    }
                 }
             }
         }
-        return mostDist;
+        return furthest;
     }
 
-    public int unreacheablePaths(){
-        List<MazeSquare> paths = new ArrayList<>(),
-                start = new ArrayList<>();
-        for(MazeSquare[] i : matrix) {
-            for(MazeSquare p : i) {
-                if(p.isPath())
-                    paths.add(p);
-                else if(p.isStartEnd())
-                    start.add(p);
-            }
-        }
-        if(paths.isEmpty() || start.isEmpty())
-            return -1;
-        paths.addAll(start);
-        Set<MazeSquare> visited = new HashSet<>();
-        List<MazeSquare> path = new ArrayList<>();
-        path.add(start.get(0));
-        while(!path.isEmpty()){
-            MazeSquare curr = path.remove(0);
-            if(!visited.contains(curr)){
-                visited.add(curr);
-                path.addAll(viciniPath(curr));
-            }
+    public int unreachablePaths(){
+        List<MazeCell> paths = getAllWalkable(true),
+                start = getAllOfTypes(MazeCellType.INIZIO_FINE);
+        if(paths.isEmpty() || start.isEmpty()) return -1;
+        Set<MazeCell> visited = new HashSet<>();
+        List<MazeCell> walk = new ArrayList<>();
+        walk.add(start.get(0));
+        while(!walk.isEmpty()){
+            MazeCell cur = walk.remove(0);
+            if(visited.add(cur))
+                walk.addAll(viciniWalkable(cur,true));
         }
         return Math.abs(visited.size()-paths.size());
     }
 
     public boolean isAllReachable(){
-        return unreacheablePaths() == 0;
+        return unreachablePaths() == 0;
     }
 
-    public void fixMaze(){ // funziona ma va ottimizzato (riconsiderare anche vecchi muri in ciclo while esterno?)
-        var walls = getAllWalls();
-        System.out.println(walls);
-        int best = unreacheablePaths();
-        while(!walls.isEmpty()){
-            var wall = walls.remove(0);
-            System.out.println(wall);
-            if(viciniPath(wall).size() >= 2) {
-                setTypeAt(wall.x,wall.y,MazeSquare.PATH);
-                //System.out.println(matrix[wall.x][wall.y]);
-                int delta = unreacheablePaths();
-                if(delta < best){
-                    System.out.println("best: "+best +" delta: "+delta);
-                    best = delta;
-                    if(best == 0) break;
-                }else{
-                    setTypeAt(wall.x,wall.y,MazeSquare.WALL);
+    public void fixMaze(){ //funziona che sistema il labirinto in fase di creazione con l'automa cellulare
+        int best = unreachablePaths();
+        while(best != 0){
+            var walls = getAllOfTypes(MazeCellType.MURO);
+            while(!walls.isEmpty()){
+                var wall = walls.remove(0);
+                if(viciniWalkable(wall,true).size() >= 2){
+                    cells[wall.x][wall.y] = new Percorso(wall.x,wall.y);
+                    int delta = unreachablePaths();
+                    if(delta < best){
+                        System.out.println("best: "+best +" delta: "+delta);
+                        best = delta;
+                        if(best == 0) break;
+                    }else
+                        cells[wall.x][wall.y] = new Muro(wall.x,wall.y);
                 }
             }
         }
-    }
-
-    public List<MazeSquare> getAllWalls(){
-        List<MazeSquare> walls = new ArrayList<>();
-        for(MazeSquare[] i : matrix)
-            for(MazeSquare j : i)
-                if(j.isWall()) walls.add(j);
-        return walls;
-    }
-
-    public List<MazeSquare> getAllPaths(){
-        List<MazeSquare> walls = new ArrayList<>();
-        for(MazeSquare[] i : matrix)
-            for(MazeSquare j : i)
-                if(j.isPath() || j.isStartEnd())
-                    walls.add(j);
-        return walls;
-    }
-
-    public List<MazeSquare> getAllStartEnd(){
-        List<MazeSquare> walls = new ArrayList<>();
-        for(MazeSquare[] i : matrix)
-            for(MazeSquare j : i)
-                if(j.isStartEnd())
-                    walls.add(j);
-        return walls;
-    }
-
-    public List<MazeSquare> getAllDoors(){
-        List<MazeSquare> walls = new ArrayList<>();
-        for(MazeSquare[] i : matrix)
-            for(MazeSquare j : i)
-                if(j.isDoor())
-                    walls.add(j);
-        return walls;
-    }
-
-    public List<MazeSquare> getAllObjectOf(int type){
-        List<MazeSquare> walls = new ArrayList<>();
-        for(MazeSquare[] i : matrix)
-            for(MazeSquare j : i)
-                if(j.type == type)
-                    walls.add(j);
-        return walls;
-    }
-
-    public List<MazeSquare> getAllObjects(){
-        List<MazeSquare> walls = new ArrayList<>();
-        for(MazeSquare[] i : matrix)
-            for(MazeSquare j : i)
-                if(j.isSwitch() || j.isTreasure() || j.isTrap())
-                    walls.add(j);
-        return walls;
-    }
-
-    public List<MazeSquare> getAllInvWalls(){
-        List<MazeSquare> walls = new ArrayList<>();
-        for(MazeSquare[] i : matrix)
-            for(MazeSquare j : i)
-                if(j.isInvWall())
-                    walls.add(j);
-        return walls;
-    }
-
-    public List<MazeSquare> getAllTeles(){
-        List<MazeSquare> walls = new ArrayList<>();
-        for(MazeSquare[] i : matrix)
-            for(MazeSquare j : i)
-                if(j.isTeleport())
-                    walls.add(j);
-        return walls;
     }
 
     public void setGridForIRK(){
-        for(int i=0;i<h;i++){
-            for(int j=0;j<w;j++){
-                if(!matrix[i][j].isLimit()){
-                    if(i%2 == 1 && j%2 == 1){
-                        setTypeAt(i,j,MazeSquare.PATH);
-                    }
-                }
-            }
-        }
+        for(int i=0;i<h;i++)
+            for(int j=0;j<w;j++)
+                if(!cells[i][j].type().isLimite())
+                    if(i%2 == 1 && j%2 == 1)
+                        cells[i][j] = new Percorso(i,j);
+
     }
 
-    //middleDistancePointToPoint
-
-    public MazeSquare middleDistanceStartEnd(double d, int qty){
-        if(!isAllReachable()) return null;
-        if(d < 0.0 || d > 1.0) d = 1.0;
-        if(qty < 0 || qty > 10) qty = 5;
-        List<MazeSquare> startEnd = getAllStartEnd();
-        List<SquareDist> dI = distancesFrom(startEnd.get(0)),
-                dF = distancesFrom(startEnd.get(1));
-        dI.removeIf(sd -> sd.square.isStartEnd());
-        dF.removeIf(sd -> sd.square.isStartEnd());
-//        System.out.println(dI+"\n"+dF);
-//        System.out.println(dI.size()+"\n"+dF.size());
-        Collections.reverse(dF);
-        List<SquareMiddleDist> dists = new ArrayList<>();
-        for(SquareDist sd1 : dI)
-            for(SquareDist sd2 : dF)
-                if(sd1.square.equals(sd2.square))
-                    dists.add(new SquareMiddleDist(sd1.square,sd1.d,sd2.d));
-        if(dists.isEmpty()) return null;
-        dists.sort(Comparator.comparingInt(SquareMiddleDist::diff));
-        dists = dists.subList(0,Math.min(qty,dists.size()));
-        Collections.reverse(dists);
-        System.out.println(dists);
-        if(d == 0.0) return dists.get(0).square;
-        int idx = (int) ((double) dists.size() * d);
-        return dists.get(idx-1).square;
+    public List<CellVector> middleDistancesInizioToFine(){
+        var se = getAllOfTypes(MazeCellType.INIZIO_FINE);
+        return middleDistancesPointToPoint(se.get(0),se.get(1));
     }
 
-    //isSetAllConnected
-
-    public List<SquareDist> distancesFrom(MazeSquare square){
-        return distancesFrom(square.x,square.y);
+    public List<CellVector> middleDistancesPointToPoint(MazeCell p1,MazeCell p2){
+        List<CellVector> d1 = distancesFrom(p1), d2 = distancesFrom(p2),
+                dists = new ArrayList<>();
+        for(CellVector sd1 : d1)
+            for(CellVector sd2 : d2)
+                if(sd1.cell.equals(sd2.cell))
+                    dists.add(new CellVector(sd1.cell,sd1.d[0],sd2.d[0]));
+        dists.sort(Comparator.comparingInt(CellVector::diffPointByPoint));
+        return dists;
     }
 
-    public List<SquareDist> distancesFrom(int x,int y){
-        List<SquareDist> d = new ArrayList<>(),
+    public List<CellVector> distancesFrom(MazeCell cell){
+        return distancesFrom(cell.x,cell.y);
+    }
+
+    public List<CellVector> distancesFrom(int x,int y){
+        List<CellVector> d = new ArrayList<>(),
                 queue = new ArrayList<>();
-        Set<MazeSquare> visited = new HashSet<>();
-        queue.add(new SquareDist(getCellAt(x,y),0));
+        Set<MazeCell> visited = new HashSet<>();
+        queue.add(new CellVector(cellAt(x,y),0));
         while(!queue.isEmpty()){
             var cur = queue.remove(0);
-            if(!visited.contains(cur.square)){
-                visited.add(cur.square);
+            if(visited.add(cur.cell)){
                 d.add(cur);
-                for(MazeSquare ms : viciniPath(cur.square)){
-                    if(!visited.contains(ms)){
-                        queue.add(new SquareDist(ms,cur.d+1));
-                    }
-                }
+                for(MazeCell cell : viciniWalkable(cur.cell,true))
+                    if(!visited.contains(cell))
+                        queue.add(new CellVector(cell,cur.d[0]+1));
             }
         }
-        Collections.sort(d);
+        d.sort(Comparator.comparingInt(CellVector::diffPointByPoint));
         return d;
     }
 
-    public List<Set<MazeSquare>> pathSets(){
-        return pathSets(getAllPaths());
+    //isSetAllConnected?
+
+    public List<Set<MazeCell>> walkSets(){
+        return walkSets(getAllWalkable(true));
     }
 
-    public List<Set<MazeSquare>> pathSets(List<MazeSquare> paths){
-        int d = paths.size();
-        Set<MazeSquare> visited = new HashSet<>();
-        List<Set<MazeSquare>> finalSets = new ArrayList<>();
-        while(visited.size() != d && !paths.isEmpty()){
-            Set<MazeSquare> set = new HashSet<>();
-            List<MazeSquare> queue = new ArrayList<>();
-            queue.add(paths.remove(0));
+    public List<Set<MazeCell>> walkSets(List<MazeCell> walk){
+        int d = walk.size();
+        Set<MazeCell> visited = new HashSet<>();
+        List<Set<MazeCell>> finalSets = new ArrayList<>();
+        while(visited.size() != d && !walk.isEmpty()){
+            Set<MazeCell> set = new HashSet<>();
+            List<MazeCell> queue = new ArrayList<>();
+            queue.add(walk.remove(0));
             while(!queue.isEmpty()){
-                MazeSquare cur = queue.remove(0);
-                if(!visited.contains(cur)){
-                    visited.add(cur);
+                MazeCell cur = queue.remove(0);
+                if(visited.add(cur)){
                     set.add(cur);
-                    for(MazeSquare vicino : viciniPath(cur)){
-                        if(!visited.contains(vicino))
-                            queue.add(vicino);
-                    }
+                    for(MazeCell cell : viciniWalkable(cur,true))
+                        if(!visited.contains(cell)) queue.add(cell);
                 }
             }
             if(!set.isEmpty())
                 finalSets.add(set);
         }
-        return finalSets;
+        walkSets.clear();
+        walkSets.addAll(finalSets);
+        return walkSets;
     }
 
-    public Set<MazeSquare> oppWall2Set(Set<MazeSquare> pathSet){
-        if(pathSet.size() < 30) return null;
-        var doorSet = pathSet.stream().filter(this::isOppWall2)
+    public Set<MazeCell> oppNoWalk2Set(Set<MazeCell> walkSet){
+        if(walkSet.size() < 30) return null;
+        var oppNoWalkSet = walkSet.stream().filter(this::isOppNoWalk2)
                 .collect(Collectors.toSet());
-        doorSet.removeIf(MazeSquare::isStartEnd);
-        System.out.println(doorSet);
-        return doorSet;
+        oppNoWalkSet.removeIf(e -> !e.type().isPercorso());
+        System.out.println(oppNoWalkSet);
+        return oppNoWalkSet;
     }
 
-    public MazeSquare bestWallOrDoorOrIW(double d, Set<MazeSquare> pathSet, int type){
-        if(pathSet == null) return null;
-        if(type != MazeSquare.WALL && type != MazeSquare.PORTA &&
-                type != MazeSquare.MURI_INVISIBILI) return null;
+    public boolean isOppNoWalk2(int x,int y){
+        return isOppNoWalk2(cellAt(x,y));
+    }
+
+    public boolean isOppNoWalk2(MazeCell cell){
+        var viciniWalk = viciniFilter(cell,MazeCellType.PERCORSO,MazeCellType.INIZIO_FINE);
+        var viciniNoWalk = viciniFilter(cell,MazeCellType.MURO,MazeCellType.LIMITE);
+        if(viciniWalk.size() == 2 && viciniNoWalk.size() == 2){
+            return viciniWalk.get(0).x == viciniWalk.get(1).x ||
+                    viciniWalk.get(0).y == viciniWalk.get(1).y;
+        }else return false;
+    }
+
+    public Set<MazeCell> noWalk3Set(Set<MazeCell> walkSet){
+        if(walkSet.size() < 30) return null;
+        var noWalk3Set = walkSet.stream().filter(this::isNoWalk3)
+                .collect(Collectors.toSet());
+        noWalk3Set.removeIf(e -> !e.type().isPercorso());
+        System.out.println(noWalk3Set);
+        return noWalk3Set;
+    }
+
+    public boolean isNoWalk3(int x,int y){
+        return isNoWalk3(cellAt(x,y));
+    }
+
+    public boolean isNoWalk3(MazeCell cell){
+        var viciniWalk = viciniFilter(cell,MazeCellType.PERCORSO,MazeCellType.INIZIO_FINE);
+        var viciniNoWalk = viciniFilter(cell,MazeCellType.MURO,MazeCellType.LIMITE);
+        return viciniWalk.size() == 1 && viciniNoWalk.size() == 3;
+    }
+
+    public MazeCell bestSeparatorOpp2(double d,Set<MazeCell> walkSet){
+        if(walkSet == null) return null;
         if(d < 0.0 || d > 1.0) d = 1.0;
-        var dSet = oppWall2Set(pathSet);
+        var dSet = oppNoWalk2Set(walkSet);
         if(dSet == null) return null;
-        List<SquareDist> sepa = new ArrayList<>();
+        List<CellVector> sepa = new ArrayList<>();
         int c = 0;
-        for(MazeSquare ms : dSet){
-            setTypeAt(ms.x,ms.y,type);
-            List<MazeSquare> lis = new ArrayList<>(pathSet);
-            lis.remove(ms);
-            var sets = pathSets(lis);
-            System.out.println(ms+" "+sets.size()+" "+c+"/"+dSet.size());
-            if(sets.size() == 2){
-                //System.out.println(sets);
-                sepa.add(new SquareDist(ms,Math.abs(sets.get(0).size()-sets.get(1).size())));
-            }
-            setTypeAt(ms.x,ms.y,MazeSquare.PATH);
+        for(MazeCell cell : dSet){
+            MazeCell tmp = cells[cell.x][cell.y];
+            cells[cell.x][cell.y] = new Muro(cell.x,cell.y);
+            List<MazeCell> lis = new ArrayList<>(walkSet);
+            lis.remove(cell);
+            var sets = walkSets(lis);
+            System.out.println(cell+" "+sets.size()+" "+c+"/"+dSet.size());
+            if(sets.size() == 2)
+                sepa.add(new CellVector(cell,
+                        Math.abs(sets.get(0).size()-sets.get(1).size())));
+            cells[cell.x][cell.y] = tmp;
             c++;
         }
-        if(!sepa.isEmpty()) {
-            Collections.sort(sepa);
+        if(!sepa.isEmpty()){
+            sepa.sort(Comparator.comparingInt(CellVector::diffPointByPoint));
             Collections.reverse(sepa);
-        }else return null;
+        }
         System.out.println(sepa);
-        if(d == 0.0) return sepa.get(0).square;
+        if(d == 0.0) return sepa.get(0).cell;
         int idx = (int) ((double) sepa.size() * d);
-        return sepa.get(idx-1).square;
+        return sepa.get(idx-1).cell;
     }
 
-    public Set<MazeSquare> wall3Set(Set<MazeSquare> pathSet){
-        if(pathSet.size() < 30) return null;
-        var ittSet = pathSet.stream().filter(this::isWall3)
-                .collect(Collectors.toSet());
-        ittSet.removeIf(MazeSquare::isStartEnd);
-        return ittSet;
-    }
-
-    public List<MazeSquare> bestITT(Set<MazeSquare> pathSet,int n,int type){ // sta per interruttori, tesori, trappole
-        if(type < MazeSquare.INTERRUTTORE || type > MazeSquare.TRAPPOLA)
+    public List<MazeCell> bestsNoWalks3(Set<MazeCell> walkSet,int n){
+        if(walkSet == null || walkSet.isEmpty()) return null;
+        if(n < 1 || n > 10) n = 1;
+        var noWalk3Set = noWalk3Set(walkSet);
+        if(noWalk3Set == null || noWalk3Set.isEmpty())
             return null;
-        var ittSet = wall3Set(pathSet);
-        if(ittSet == null || ittSet.isEmpty())
-            return null;
-        System.out.println("wall3Set: "+ittSet.size()+" "+ittSet);
-        n = Math.min(n,ittSet.size());
-        Random rand = new Random();
-        var ittL = new ArrayList<>(ittSet);
-        var objCells = new ArrayList<MazeSquare>();
+        System.out.println("wall3Set: "+noWalk3Set.size()+" "+noWalk3Set);
+        n = Math.min(n,noWalk3Set.size());
+        var nw3L = new ArrayList<>(noWalk3Set);
+        var objCells = new ArrayList<MazeCell>();
         for(int i=0;i<n;i++)
-            objCells.add(ittL.remove(rand.nextInt(ittL.size())));
+            objCells.add(nw3L.remove(rand.nextInt(nw3L.size())));
         var bestCells = new ArrayList<>(objCells);
         System.out.println(objCells+" "+bestCells);
         if(objCells.size() <= 1){
@@ -403,11 +348,11 @@ public class Maze {
                     if(patience <= 0)
                         break;
                     else{
-                        if(!ittL.isEmpty()){
+                        if(!nw3L.isEmpty()){
                             var randRm = objCells.remove(rand.nextInt(objCells.size()));
-                            var randAdd = ittL.remove(rand.nextInt(ittL.size()));
+                            var randAdd = nw3L.remove(rand.nextInt(nw3L.size()));
                             objCells.add(randAdd);
-                            ittL.add(randRm);
+                            nw3L.add(randRm);
                         }else{
                             break;
                         }
@@ -416,11 +361,11 @@ public class Maze {
                     diff = nDiff;
                     bestCells.clear();
                     bestCells.addAll(objCells);
-                    if(!ittL.isEmpty()){
+                    if(!nw3L.isEmpty()){
                         var randRm = objCells.remove(rand.nextInt(objCells.size()));
-                        var randAdd = ittL.remove(rand.nextInt(ittL.size()));
+                        var randAdd = nw3L.remove(rand.nextInt(nw3L.size()));
                         objCells.add(randAdd);
-                        ittL.add(randRm);
+                        nw3L.add(randRm);
                     }else{
                         break;
                     }
@@ -430,64 +375,40 @@ public class Maze {
         return bestCells;
     }
 
-    public List<MazeSquare> randomMuriOrPorteOrIW(Set<MazeSquare> pathSet, int n, int type){
-        var opp2Set = oppWall2Set(pathSet);
-        if(type != MazeSquare.WALL && type != MazeSquare.PORTA &&
-                type != MazeSquare.MURI_INVISIBILI) return null;
+    public List<MazeCell> randomOppNoWalk2(Set<MazeCell> walkSet, int n){
+        var opp2Set = oppNoWalk2Set(walkSet);
         if(opp2Set == null) return null;
         n = Math.min(n,opp2Set.size());
-        List<MazeSquare> l = new ArrayList<>(opp2Set),
+        List<MazeCell> l = new ArrayList<>(opp2Set),
                 ris = new ArrayList<>();
-        Random rand = new Random();
         for(int i=0;i<n;i++)
             ris.add(l.remove(rand.nextInt(l.size())));
         return ris;
     }
 
-    public MazeSquare[] randomTeleport(Set<MazeSquare> pathSetA,
-                                           Set<MazeSquare> pathSetB){
+    public Teletrasporto[] randomTeleports(Set<MazeCell> pathSetA,
+                                           Set<MazeCell> pathSetB){
         if(isIntersection(pathSetA,pathSetB)) return null;
-        MazeSquare[] teleports = new MazeSquare[2];
-        Random rand = new Random();
-        var wall3A = wall3Set(pathSetA);
-        var wall3B = wall3Set(pathSetB);
+        Teletrasporto[] teleports = new Teletrasporto[2];
+        var wall3A = noWalk3Set(pathSetA);
+        var wall3B = noWalk3Set(pathSetB);
         if(wall3A == null || wall3A.isEmpty() ||
-                wall3B == null || wall3B.isEmpty()) return null;
+                wall3B == null || wall3B.isEmpty())
+            return null;
         var wall3AL = new ArrayList<>(wall3A);
         var wall3BL = new ArrayList<>(wall3B);
-        teleports[0] = wall3AL.get(rand.nextInt(wall3AL.size()));
-        teleports[1] = wall3BL.get(rand.nextInt(wall3BL.size()));
+        var ta = wall3AL.get(rand.nextInt(wall3AL.size()));
+        var tb = wall3BL.get(rand.nextInt(wall3BL.size()));
+        teleports[0] = new Teletrasporto(ta.x,ta.y,teleports[1]); //questa rivedere
+        teleports[1] = new Teletrasporto(tb.x,tb.y,teleports[0]);
         return teleports;
     }
 
-    private boolean isIntersection(Set<MazeSquare> pathSetA,
-                                   Set<MazeSquare> pathSetB){
-        Set<MazeSquare> set = new HashSet<>(pathSetA);
+    private boolean isIntersection(Set<MazeCell> pathSetA,
+                                   Set<MazeCell> pathSetB){
+        Set<MazeCell> set = new HashSet<>(pathSetA);
         set.retainAll(pathSetB);
         return !set.isEmpty();
-    }
-
-    public boolean isOppWall2(int x,int y){
-        return isOppWall2(getCellAt(x,y));
-    }
-
-    public boolean isOppWall2(MazeSquare ms){
-        var viciniP = viciniPath(ms);
-        var viciniW = viciniWallOrLimit(ms);
-        if(viciniP.size() == 2 && viciniW.size() == 2){
-            return viciniP.get(0).x == viciniP.get(1).x ||
-                    viciniP.get(0).y == viciniP.get(1).y;
-        }else return false;
-    }
-
-    public boolean isWall3(int x,int y){
-        return isWall3(getCellAt(x,y));
-    }
-
-    public boolean isWall3(MazeSquare ms){
-        var viciniP = viciniPath(ms);
-        var viciniW = viciniWallOrLimit(ms);
-        return viciniP.size() == 1 && viciniW.size() == 3;
     }
 
     @Override
@@ -495,89 +416,109 @@ public class Maze {
         String s = "h:"+h+",w:"+w+"\n";
         for(int i=0;i<h;i++){
             for(int j=0;j<w;j++){
-                s += matrix[i][j] + " ";
+                s += cells[i][j] + " ";
             }
             s+="\n";
         }
         return s;
     }
 
-    public Maze copy() {
-        Maze m = new Maze(h,w);
+    public Maze copy() throws Exception{
+        Maze m = new Maze(h,w,genType);
         for(int i=0;i<h;i++){
             for(int j=0;j<w;j++){
-                var cell = matrix[i][j];
-                m.setTypeAt(i,j,cell.type);
+                var cell = cells[i][j];
+                m.cells[i][j] = cell.copy();
             }
         }
         return m;
     }
 
     public static void mazeToXML(Maze maze){
-        try{
+        try {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.newDocument();
             Element element = doc.createElement("Maze");
             doc.appendChild(element);
             Attr hAttr = doc.createAttribute("h"),
-                    wAttr = doc.createAttribute("w");
+                    wAttr = doc.createAttribute("w"),
+                    gtAttr = doc.createAttribute("genType");
             hAttr.setValue(maze.h+"");
             wAttr.setValue(maze.w+"");
+            gtAttr.setValue(maze.genType.ordinal()+"");
             element.setAttributeNode(hAttr);
             element.setAttributeNode(wAttr);
-            //element.appendChild(doc.createTextNode("Maze x"));
-            for(MazeSquare[] i : maze.matrix){
-                for(MazeSquare j : i){
-                    Element sqEl = doc.createElement("MazeSquare");
-                    sqEl.setAttribute("x",j.x+"");
-                    sqEl.setAttribute("y",j.y+"");
-                    sqEl.setAttribute("type",j.type+"");
-                    element.appendChild(sqEl);
-                }
-            }
+            element.setAttributeNode(gtAttr);
+            for(MazeCell[] i : maze.cells)
+                for(MazeCell j : i)
+                    element.appendChild(j.toXMLElement(doc));
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
             transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
             transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION,"no");
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             DOMSource source = new DOMSource(doc);
+            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH_mm_ss");
             StreamResult result = new StreamResult(new File(
                     "src/main/resources/com/flavio/rognoni/purgatory/purgatory/labirinti/"+
-                            new Date().getTime()+"_maze.xml"));
+                            maze.h+"x"+maze.w+" "+maze.genType.getNome()+" "+
+                            sdf.format(new Date())+"_maze.xml"));
             transformer.transform(source,result);
             StreamResult consoleResult = new StreamResult(System.out);
             transformer.transform(source,consoleResult);
-        }catch(Exception e){
+        }catch (Exception e){
             e.printStackTrace();
         }
     }
 
+
     public static Maze mazeFromXML(String path){
-        try {
-            File file = new File("src/main/resources/com/flavio/rognoni/purgatory/" +
-                    "purgatory/labirinti/1764713272395_maze.xml");
-            // 1764540968716_maze.xml 20x20
-            // 1764715136966_maze.xml 200x200
-            // 1764541189706_maze.xml 100x100
-            // 1764713272395_maze.xml 50x50
-            // 1764936824966_maze.xml 20 x 30
+        try{
+//            "src/main/resources/com/flavio/rognoni/purgatory/" +
+//                    "purgatory/labirinti/1764713272395_maze.xml"
+            File file = new File(path);
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(file);
             doc.getDocumentElement().normalize();
             Element root = (Element) doc.getElementsByTagName("Maze").item(0);
             int h = Integer.parseInt(root.getAttribute("h")),
-                    w = Integer.parseInt(root.getAttribute("w"));
-            Maze maze = new Maze(h,w);
+                    w = Integer.parseInt(root.getAttribute("w")),
+                    gType = Integer.parseInt(root.getAttribute("genType"));
+            Maze maze = new Maze(h,w,MazeGenType.values()[gType]);
             NodeList childs = root.getChildNodes();
             for(int i=0;i<childs.getLength();i++){
                 if (childs.item(i).getNodeType() == Node.ELEMENT_NODE) {
-                    Element ms = (Element) childs.item(i);
-                    int x = Integer.parseInt(ms.getAttribute("x")),
-                            y = Integer.parseInt(ms.getAttribute("y")),
-                            type = Integer.parseInt(ms.getAttribute("type"));
-                    maze.setTypeAt(x,y,type);
+                    Element el = (Element) childs.item(i);
+                    var cell = MazeCell.fromXMLElement(el);
+                    if(cell == null) return null;
+                    maze.cells[cell.x][cell.y] = cell;
+                }
+            }
+            for(MazeCell[] i : maze.cells){
+                for(MazeCell j : i){
+                    if(j.type().isPorta()){
+                        Porta p = (Porta) j;
+                        if(p.type == Porta.PORTA_A_INTERRUTTORI){
+                            List<Interruttore> interruttori = new ArrayList<>();
+                            for(Interruttore interr : p.interruttori){
+                                var intCell = maze.cells[interr.x][interr.y];
+                                if(intCell.type().isInterruttore())
+                                    interruttori.add((Interruttore) intCell);
+                            }
+                            maze.cells[p.x][p.y] = new Porta(p.x,p.y,p.isOpen(),interruttori);
+                        }
+                    }else if(j.type().isTeletrasporto()){
+                        Teletrasporto t = (Teletrasporto) j;
+                        if(t.endPoint != null){
+                            var cell = maze.cells[t.endPoint.x][t.endPoint.y];
+                            if(cell.type().isTeletrasporto()){
+                                Teletrasporto ep = (Teletrasporto) cell;
+                                maze.cells[t.x][t.y] = new Teletrasporto(t.x,t.y,ep);
+                            }
+                        }
+                    }
                 }
             }
             return maze;
