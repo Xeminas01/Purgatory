@@ -89,7 +89,7 @@ public class HomeController implements Initializable {
             EditMazeController editMazeController = fxmlLoader.getController();
             Maze maze = Maze.mazeFromXML(MAZE_PATH+mazeEditChoice.getValue());
             if(maze != null)
-                editMazeController.setMaze(maze);
+                editMazeController.setMaze(maze,mazeEditChoice.getValue());
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
             stage.setTitle("Edit Maze");

@@ -144,9 +144,7 @@ public class Maze {
         return Math.abs(visited.size()-paths.size());
     }
 
-    public boolean isAllReachable(){
-        return unreachablePaths() == 0;
-    }
+    public boolean isAllReachable(){ return unreachablePaths() == 0; }
 
     public void fixMaze(){ //funziona che sistema il labirinto in fase di creazione con l'automa cellulare
         int best = unreachablePaths();
@@ -215,8 +213,6 @@ public class Maze {
         return d;
     }
 
-    //isSetAllConnected?
-
     public List<Set<MazeCell>> walkSets(){
         return walkSets(getAllWalkable(true));
     }
@@ -250,7 +246,7 @@ public class Maze {
         var oppNoWalkSet = walkSet.stream().filter(this::isOppNoWalk2)
                 .collect(Collectors.toSet());
         oppNoWalkSet.removeIf(e -> !e.type().isPercorso());
-        System.out.println(oppNoWalkSet);
+        //System.out.println(oppNoWalkSet);
         return oppNoWalkSet;
     }
 
@@ -272,7 +268,7 @@ public class Maze {
         var noWalk3Set = walkSet.stream().filter(this::isNoWalk3)
                 .collect(Collectors.toSet());
         noWalk3Set.removeIf(e -> !e.type().isPercorso());
-        System.out.println(noWalk3Set);
+        //System.out.println(noWalk3Set);
         return noWalk3Set;
     }
 
@@ -310,7 +306,7 @@ public class Maze {
             sepa.sort(Comparator.comparingInt(CellVector::diffPointByPoint));
             Collections.reverse(sepa);
         }
-        System.out.println(sepa);
+        //System.out.println(sepa);
         if(d == 0.0) return sepa.get(0).cell;
         int idx = (int) ((double) sepa.size() * d);
         return sepa.get(idx-1).cell;
@@ -322,14 +318,14 @@ public class Maze {
         var noWalk3Set = noWalk3Set(walkSet);
         if(noWalk3Set == null || noWalk3Set.isEmpty())
             return null;
-        System.out.println("wall3Set: "+noWalk3Set.size()+" "+noWalk3Set);
+        //System.out.println("wall3Set: "+noWalk3Set.size()+" "+noWalk3Set);
         n = Math.min(n,noWalk3Set.size());
         var nw3L = new ArrayList<>(noWalk3Set);
         var objCells = new ArrayList<MazeCell>();
         for(int i=0;i<n;i++)
             objCells.add(nw3L.remove(rand.nextInt(nw3L.size())));
         var bestCells = new ArrayList<>(objCells);
-        System.out.println(objCells+" "+bestCells);
+        //System.out.println(objCells+" "+bestCells);
         if(objCells.size() <= 1){
             return objCells;
         }else{
@@ -342,7 +338,8 @@ public class Maze {
                 int nDiff = 0;
                 for(int i=0;i<l.size()-1;i++)
                     nDiff += Math.abs(l.get(i)-l.get(i+1));
-                System.out.println(nDiff + " " + objCells);
+                //System.out.println(nDiff + " " + objCells);
+                System.out.println(nDiff);
                 if(nDiff <= diff){
                     patience--;
                     if(patience <= 0)
@@ -386,6 +383,17 @@ public class Maze {
         return ris;
     }
 
+    public List<MazeCell> randomNoWalk3(Set<MazeCell> walkSet, int n){
+        var noWalk3Set = noWalk3Set(walkSet);
+        if(noWalk3Set == null) return null;
+        n = Math.min(n,noWalk3Set.size());
+        List<MazeCell> l = new ArrayList<>(noWalk3Set),
+                ris = new ArrayList<>();
+        for(int i=0;i<n;i++)
+            ris.add(l.remove(rand.nextInt(l.size())));
+        return ris;
+    }
+
     public Teletrasporto[] randomTeleports(Set<MazeCell> pathSetA,
                                            Set<MazeCell> pathSetB){
         if(isIntersection(pathSetA,pathSetB)) return null;
@@ -411,6 +419,10 @@ public class Maze {
         return !set.isEmpty();
     }
 
+    public boolean isSolvable(){ //todo: implementare
+        return true;
+    }
+
     @Override
     public String toString() {
         String s = "h:"+h+",w:"+w+"\n";
@@ -425,16 +437,13 @@ public class Maze {
 
     public Maze copy() throws Exception{
         Maze m = new Maze(h,w,genType);
-        for(int i=0;i<h;i++){
-            for(int j=0;j<w;j++){
-                var cell = cells[i][j];
-                m.cells[i][j] = cell.copy();
-            }
-        }
+        for(int i=0;i<h;i++)
+            for(int j=0;j<w;j++)
+                m.cells[i][j] = cells[i][j].copy();
         return m;
     }
 
-    public static void mazeToXML(Maze maze){
+    public static void mazeToXML(Maze maze,String fn){
         try {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -460,10 +469,10 @@ public class Maze {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             DOMSource source = new DOMSource(doc);
             SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH_mm_ss");
+            fn = (fn != null) ? fn : maze.h+"x"+maze.w+" "+maze.genType.getNome()+" "+
+                    sdf.format(new Date())+"_maze.xml";
             StreamResult result = new StreamResult(new File(
-                    "src/main/resources/com/flavio/rognoni/purgatory/purgatory/labirinti/"+
-                            maze.h+"x"+maze.w+" "+maze.genType.getNome()+" "+
-                            sdf.format(new Date())+"_maze.xml"));
+                    "src/main/resources/com/flavio/rognoni/purgatory/purgatory/labirinti/"+fn));
             transformer.transform(source,result);
             StreamResult consoleResult = new StreamResult(System.out);
             transformer.transform(source,consoleResult);
@@ -475,8 +484,6 @@ public class Maze {
 
     public static Maze mazeFromXML(String path){
         try{
-//            "src/main/resources/com/flavio/rognoni/purgatory/" +
-//                    "purgatory/labirinti/1764713272395_maze.xml"
             File file = new File(path);
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();

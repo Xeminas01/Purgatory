@@ -1270,7 +1270,7 @@
     <Muro x="31" y="27"/>
     <Percorso x="31" y="28"/>
     <Percorso x="31" y="29"/>
-    <Percorso x="31" y="30"/>
+    <Porta chiavi="1" interruttori="" open="false" type="0" x="31" y="30"/>
     <Percorso x="31" y="31"/>
     <Muro x="31" y="32"/>
     <Muro x="31" y="33"/>

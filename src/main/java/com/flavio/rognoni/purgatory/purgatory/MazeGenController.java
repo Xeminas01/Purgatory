@@ -183,7 +183,7 @@ public class MazeGenController implements Initializable {
     }
 
     public void onSave(ActionEvent event) {
-        Maze.mazeToXML(maze);
+        Maze.mazeToXML(maze,null);
     }
 
     public void onStop(ActionEvent event) {

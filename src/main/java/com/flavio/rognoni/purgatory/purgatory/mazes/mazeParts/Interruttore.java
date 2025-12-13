@@ -29,7 +29,7 @@ public class Interruttore extends MazeCell {
     public boolean isWalkable() { return true; }
 
     @Override
-    public String color() { return (on) ? "Green" : "Red"; }
+    public String color() { return (on) ? "Green" : "DarkOrange"; }
 
     @Override
     public MazeCell copy() { return new Interruttore(x,y,on); }

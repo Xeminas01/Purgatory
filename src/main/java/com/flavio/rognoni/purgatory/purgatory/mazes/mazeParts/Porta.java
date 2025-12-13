@@ -97,7 +97,7 @@ public class Porta extends MazeCell{
     @Override
     public String toString() {
         String s = (type == PORTA_A_CHIAVI) ? "chiavi:"+nChiavi : "interruttori:"+interruttori;
-        return super.toString()+"{"+((open) ? "aperta" : " chiusa")+"}{"+s+"}";
+        return super.toString()+"{"+((open) ? "aperta" : "chiusa")+"}{"+s+"}";
     }
 
     @Override
