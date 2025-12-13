@@ -19,6 +19,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -38,12 +39,7 @@ public class MazeGenController implements Initializable {
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
     private Maze maze;
-    private DFSGen dfsGen;
-    private FractalTessellationGen fractalTessellationGen;
-    private CellularGen cellularGen;
-    private IRKGen irkGen;
-    private IRPGen irpGen;
-    private WilsonGen wilsonGen;
+    private MazeGen mazeGen;
     private MazeGenType genType;
     private Timer timer;
     private boolean gen;
@@ -93,31 +89,30 @@ public class MazeGenController implements Initializable {
     private void setGenerator(int sx, int sy){
         switch(genType){
             case DFS_GEN -> {
-                dfsGen = new DFSGen(this.maze,sx,sy);
-                dfsGen.start();
-                renderMaze(dfsGen.getMaze(),null);
+                mazeGen = new DFSGen(this.maze,sx,sy);
+                ((DFSGen) mazeGen).start();
+                renderMaze(mazeGen.getMaze(),null);
             }
             case FRACTAL_GEN -> {
                 int rounds = maze.h - 2;
                 rounds = (int) (Math.log(rounds)/Math.log(2));
-                System.out.println(rounds);
-                fractalTessellationGen = new FractalTessellationGen(rounds,sx,sy);
-                renderMaze(fractalTessellationGen.getMaze(),null);
+                mazeGen = new FractalTessellationGen(rounds,sx,sy);
+                renderMaze(mazeGen.getMaze(),null);
             }
             case CELLULAR_GEN -> {
-                cellularGen = new CellularGen(this.maze,sx,sy);
+                mazeGen = new CellularGen(this.maze,sx,sy);
                 renderMaze(this.maze,null);
             }
             case I_R_KRUSKAL_GEN -> {
-                irkGen = new IRKGen(this.maze,sx,sy);
+                mazeGen = new IRKGen(this.maze,sx,sy);
                 renderMaze(this.maze,null);
             }
             case I_R_PRIM_GEM -> {
-                irpGen = new IRPGen(this.maze,sx,sy);
+                mazeGen = new IRPGen(this.maze,sx,sy);
                 renderMaze(this.maze,null);
             }
             case WILSON_GEN -> {
-                wilsonGen = new WilsonGen(this.maze,sx,sy);
+                mazeGen = new WilsonGen(this.maze,sx,sy);
                 renderMaze(this.maze,null);
             }
         }
@@ -146,142 +141,34 @@ public class MazeGenController implements Initializable {
             @Override
             public void run() {
                 Platform.runLater(() -> {
-                    timeTask();
+                    timeTask(true);
                 });
             }
         },0,genType.millis());
     }
 
-    private void timeTask(){
+    private void timeTask(boolean fromTimer){
         if(gen) return;
-        int t = 0;
-        switch(genType){
-            case DFS_GEN -> {
-                renderMaze(dfsGen.getMaze(),dfsGen.step());
-                t = dfsGen.getT();
-                gen = dfsGen.isGen();
-                if(gen) {
-                    timer.cancel();
-                    setIsGenerated();
-                }
-            }
-            case FRACTAL_GEN -> {
-                fractalTessellationGen.step();
-                t = fractalTessellationGen.getT();
-                maze = fractalTessellationGen.getMaze();
-                renderMaze(maze,null);
-                gen = fractalTessellationGen.isGenerato();
-                if(gen) {
-                    timer.cancel();
-                    setIsGenerated();
-                }
-            }
-            case CELLULAR_GEN -> {
-                cellularGen.step();
-                t = cellularGen.getT();
-                maze = cellularGen.getMaze();
-                renderMaze(maze,null);
-                gen = cellularGen.isGen();
-                if(gen){
-                    timer.cancel();
-                    setIsGenerated();
-                }
-            }
-            case I_R_KRUSKAL_GEN -> {
-                irkGen.step();
-                t = irkGen.getT();
-                maze = irkGen.getMaze();
-                renderMaze(maze,null);
-                gen = irkGen.isGen();
-                if(gen){
-                    timer.cancel();
-                    setIsGenerated();
-                }
-            }
-            case I_R_PRIM_GEM -> {
-                irpGen.step();
-                t = irpGen.getT();
-                maze = irpGen.getMaze();
-                renderMaze(maze,null);
-                gen = irpGen.isGen();
-                if(gen){
-                    timer.cancel();
-                    setIsGenerated();
-                }
-            }
-            case WILSON_GEN -> {
-                wilsonGen.step();
-                t = wilsonGen.getT();
-                maze = wilsonGen.getMaze();
-                renderMaze(maze,null);
-                gen = wilsonGen.isGen();
-                if(gen){
-                    timer.cancel();
-                    setIsGenerated();
-                }
-            }
+        int t;
+        if (genType == MazeGenType.DFS_GEN) {
+            renderMaze(mazeGen.getMaze(), mazeGen.step());
+            t = mazeGen.getT();
+        } else {
+            mazeGen.step();
+            t = mazeGen.getT();
+            maze = mazeGen.getMaze();
+            renderMaze(maze, null);
+        }
+        gen = mazeGen.isGen();
+        if (gen) {
+            if(fromTimer) timer.cancel();
+            setIsGenerated();
         }
         timeTxt.setText("t="+t);
     }
 
     public void onStep(ActionEvent event) {
-        if(gen) return;
-        int t = 0;
-        switch(genType){
-            case DFS_GEN -> {
-                renderMaze(dfsGen.getMaze(),dfsGen.step());
-                t = dfsGen.getT();
-                gen = dfsGen.isGen();
-                if(gen)
-                    setIsGenerated();
-            }
-            case FRACTAL_GEN -> {
-                fractalTessellationGen.step();
-                t = fractalTessellationGen.getT();
-                maze = fractalTessellationGen.getMaze();
-                renderMaze(maze,null);
-                gen = fractalTessellationGen.isGenerato();
-                if(gen)
-                    setIsGenerated();
-            }
-            case CELLULAR_GEN -> {
-                cellularGen.step();
-                t = cellularGen.getT();
-                maze = cellularGen.getMaze();
-                renderMaze(maze,null);
-                gen = cellularGen.isGen();
-                if(gen)
-                    setIsGenerated();
-            }
-            case I_R_KRUSKAL_GEN -> {
-                irkGen.step();
-                t = irkGen.getT();
-                maze = irkGen.getMaze();
-                renderMaze(maze,null);
-                gen = irkGen.isGen();
-                if(gen)
-                    setIsGenerated();
-            }
-            case I_R_PRIM_GEM -> {
-                irpGen.step();
-                t = irpGen.getT();
-                maze = irpGen.getMaze();
-                renderMaze(maze,null);
-                gen = irpGen.isGen();
-                if(gen)
-                    setIsGenerated();
-            }
-            case WILSON_GEN -> {
-                wilsonGen.step();
-                t = wilsonGen.getT();
-                maze = wilsonGen.getMaze();
-                renderMaze(maze,null);
-                gen = wilsonGen.isGen();
-                if(gen)
-                    setIsGenerated();
-            }
-        }
-        timeTxt.setText("t="+t);
+        timeTask(false);
     }
 
     private void setIsGenerated(){

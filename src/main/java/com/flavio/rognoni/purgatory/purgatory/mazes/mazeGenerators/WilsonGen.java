@@ -8,43 +8,41 @@ import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Percorso;
 
 import java.util.*;
 
-public class WilsonGen { //loop-erased random walk (funziona male da rivedere)
+public class WilsonGen extends MazeGen { //loop-erased random walk (funziona male da rivedere)
 
-    private final Maze maze;
-    private final Random rand;
-    private List<MazeCell> stack;
-    private Set<MazeCell> visited;
-    private final MazeCell startCell;
-    private boolean isGen;
-    private int t;
+    private final List<MazeCell> stack;
+    private final Set<MazeCell> visited;
 
     public WilsonGen(Maze maze, int x, int y){
-        this.maze = maze;
-        this.rand = new Random();
-        this.isGen = false;
+        super(maze,getInitCell(maze,x,y));
         this.maze.setGridForIRK();
         if(maze.cells[x][y].type().isPercorso())
-            this.startCell = new InizioFine(x,y,true);
+            this.initCell = new InizioFine(x,y,true);
         else
-            this.startCell = new InizioFine(1,1,true);
-        this.maze.cells[startCell.x][startCell.y] = this.startCell;
-        var far = this.maze.furthestFromManhattan(startCell);
+            this.initCell = new InizioFine(1,1,true);
+        this.maze.cells[initCell.x][initCell.y] = this.initCell;
+        var far = this.maze.furthestFromManhattan(initCell);
         this.maze.cells[far.x][far.y] = new InizioFine(far.x,far.y,false);
         this.stack = new ArrayList<>();
-        stack.add(startCell);
+        stack.add(initCell);
         this.visited = new HashSet<>();
-        this.visited.add(startCell);
-        t = 0;
+        this.visited.add(initCell);
     }
 
-    public void step(){
-        if(isGen) return;
+    private static MazeCell getInitCell(Maze maze, int x, int y){
+        if(!maze.cells[x][y].type().isLimite())
+            return maze.cells[x][y];
+        else
+            return maze.cells[1][1];
+    }
+
+    @Override
+    public MazeCell step(){
+        if(gen) return null;
         if(maze.isAllReachable()){
-            isGen = true;
-            //maze.setTypeAt();
-            return;
+            gen = true;
+            return null;
         }
-        //System.out.println(stack);
         if(stack.isEmpty()){
             var paths = maze.getAllOfTypes(MazeCellType.PERCORSO,MazeCellType.INIZIO_FINE);
             paths.removeAll(visited);
@@ -69,23 +67,9 @@ public class WilsonGen { //loop-erased random walk (funziona male da rivedere)
             }
         }
         t++;
+        return null;
     }
 
-    public void generate(){
-        while(!isGen){
-            step();
-        }
-    }
+    public Maze getMaze() { return maze; }
 
-    public Maze getMaze() {
-        return maze;
-    }
-
-    public boolean isGen() {
-        return isGen;
-    }
-
-    public int getT() {
-        return t;
-    }
 }

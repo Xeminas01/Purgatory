@@ -1,8 +1,7 @@
 package com.flavio.rognoni.purgatory.purgatory;
 
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.MazeGenType;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCell;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.*;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
@@ -90,12 +89,10 @@ public class EditMazeController implements Initializable {
         rmTeleChoice.setVisible(false);
         rmTeleBtn.setVisible(false);
         l.clear();
-        l.add("Muro");l.add("Path");l.add("SE");l.add("Porta");l.add("Interruttore");
-        l.add("Tesoro");l.add("Trap");l.add("InvW");l.add("Tele");
+        for(MazeCellType cellType : MazeCellType.values())
+            l.add(cellType.nome);
         cellTypeChoice.setItems(FXCollections.observableArrayList(l));
         cellTypeChoice.getSelectionModel().selectFirst();
-        xSpinner.setEditable(true);
-        ySpinner.setEditable(true);
         mazePanel.setStyle("-fx-background-color: transparent");
     }
 
@@ -107,14 +104,14 @@ public class EditMazeController implements Initializable {
         mazePanel.getChildren().add(rowsBox);
         this.columnBoxes = new HBox[maze.h];
         this.cellsMatrix = new Label[maze.h][maze.w];
+        GUIMethods.renderSpinner(xSpinner,0,maze.h);
+        GUIMethods.renderSpinner(ySpinner,0,maze.h);
         for (int i = 0; i < maze.h; i++) {
             HBox hBox = new HBox();
             for (int j = 0; j < maze.w; j++) {
                 Label label = new Label();
                 MazeCell cell = maze.cellAt(i,j);
                 label.setAlignment(Pos.CENTER);
-//                label.setLayoutX(i*cellDim+cellDim);
-//                label.setLayoutY(j*cellDim+cellDim);
                 label.setMinWidth(cellDim);
                 label.setPrefWidth(cellDim);
                 label.setMaxWidth(cellDim);
@@ -123,6 +120,10 @@ public class EditMazeController implements Initializable {
                 label.setMaxHeight(cellDim);
                 label.setFont(new Font("Verdana",10));
                 label.setStyle("-fx-background-color: "+cell.color());
+                final int x = i, y = j;
+                label.setOnMouseClicked(e -> {
+                    setPutSpinners(x,y);
+                });
                 hBox.getChildren().add(label);
                 cellsMatrix[i][j] = label;
             }
@@ -145,6 +146,28 @@ public class EditMazeController implements Initializable {
         }
     }
 
+    private void resetSetChoice(){
+        var l = new ArrayList<String>();
+        var pS = maze.walkSets();
+        for(int i=0;i<pS.size();i++)
+            l.add("Set<"+i+"> "+pS.get(i).size());
+        setChoice.setItems(FXCollections.observableArrayList(l));
+        setChoice.setOnAction(e -> {
+            renderSet(setChoice.getSelectionModel().getSelectedIndex(),true);
+        });
+        setChoice1.setItems(FXCollections.observableArrayList(l));
+        setChoice1.setOnAction(e -> {
+            renderSet(setChoice1.getSelectionModel().getSelectedIndex(),false);
+        });
+        setChoice1.getSelectionModel().selectFirst();
+        setChoice.getSelectionModel().selectFirst();
+    }
+
+    private void setPutSpinners(int x,int y){
+        xSpinner.getValueFactory().setValue(x);
+        ySpinner.getValueFactory().setValue(y);
+    }
+
 //    private void renderDist(List<SquareDist> dists){
 //        for(SquareDist dist : dists){
 //            Label label = cellsMatrix[dist.square.x][dist.square.y];
@@ -152,24 +175,32 @@ public class EditMazeController implements Initializable {
 //        }
 //    }
 
-//    private void renderSet(int idx,boolean choice){
-//        if(idx < 0) return;
-//        renderMaze(maze);
-//        var set = maze.pathSets().get(idx);
-//        for(MazeSquare ms : set){
-//            if(choice){
-//                if(!ms.isStartEnd())
-//                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: coral");
-//                else
-//                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: cyan");
-//            }else{
-//                if(!ms.isStartEnd())
-//                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: RoyalBlue");
-//                else
-//                    cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: magenta");
-//            }
-//        }
-//    }
+    private void renderSet(int idx,boolean choice){
+        if(idx < 0) return;
+        renderMaze(maze);
+        var set = maze.walkSets.get(idx);
+        for(MazeCell cell : set){
+            if(choice){
+                if(!cell.type().isInizioFine())
+                    cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: red");
+                else {
+                    if(((InizioFine) cell).isStart)
+                        cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: rgb(255,94,94)");
+                    else
+                        cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: rgb(255,162,162)");
+                }
+            }else{
+                if(!cell.type().isInizioFine())
+                    cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: blue");
+                else {
+                    if(((InizioFine) cell).isStart)
+                        cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: rgb(72,88,255)");
+                    else
+                        cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: rgb(146,154,255)");
+                }
+            }
+        }
+    }
 
     public void onPorte(ActionEvent event) {
 //        renderMaze(maze);
@@ -343,23 +374,6 @@ public class EditMazeController implements Initializable {
 //        renderMaze(maze);
 //    }
 
-    private void resetSetChoice(){
-//        var l = new ArrayList<String>();
-//        var pS = maze.pathSets();
-//        for(int i=0;i<pS.size();i++)
-//            l.add("Set<"+i+"> "+pS.get(i).size());
-//        setChoice.setItems(FXCollections.observableArrayList(l));
-//        setChoice.setOnAction(e -> {
-//            renderSet(setChoice.getSelectionModel().getSelectedIndex(),true);
-//        });
-//        setChoice1.setItems(FXCollections.observableArrayList(l));
-//        setChoice1.setOnAction(e -> {
-//            renderSet(setChoice1.getSelectionModel().getSelectedIndex(),false);
-//        });
-//        setChoice1.getSelectionModel().selectFirst();
-//        setChoice.getSelectionModel().selectFirst();
-    }
-
     public void onTele(ActionEvent event) {
 //        renderMaze(maze);
 //        var sets = maze.pathSets();
@@ -407,41 +421,54 @@ public class EditMazeController implements Initializable {
     }
 
     public void onPutTypeIn(ActionEvent event) {
-//        int x = xSpinner.getValue(),
-//                y = ySpinner.getValue();
-//        var cell = maze.getCellAt(x,y);
-//        System.out.println(cell);
-//        int type = cellTypeChoice.getSelectionModel().getSelectedIndex()+1;
-//        switch(type){
-//            case MazeSquare.WALL,MazeSquare.PATH,MazeSquare.START_END -> {
-//                maze.setTypeAt(cell.x,cell.y,type);
-//            }
-//            case MazeSquare.PORTA,MazeSquare.MURI_INVISIBILI -> {
-//                if(maze.isOppWall2(cell)) maze.setTypeAt(cell.x,cell.y,type);
-//                else{
-//                    Alert alert = new Alert(Alert.AlertType.ERROR,
-//                            "Invalid cell for Porta or Muro Invisibile",ButtonType.OK);
-//                    alert.show();
-//                }
-//            }
-//            case MazeSquare.INTERRUTTORE,MazeSquare.TESORO,MazeSquare.TRAPPOLA,MazeSquare.TELETRASPORTI -> {
-//                if(maze.isWall3(cell)) maze.setTypeAt(cell.x,cell.y,type);
-//                else{
-//                    Alert alert = new Alert(Alert.AlertType.ERROR,
-//                            "Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto",ButtonType.OK);
-//                    alert.show();
-//                }
-//            }
-//        }
-//        renderMaze(maze);
-//        resetSetChoice();
+        int x = xSpinner.getValue(),
+                y = ySpinner.getValue();
+        var cell = maze.cellAt(x,y);
+        System.out.println(cell);
+        MazeCellType type = MazeCellType.values()[cellTypeChoice.getSelectionModel().getSelectedIndex()];
+        switch(type){
+            case LIMITE -> maze.cells[x][y] = new Limite(x,y); //todo: vedere se tenere o no
+            case MURO -> maze.cells[x][y] = new Muro(x,y);
+            case PERCORSO -> maze.cells[x][y] = new Percorso(x,y);
+            case INIZIO_FINE -> maze.cells[x][y] = new InizioFine(x,y,true); //todo: vedere se tenere o no
+            case PORTA -> {
+                if(maze.isOppNoWalk2(cell)) maze.cells[x][y] = new Porta(x,y,false,1);
+                //todo: gestire quali interruttori o quante chiavi
+                else GUIMethods.showError("Invalid cell for Porta or Muro Invisibile");
+            }
+            case INTERRUTTORE -> {
+                if(maze.isNoWalk3(cell)) maze.cells[x][y] = new Interruttore(x,y,false);
+                else GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
+            }
+            case TESORO -> {
+                if(maze.isNoWalk3(cell)) maze.cells[x][y] = new Tesoro(x,y,"",false);
+                //todo: input del nome dell'oggetto
+                else GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
+            }
+            case TRAPPOLA -> {
+                if(maze.isNoWalk3(cell)) maze.cells[x][y] = new Trappola(x,y,1,false);
+                //todo: input dei danni della trappola
+                else GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
+            }
+            case MURO_INVISIBILE -> {
+                if(maze.isOppNoWalk2(cell)) maze.cells[x][y] = new MuroInvisibile(x,y);
+                else GUIMethods.showError("Invalid cell for Porta or Muro Invisibile");
+            }
+            case TELETRASPORTO -> {
+                if(maze.isNoWalk3(cell)) maze.cells[x][y] = new Teletrasporto(x,y,null);
+                //todo: gestire inserimento endPoint
+                else GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
+            }
+        }
+        renderMaze(maze);
+        resetSetChoice();
     }
 
     public void onBack(ActionEvent event) {
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("home.fxml"));
             Parent parent = fxmlLoader.load();
-            HomeController homeController = fxmlLoader.getController();
+            //HomeController homeController = fxmlLoader.getController();
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
             stage.setTitle("Mazes Handler");

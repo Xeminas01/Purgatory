@@ -3,27 +3,25 @@ package com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCell;
 
-public class CellularGen {
+public class CellularGen extends MazeGen {
 
-    private Maze maze;
     private final CellularAutomata2D mazectric;
-    private boolean gen;
-    private int t;
-    private final MazeCell initCell;
 
     public CellularGen(Maze maze, int x, int y){
-        this.maze = maze;
+        super(maze,getInitCell(maze,x,y));
         this.mazectric = CellularAutomata2D.mazectric(maze.h-2,maze.w-2);
-        this.gen = false;
-        this.t = 0;
-        if(!maze.cells[x][y].type().isLimite())
-            this.initCell = maze.cells[x][y];
-        else
-            this.initCell = maze.cells[1][1];
     }
 
-    public void step(){
-        if(gen) return;
+    private static MazeCell getInitCell(Maze maze, int x, int y){
+        if(!maze.cells[x][y].type().isLimite())
+            return maze.cells[x][y];
+        else
+            return maze.cells[1][1];
+    }
+
+    @Override
+    public MazeCell step(){
+        if(gen) return null;
         mazectric.step();
         maze = mazectric.getMazeRender();
         t++;
@@ -31,11 +29,10 @@ public class CellularGen {
             maze = mazectric.getMaze(initCell.x,initCell.y);
             gen = true;
         }
+        return null;
     }
 
     public Maze getMaze() { return maze; }
-
-    public boolean isGen() { return gen; }
 
     @Override
     public String toString() {
@@ -48,7 +45,5 @@ public class CellularGen {
         }
         return s;
     }
-
-    public int getT() { return t; }
 
 }

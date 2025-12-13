@@ -6,17 +6,14 @@ import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class FractalTessellationGen {
+public class FractalTessellationGen extends MazeGen {
 
     public final int rounds,dim;
     private final MazeCell[][] matrix;
-    private final Random rand;
-    private boolean generato;
     private int gStep;
-    private MazeCell initCell;
-    private int t;
 
     public FractalTessellationGen(int rounds, int x, int y) {
+        super(null,getInitCell(rounds,x,y));
         this.rounds = rounds;
         this.dim = (int) (Math.pow(2,rounds) + 2);
         this.matrix = new MazeCell[dim][dim];
@@ -30,36 +27,28 @@ public class FractalTessellationGen {
             }
         }
         matrix[1][1] = new Percorso(1,1);
-        rand = new Random();
-        generato = false;
         gStep = 0;
-        if(!matrix[x][y].type().isLimite())
-            this.initCell = matrix[x][y];
-        else
-            this.initCell = matrix[1][1];
-        this.t = 0;
     }
 
-    public void step(){
-        if(generato) return;
+    private static MazeCell getInitCell(int rounds, int i, int j){
+        int dim = (int) (Math.pow(2,rounds) + 2);
+        if(i == 0 || i == dim-1 || j == 0 || j == dim-1)
+            return new Percorso(i,j);
+        else
+            return new Percorso(1,1);
+    }
+
+    @Override
+    public MazeCell step(){
+        if(gen) return null;
         int exp = gStep/2;
         int stepCol = (int) Math.pow(2,exp+1);
         if(gStep%2==0) duplicateMaze(stepCol);
         if(gStep%2==1) removeWallsOnCoord(stepCol);
         gStep++;
-        if(gStep == (rounds-1)*2) generato = true;
+        if(gStep == (rounds-1)*2) gen = true;
         t++;
-    }
-
-    public void generate(){
-        for(int i=1;i<rounds;i++){
-            int stepCol = (int) Math.pow(2,i);
-            duplicateMaze(stepCol);
-            t++;
-            removeWallsOnCoord(stepCol);
-            t++;
-        }
-        generato = true;
+        return null;
     }
 
     private void duplicateMaze(int stepCol){
@@ -121,20 +110,12 @@ public class FractalTessellationGen {
         return vicini.size() >= 2;
     }
 
-    public MazeCell[][] getMatrix() {
-        return matrix;
-    }
-
-    public boolean isGenerato() {
-        return generato;
-    }
-
     public Maze getMaze() {
         try{
             Maze maze = new Maze(dim,dim,MazeGenType.FRACTAL_GEN);
             for(int i=0;i<dim;i++)
                 System.arraycopy(matrix[i], 0, maze.cells[i], 0, dim);
-            if(generato){
+            if(gen){
                 if(!initCell.type().isPercorso()) {
                     var vP = maze.viciniFilter(initCell, MazeCellType.PERCORSO);
                     if(!vP.isEmpty()) initCell = vP.get(0);
@@ -162,7 +143,5 @@ public class FractalTessellationGen {
         }
         return s;
     }
-
-    public int getT() { return t; }
 
 }
