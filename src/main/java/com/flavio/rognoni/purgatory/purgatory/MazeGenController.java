@@ -312,17 +312,13 @@ public class MazeGenController implements Initializable {
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("home.fxml"));
             Parent parent = fxmlLoader.load();
             HomeController homeController = fxmlLoader.getController();
-            Maze maze = Maze.mazeFromXML("src/main/resources/com/flavio/rognoni/purgatory/"+
-                    "purgatory/labirinti/10x10 DFS 12-12-2025 13_02_21_maze.xml");
-            if(maze != null)
-                homeController.setMaze(maze);
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
-            stage.setTitle("Mazes!");
+            stage.setTitle("Mazes Handler");
             stage.setScene(scene);
             stage.show();
-        }catch(Exception e){
-            System.out.println(e.getMessage());
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 

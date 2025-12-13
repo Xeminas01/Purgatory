@@ -5,154 +5,61 @@
 <?import javafx.scene.text.*?>
 
 <AnchorPane fx:id="backgroundPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.flavio.rognoni.purgatory.purgatory.HomeController">
-    <AnchorPane fx:id="mazePanel" layoutX="280.0" prefHeight="720.0" prefWidth="720.0" style="-fx-background-color: lightgray;" />
-   <Button fx:id="porteBtn" layoutX="1110.0" layoutY="121.0" mnemonicParsing="false" onAction="#onPorte" style="-fx-background-color: green;" text="Porta" textFill="WHITE">
+   <Button fx:id="genMazeBtn" layoutX="288.0" layoutY="404.0" mnemonicParsing="false" onAction="#onGenMaze" style="-fx-background-color: yellow;" text="Generate Maze">
       <font>
          <Font name="Verdana" size="15.0" />
       </font>
    </Button>
-   <Button fx:id="distBtn" layoutX="1097.0" layoutY="64.0" mnemonicParsing="false" onAction="#onDistanze" style="-fx-background-color: green;" text="Distanze" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <Spinner fx:id="percSpinner" layoutX="1181.0" layoutY="123.0" prefHeight="25.0" prefWidth="72.0">
-      <valueFactory>
-         <SpinnerValueFactory.DoubleSpinnerValueFactory amountToStepBy="0.01" initialValue="1.0" max="1.0" min="0.0" />
-      </valueFactory>
-   </Spinner>
-   <ChoiceBox fx:id="setChoice" layoutX="1091.0" layoutY="27.0" prefHeight="25.0" prefWidth="96.0" />
-   <Button fx:id="addPortaBtn" layoutX="1063.0" layoutY="164.0" mnemonicParsing="false" onAction="#onAddPorta" style="-fx-background-color: green;" text="Add Porta in (1,1)" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <ChoiceBox fx:id="rmDoorChoice" layoutX="1139.0" layoutY="201.0" prefHeight="25.0" prefWidth="96.0" />
-   <Button fx:id="rmPortaBtn" layoutX="1031.0" layoutY="199.0" mnemonicParsing="false" onAction="#onRmPorta" style="-fx-background-color: green;" text="Rm Porta" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <Button fx:id="ittBtn" layoutX="1031.0" layoutY="247.0" mnemonicParsing="false" onAction="#onITT" style="-fx-background-color: green;" text="ITT" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <ChoiceBox fx:id="ittTypeChoice" layoutX="1162.0" layoutY="249.0" prefHeight="25.0" prefWidth="96.0" />
-   <ChoiceBox fx:id="rmObjChoice" layoutX="1139.0" layoutY="341.0" prefHeight="25.0" prefWidth="96.0" />
-   <Button fx:id="addObjsBtn" layoutX="1107.0" layoutY="292.0" mnemonicParsing="false" onAction="#onAddObjs" style="-fx-background-color: green;" text="Add Objs" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <Button fx:id="rmObjBtn" layoutX="1038.0" layoutY="339.0" mnemonicParsing="false" onAction="#onRmObj" style="-fx-background-color: green;" text="Rm Obj" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <Spinner fx:id="objSpinner" layoutX="1091.0" layoutY="249.0" prefHeight="25.0" prefWidth="60.0">
+   <ComboBox fx:id="genMazeChoice" layoutX="280.0" layoutY="364.0" prefWidth="150.0" />
+   <Spinner fx:id="hSpinner" layoutX="282.0" layoutY="288.0" prefHeight="25.0" prefWidth="60.0">
       <valueFactory>
          <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
       </valueFactory>
    </Spinner>
-   <Button fx:id="genMazeBtn" layoutX="69.0" layoutY="156.0" mnemonicParsing="false" onAction="#onGenMaze" style="-fx-background-color: yellow;" text="Generate Maze">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <ComboBox fx:id="genMazeChoice" layoutX="61.0" layoutY="116.0" prefWidth="150.0" />
-   <Button fx:id="addInvWallsBtn" layoutX="1098.0" layoutY="447.0" mnemonicParsing="false" onAction="#onAddIWs" style="-fx-background-color: green;" text="Add IWs" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <ChoiceBox fx:id="rmIWsChoice" layoutX="1139.0" layoutY="494.0" prefHeight="25.0" prefWidth="96.0" />
-   <Button fx:id="rmIWBtn" layoutX="1042.0" layoutY="492.0" mnemonicParsing="false" onAction="#onRmIW" style="-fx-background-color: green;" text="Rm IW" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <Spinner fx:id="iwSpinner" layoutX="1152.0" layoutY="398.0" prefHeight="25.0" prefWidth="60.0">
+   <Spinner fx:id="wSpinner" layoutX="395.0" layoutY="288.0" prefHeight="25.0" prefWidth="60.0">
       <valueFactory>
          <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
       </valueFactory>
    </Spinner>
-   <Button fx:id="iwBtn" layoutX="1074.0" layoutY="396.0" mnemonicParsing="false" onAction="#onIWs" style="-fx-background-color: green;" text="IWs" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <ComboBox fx:id="cellTypeChoice" layoutX="60.0" layoutY="341.0" prefWidth="150.0" />
-   <Button fx:id="putTypeInBtn" layoutX="69.0" layoutY="432.0" mnemonicParsing="false" onAction="#onPutTypeIn" style="-fx-background-color: green;" text="Metti * in (x,y)" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <Spinner layoutX="60.0" layoutY="385.0" prefHeight="25.0" prefWidth="60.0" fx:id="xSpinner">
+   <Spinner fx:id="sxSpinner" layoutX="282.0" layoutY="323.0" prefHeight="25.0" prefWidth="60.0">
       <valueFactory>
          <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
       </valueFactory>
    </Spinner>
-   <Spinner fx:id="ySpinner" layoutX="150.0" layoutY="385.0" prefHeight="25.0" prefWidth="60.0">
+   <Spinner fx:id="sySpinner" layoutX="395.0" layoutY="323.0" prefHeight="25.0" prefWidth="60.0">
       <valueFactory>
          <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
       </valueFactory>
    </Spinner>
-   <Button fx:id="addTeleBtn" layoutX="1077.0" layoutY="578.0" mnemonicParsing="false" onAction="#onAddTele" style="-fx-background-color: green;" text="Add Teleports" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <ChoiceBox fx:id="rmTeleChoice" layoutX="1152.0" layoutY="632.0" prefHeight="25.0" prefWidth="96.0" />
-   <Button fx:id="rmTeleBtn" layoutX="1049.0" layoutY="630.0" mnemonicParsing="false" onAction="#onRmTele" style="-fx-background-color: green;" text="Rm TeleP" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <Button fx:id="teleBtn" layoutX="1033.0" layoutY="540.0" mnemonicParsing="false" onAction="#onTele" style="-fx-background-color: green;" text="Teleports" textFill="WHITE">
-      <font>
-         <Font name="Verdana" size="15.0" />
-      </font>
-   </Button>
-   <ChoiceBox fx:id="setChoice1" layoutX="1139.0" layoutY="542.0" prefHeight="25.0" prefWidth="96.0" />
-   <Spinner fx:id="hSpinner" layoutX="63.0" layoutY="40.0" prefHeight="25.0" prefWidth="60.0">
-      <valueFactory>
-         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
-      </valueFactory>
-   </Spinner>
-   <Spinner fx:id="wSpinner" layoutX="176.0" layoutY="40.0" prefHeight="25.0" prefWidth="60.0">
-      <valueFactory>
-         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
-      </valueFactory>
-   </Spinner>
-   <Spinner fx:id="sxSpinner" layoutX="63.0" layoutY="75.0" prefHeight="25.0" prefWidth="60.0">
-      <valueFactory>
-         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
-      </valueFactory>
-   </Spinner>
-   <Spinner fx:id="sySpinner" layoutX="176.0" layoutY="75.0" prefHeight="25.0" prefWidth="60.0">
-      <valueFactory>
-         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
-      </valueFactory>
-   </Spinner>
-   <Label layoutX="39.0" layoutY="40.0" text="h">
+   <Label layoutX="258.0" layoutY="288.0" text="h">
       <font>
          <Font name="Verdana" size="20.0" />
       </font>
    </Label>
-   <Label layoutX="153.0" layoutY="40.0" text="w">
+   <Label layoutX="372.0" layoutY="288.0" text="w">
       <font>
          <Font name="Verdana" size="20.0" />
       </font>
    </Label>
-   <Label layoutX="34.0" layoutY="75.0" text="sx">
+   <Label layoutX="253.0" layoutY="323.0" text="sx">
       <font>
          <Font name="Verdana" size="20.0" />
       </font>
    </Label>
-   <Label layoutX="150.0" layoutY="75.0" text="sy">
+   <Label layoutX="369.0" layoutY="323.0" text="sy">
       <font>
          <Font name="Verdana" size="20.0" />
+      </font>
+   </Label>
+   <ComboBox fx:id="mazeEditChoice" layoutX="711.0" layoutY="301.0" prefHeight="25.0" prefWidth="397.0" />
+   <Button fx:id="editMazeBtn" layoutX="863.0" layoutY="350.0" mnemonicParsing="false" onAction="#onEditMaze" style="-fx-background-color: green;" text="Edit Maze" textFill="WHITE">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
+   <Label fx:id="titleTxt" alignment="CENTER" layoutX="1.0" layoutY="14.0" prefHeight="65.0" prefWidth="1280.0" text="Maze Handler">
+      <font>
+         <Font name="Verdana" size="50.0" />
       </font>
    </Label>
 </AnchorPane>
