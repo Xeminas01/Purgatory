@@ -23,8 +23,11 @@ public class Tesoro extends MazeCell {
         taken = true;
     }
 
-    public String getOggetto() {
-        if(isTaken()) {
+    public String oggetto(){ return oggetto; }
+
+    public String takeOggetto() {
+        if(!isTaken()) {
+            take();
             String s = oggetto;
             this.oggetto = null;
             return s;

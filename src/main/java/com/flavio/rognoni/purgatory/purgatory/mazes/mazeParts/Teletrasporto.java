@@ -33,7 +33,9 @@ public class Teletrasporto extends MazeCell {
 
     @Override
     public String toString() {
-        return super.toString()+"{endPoint:"+endPoint.x+","+endPoint.y+"}";
+        String ep = (endPoint != null) ?
+                "{endPoint:"+endPoint.x+","+endPoint.y+"}" : "{endPoint:null}";
+        return super.toString()+ep;
     }
 
     @Override

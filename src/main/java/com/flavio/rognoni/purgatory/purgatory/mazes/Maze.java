@@ -459,10 +459,89 @@ public class Maze {
         return false;
     }
 
-    public boolean isSolvable() throws Exception{ //todo: implementare
-        if(!hasInizioAndFine()){
-            throw new Exception("Manca l'Inizio o la Fine del Labirinto");
+    public List<Interruttore> topoCorrectInterruttori(Porta porta,List<MazeCell> cellList){
+        List<Interruttore> list = new ArrayList<>();
+        for(MazeCell cell : cellList){
+            if(cell.type().isInterruttore())
+                list.add((Interruttore) cell);
+            else return null;
         }
+        var topoMap = topologicalOrderOfWalkSets();
+        var vicini = viciniFilter(porta,MazeCellType.PERCORSO);
+        if(vicini.size() == 2){
+            int setA = -1, setB = -1;
+            Map<Interruttore,Integer> interrSetMap = new HashMap<>();
+            for(int i=0;i<walkSets.size();i++){
+                Set<MazeCell> set = walkSets.get(i);
+                if(set.contains(vicini.get(0))) setA = i;
+                else if(set.contains(vicini.get(1))) setB = i;
+                for(Interruttore interruttore : list)
+                    if(set.contains(interruttore))
+                        interrSetMap.put(interruttore,i);
+            }
+            if(interrSetMap.size() != list.size())
+                return null;
+            int next = followInTopo(setA,setB,topoMap);
+            for(Interruttore interr : list){
+                int set = interrSetMap.get(interr);
+                if(!isPrevInTopo(set,next,topoMap))
+                    return null;
+            }
+        }else return null;
+        return list;
+    }
+
+    private int followInTopo(int a,int b,Map<Integer, List<Integer>> topoMap){
+        if(isFollowInTopo(a,b,topoMap)) return b;
+        else if(isFollowInTopo(b,a,topoMap)) return a;
+        else return -1;
+    }
+
+    private boolean isFollowInTopo(int a,int b,Map<Integer, List<Integer>> topoMap){
+        List<Integer> lA = topoMap.get(a), queue = new ArrayList<>();
+        Set<Integer> set = new HashSet<>();
+        if(lA != null && !lA.isEmpty()){ // a ha dei successori
+            queue.add(a);
+            while(!queue.isEmpty()){
+                int cur = queue.remove(0);
+                set.add(cur);
+                for(Integer succ : topoMap.get(cur)){
+                    if(succ == b)
+                        return true;
+                    if(!set.contains(succ))
+                        queue.add(succ);
+                }
+            }
+        }
+        return false; // b non viene dopo a
+    }
+
+    private boolean isPrevInTopo(int a,int b,Map<Integer, List<Integer>> topoMap){
+        return followInTopo(a,b,topoMap) == b;
+    }
+
+    private int rootOfTopo(Map<Integer, List<Integer>> topoMap){
+        List<Integer> ks = new ArrayList<>(topoMap.keySet());
+        Set<Integer> v = new HashSet<>();
+        for(List<Integer> l : topoMap.values())
+             v.addAll(l);
+        ks.removeAll(v);
+        if(!ks.isEmpty())
+            return ks.get(0);
+        else return -1;
+    }
+
+    public boolean isSolvable() throws Exception{ //todo: implementare
+        if(!hasInizioAndFine())
+            throw new Exception("Manca l'Inizio o la Fine del Labirinto");
+        //controllo teletrasporti (tutti con un endpoint nel labirinto e
+        // tutti accoppiati a -> b e b -> a, non  a -> b e b -> c)
+        //controllo porte (aprire tutte le porte e verificare che il labirinto
+        // sia tutto percorribile (anche con teletrasporti),
+        // controllare ordini topologici o tesori con chiavi in ordine topologico)
+        //controllo interruttori (spegnerli tutti)
+        //controllo tesori (controllare che siano tutti non presi)
+        //controllo trappole (tutte disattivate)
         return true;
     }
 

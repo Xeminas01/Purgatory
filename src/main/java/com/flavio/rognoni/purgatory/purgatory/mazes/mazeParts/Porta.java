@@ -57,7 +57,9 @@ public class Porta extends MazeCell{
                 new Porta(x,y,open,interruttori);
     }
 
-    public int doorType(){ return type; }
+    public boolean isChiavi(){ return type == PORTA_A_CHIAVI; }
+
+    public boolean isInterruttori(){ return type == PORTA_A_INTERRUTTORI; }
 
     public boolean isOpen() { return open; }
 

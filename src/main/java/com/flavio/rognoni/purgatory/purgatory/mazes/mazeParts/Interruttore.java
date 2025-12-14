@@ -40,6 +40,11 @@ public class Interruttore extends MazeCell {
     }
 
     @Override
+    public String toString() {
+        return super.toString()+"{"+((on) ? "on" : "off")+"}";
+    }
+
+    @Override
     public Element toXMLElement(Document doc) {
         Element el = doc.createElement(this.getClass().getSimpleName());
         el.setAttribute("x",""+x);

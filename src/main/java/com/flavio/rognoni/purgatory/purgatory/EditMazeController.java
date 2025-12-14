@@ -7,6 +7,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -47,9 +48,15 @@ public class EditMazeController implements Initializable {
     public Button saveBtn;
     public Button showSetsBtn;
     public CheckBox booleanChoice;
-    public CheckBox booleanChoice1;
-    public Button modBtn;
     public TextArea cellInfoTxt;
+    public ComboBox<String> cellSubTypeChoice;
+    public Spinner<Integer> nSpinner;
+    public ComboBox<String> cellChoice;
+    public Button plusBtn;
+    public Button minusBtn;
+    public TextField cellTextInput;
+    public TextArea cellListArea;
+    private List<MazeCell> cellList;
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
@@ -70,14 +77,22 @@ public class EditMazeController implements Initializable {
             l.add(cellType.nome);
         cellTypeChoice.setItems(FXCollections.observableArrayList(l));
         cellTypeChoice.setOnAction(e -> {
-            renderCellInputs();
+            renderCellInputs(cellTypeChoice.getSelectionModel().getSelectedIndex() !=
+                    maze.cellAt(xSpinner.getValue(),ySpinner.getValue()).type().ordinal());
         });
         cellTypeChoice.getSelectionModel().selectFirst();
         mazePanel.setStyle("-fx-background-color: transparent");
         booleanChoice.setVisible(false);
-        booleanChoice1.setVisible(false);
-        modBtn.setVisible(false);
         cellInfoTxt.setEditable(false);
+        cellSubTypeChoice.setVisible(false);
+        nSpinner.setVisible(false);
+        GUIMethods.renderSpinner(nSpinner,1,10);
+        cellChoice.setVisible(false);
+        plusBtn.setVisible(false);
+        minusBtn.setVisible(false);
+        cellTextInput.setVisible(false);
+        cellListArea.setVisible(false);
+        cellList = new ArrayList<>();
     }
 
     public void setMaze(Maze maze,String fileName) {
@@ -156,35 +171,136 @@ public class EditMazeController implements Initializable {
         renderCellInfos(maze.cellAt(x,y));
     }
 
-    private void renderCellInputs(){
-        MazeCellType type = MazeCellType.values()
-                [cellTypeChoice.getSelectionModel().getSelectedIndex()];
+    private void elementsVis(boolean vis, Node ...nodes){
+        for(Node n : nodes) n.setVisible(vis);
+    }
+
+    private void renderCellInputs(boolean typeFromChoice){
+        int x = xSpinner.getValue(),
+                y = ySpinner.getValue();
+        var cell = maze.cellAt(x,y);
+        MazeCellType type = (typeFromChoice) ?
+                MazeCellType.values()[cellTypeChoice.getSelectionModel().getSelectedIndex()] :
+                cell.type();
         switch(type){
-            case LIMITE,MURO,PERCORSO ->
-                    booleanChoice.setVisible(false);
+            case LIMITE,MURO,PERCORSO,MURO_INVISIBILE,INTERRUTTORE ->
+                    elementsVis(false,booleanChoice,cellSubTypeChoice,nSpinner,cellChoice,
+                            plusBtn,minusBtn,cellTextInput,cellListArea);
             case INIZIO_FINE -> {
-                booleanChoice.setVisible(true);
-                booleanChoice.setText("Inizio");
-                booleanChoice.setSelected(true);
+                elementsVis(true,booleanChoice);
+                elementsVis(false,cellSubTypeChoice,nSpinner,cellChoice,
+                        plusBtn,minusBtn,cellTextInput,cellListArea);
+                if(!typeFromChoice){
+                    booleanChoice.setText("Inizio");
+                    booleanChoice.setSelected(((InizioFine) cell).isStart);
+                }else{
+                    booleanChoice.setText("Inizio");
+                    booleanChoice.setSelected(true);
+                }
+            }
+            case PORTA -> {
+                elementsVis(true,cellSubTypeChoice);
+                elementsVis(false,booleanChoice,nSpinner,cellChoice,
+                        plusBtn,minusBtn,cellTextInput,cellListArea);
+                var l = new ArrayList<String>();
+                l.add("A chiavi");l.add("A interruttori");
+                cellSubTypeChoice.setItems(FXCollections.observableArrayList(l));
+                if(!typeFromChoice){
+                    Porta porta = (Porta) cell;
+                    cellSubTypeChoice.setOnAction(e -> {
+                        int px = xSpinner.getValue(),
+                                py = ySpinner.getValue();
+                        var pcell = maze.cellAt(px,py);
+                        if(pcell.type().isPorta()){
+                            Porta porta1 = (Porta) pcell;
+                            if(cellSubTypeChoice.getSelectionModel().getSelectedIndex() == 0){
+                                elementsVis(true,nSpinner);
+                                elementsVis(false,cellChoice,plusBtn,minusBtn,cellListArea);
+                                nSpinner.getValueFactory().setValue((porta1.isChiavi()) ? porta1.nChiavi : 1);
+                            }else{
+                                elementsVis(true,cellChoice,plusBtn,minusBtn,cellListArea);
+                                elementsVis(false,nSpinner);
+                                resetCellList(porta1.interruttori);
+                                cellList.clear();
+                                cellList.addAll(porta1.interruttori);
+                            }
+                        }
+                    });
+                    cellSubTypeChoice.getSelectionModel().select(porta.type);
+                }else{
+                    cellSubTypeChoice.setOnAction(e -> {
+                        if(cellSubTypeChoice.getSelectionModel().getSelectedIndex() == 0){
+                            elementsVis(true,nSpinner);
+                            elementsVis(false,cellChoice,plusBtn,minusBtn,cellListArea);
+                            nSpinner.getValueFactory().setValue(1);
+                        }else{
+                            elementsVis(true,cellChoice,plusBtn,minusBtn,cellListArea);
+                            elementsVis(false,nSpinner);
+                            cellList.clear();
+                            resetCellList(cellList);
+                        }
+                    });
+                    cellSubTypeChoice.getSelectionModel().selectFirst();
+                }
+            }
+            case TESORO -> {
+                elementsVis(true,cellTextInput);
+                elementsVis(false,booleanChoice,cellSubTypeChoice,nSpinner,cellChoice,
+                        plusBtn,minusBtn,cellListArea);
+                if(!typeFromChoice){
+                    Tesoro tesoro = (Tesoro) cell;
+                    cellTextInput.setText(tesoro.oggetto());
+                }else{
+                    cellTextInput.setText("");
+                }
+            }
+            case TRAPPOLA -> {
+                elementsVis(true,nSpinner);
+                elementsVis(false,booleanChoice,cellSubTypeChoice,cellChoice,
+                        plusBtn,minusBtn,cellTextInput,cellListArea);
+                if(!typeFromChoice){
+                    Trappola trappola = (Trappola) cell;
+                    nSpinner.getValueFactory().setValue(trappola.danni);
+                }else{
+                    nSpinner.getValueFactory().setValue(1);
+                }
+            }
+            case TELETRASPORTO -> {
+                elementsVis(true,cellChoice);
+                elementsVis(false,booleanChoice,cellSubTypeChoice,nSpinner,
+                        plusBtn,minusBtn,cellTextInput,cellListArea);
+                if(!typeFromChoice){
+                    Teletrasporto t = (Teletrasporto) cell;
+                    var list = new ArrayList<String>();
+                    var tCells = maze.getAllOfTypes(MazeCellType.TELETRASPORTO);
+                    tCells.remove(t.endPoint);
+                    for(MazeCell tCell : tCells)
+                        list.add(tCell.x+","+tCell.y);
+                    if(list.isEmpty()) {
+                        elementsVis(false,cellChoice);
+                        return;
+                    }
+                    cellChoice.setItems(FXCollections.observableArrayList(list));
+                    cellChoice.getSelectionModel().selectFirst();
+                }else{
+                    var list = new ArrayList<String>();
+                    var tCells = maze.getAllOfTypes(MazeCellType.TELETRASPORTO);
+                    for(MazeCell tCell : tCells)
+                        list.add(tCell.x+","+tCell.y);
+                    if(list.isEmpty()) {
+                        elementsVis(false,cellChoice);
+                        return;
+                    }
+                    cellChoice.setItems(FXCollections.observableArrayList(list));
+                    cellChoice.getSelectionModel().selectFirst();
+                }
             }
         }
     }
 
     private void renderCellInfos(MazeCell cell){
         cellInfoTxt.setText(cell.toString());
-        switch(cell.type()){
-            case LIMITE,MURO,PERCORSO,MURO_INVISIBILE -> {
-                booleanChoice1.setVisible(false);
-                modBtn.setVisible(false);
-            }
-            case INIZIO_FINE -> {
-                booleanChoice1.setVisible(true);
-                booleanChoice1.setVisible(true);
-                booleanChoice1.setText("Inizio");
-                booleanChoice1.setSelected(((InizioFine) cell).isStart);
-                modBtn.setVisible(true);
-            }
-        }
+        renderCellInputs(false);
     }
 
     public void onDistanze(ActionEvent event) { //todo: vedere se togliere
@@ -253,6 +369,8 @@ public class EditMazeController implements Initializable {
             xSpinner.getValueFactory().setValue(bestOpp2.x);
             ySpinner.getValueFactory().setValue(bestOpp2.y);
             cellTypeChoice.getSelectionModel().select(MazeCellType.PORTA.ordinal());
+            if(cellSubTypeChoice.getItems().size() == 2)
+                cellSubTypeChoice.getSelectionModel().selectFirst();
         }else
             GUIMethods.showError("Set troppo piccolo deve avere almeno 30 celle");
     }
@@ -281,6 +399,8 @@ public class EditMazeController implements Initializable {
             xSpinner.getValueFactory().setValue(ro2.get(0).x);
             ySpinner.getValueFactory().setValue(ro2.get(0).y);
             cellTypeChoice.getSelectionModel().select(MazeCellType.PORTA.ordinal());
+            if(cellSubTypeChoice.getItems().size() == 2)
+                cellSubTypeChoice.getSelectionModel().selectFirst();
             celle.clear();
             celle.addAll(ro2);
             addCelleBtn.setVisible(true);
@@ -375,46 +495,116 @@ public class EditMazeController implements Initializable {
                     GUIMethods.showError(((start) ? "Inizio" : "Fine")+" già presente!");
             }
             case PORTA -> {
-                if(maze.isOppNoWalk2(cell)) maze.cells[x][y] = new Porta(x,y,false,1);
-                //todo: gestire quali interruttori o quante chiavi
-                else GUIMethods.showError("Invalid cell for Porta or Muro Invisibile");
+                if(maze.isOppNoWalk2(cell)){
+                    int subType = cellSubTypeChoice.getSelectionModel().getSelectedIndex();
+                    if(subType == Porta.PORTA_A_CHIAVI){
+                        maze.cells[x][y] = new Porta(x,y,false,nSpinner.getValue());
+                    }else if(subType == Porta.PORTA_A_INTERRUTTORI){
+                        if(cell.type().isPorta()){
+                            var interrs = maze.topoCorrectInterruttori((Porta) cell,cellList);
+                            if(interrs != null && !interrs.isEmpty())
+                                maze.cells[x][y] = new Porta(x,y,false,interrs);
+                            else
+                                GUIMethods.showError("Insieme di Interruttori topologicamente invalido\n" +
+                                        "o nessun Interruttore specificato!");
+                        }else
+                            GUIMethods.showError("La Porta a cui modificare gli Interruttori non è una Porta");
+                    }
+                }else
+                    GUIMethods.showError("Invalid cell for Porta");
             }
             case INTERRUTTORE -> {
-                if(maze.isNoWalk3(cell)) maze.cells[x][y] = new Interruttore(x,y,false);
-                else GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
+                if(maze.isNoWalk3(cell))
+                    maze.cells[x][y] = new Interruttore(x,y,false);
+                else
+                    GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
             }
             case TESORO -> {
-                if(maze.isNoWalk3(cell)) maze.cells[x][y] = new Tesoro(x,y,"",false);
-                //todo: input del nome dell'oggetto
-                else GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
+                if(maze.isNoWalk3(cell))
+                    maze.cells[x][y] = new Tesoro(x,y,cellTextInput.getText(),false);
+                else
+                    GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
             }
             case TRAPPOLA -> {
-                if(maze.isNoWalk3(cell)) maze.cells[x][y] = new Trappola(x,y,1,false);
-                //todo: input dei danni della trappola
-                else GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
+                if(maze.isNoWalk3(cell))
+                    maze.cells[x][y] = new Trappola(x,y,nSpinner.getValue(),false);
+                else
+                    GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
             }
             case MURO_INVISIBILE -> {
-                if(maze.isOppNoWalk2(cell)) maze.cells[x][y] = new MuroInvisibile(x,y);
-                else GUIMethods.showError("Invalid cell for Porta or Muro Invisibile");
+                if(maze.isOppNoWalk2(cell))
+                    maze.cells[x][y] = new MuroInvisibile(x,y);
+                else
+                    GUIMethods.showError("Invalid cell for Muro Invisibile");
             }
             case TELETRASPORTO -> {
-                if(maze.isNoWalk3(cell)) maze.cells[x][y] = new Teletrasporto(x,y,null);
-                //todo: gestire inserimento endPoint
-                else GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
+                if(maze.isNoWalk3(cell)) {
+                    String[] ch = cellChoice.getValue().split(",");
+                    if(ch.length == 2){
+                        int tx = Integer.parseInt(ch[0]), ty = Integer.parseInt(ch[1]);
+                        var tCell = maze.cellAt(tx,ty);
+                        if(tCell.type().isTeletrasporto()){
+                            Teletrasporto teletrasporto = (Teletrasporto) cell;
+                            if(teletrasporto.x != x && teletrasporto.y != y){
+                                maze.cells[x][y] = new Teletrasporto(x,y,teletrasporto);
+                            }else{
+                                maze.cells[x][y] = new Teletrasporto(x,y,null);
+                                GUIMethods.showWarning("Nessun end point specificato per questo teletrasporto");
+                            }
+                        }
+                    }else{
+                        maze.cells[x][y] = new Teletrasporto(x,y,null);
+                        GUIMethods.showWarning("Nessun end point specificato per questo teletrasporto");
+                    }
+                }
+                else
+                    GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
             }
         }
         renderMaze(maze);
         resetSetChoice();
     }
 
-    public void onModCell(ActionEvent event) {
-        MazeCellType type = MazeCellType.values()[cellTypeChoice.getSelectionModel().getSelectedIndex()];
-        switch(type){
-            case INIZIO_FINE -> {
-                booleanChoice.setSelected(booleanChoice1.isSelected());
-                onPutTypeIn(null);
-            }
+    public void onPlusCell(ActionEvent event) {
+        if(cellList.size() >= 10){
+            GUIMethods.showError("Lista piena! (max 10 elementi)");
+            return;
         }
+        String[] ch = cellChoice.getValue().split(",");
+        if(ch.length == 2){
+            int x = Integer.parseInt(ch[0]),
+                    y = Integer.parseInt(ch[1]);
+            cellList.add(maze.cellAt(x,y));
+            resetCellList(cellList);
+        }else
+            GUIMethods.showError("Nessuna casa selezionata");
+    }
+
+    public void onMinusCell(ActionEvent event) {
+        if(cellList.isEmpty()){
+            GUIMethods.showError("Lista vuota!");
+            return;
+        }
+        cellList.remove(cellList.size()-1);
+        resetCellList(cellList);
+    }
+
+    private void resetCellList(List<? extends MazeCell> celle){
+        var list = new ArrayList<String>();
+        var mazeInterr = maze.getAllOfTypes(MazeCellType.INTERRUTTORE);
+        mazeInterr.removeAll(celle);
+        for(MazeCell inter : mazeInterr)
+            list.add(inter.x+","+inter.y);
+        if(mazeInterr.isEmpty()){
+            elementsVis(false,cellChoice);
+        }else{
+            cellChoice.setItems(FXCollections.observableArrayList(list));
+            cellChoice.getSelectionModel().selectFirst();
+        }
+        String s = "";
+        for(MazeCell i : celle) s += i+",";
+        if(s.endsWith(",")) s = s.substring(0,s.length()-1);
+        cellListArea.setText(s);
     }
 
     public void onShowSets(ActionEvent event) {
