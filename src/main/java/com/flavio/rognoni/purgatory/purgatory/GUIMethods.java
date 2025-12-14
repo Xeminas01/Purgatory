@@ -8,6 +8,9 @@ import javafx.scene.control.SpinnerValueFactory;
 
 public class GUIMethods {
 
+    public static String[] setColors = {"red","blue","yellow","green","purple","orange",
+            "coral","MediumPurple","LawnGreen","Khaki","DodgerBlue","Crimson"};
+
     public static void showInfo(String info){
         Alert alert = new Alert(Alert.AlertType.INFORMATION,info, ButtonType.OK);
         alert.show();

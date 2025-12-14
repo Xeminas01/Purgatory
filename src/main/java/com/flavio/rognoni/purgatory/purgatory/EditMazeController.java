@@ -44,6 +44,12 @@ public class EditMazeController implements Initializable {
     public Button addCelleBtn;
     public Button randomOpp2Btn;
     public Button random3Btn;
+    public Button saveBtn;
+    public Button showSetsBtn;
+    public CheckBox booleanChoice;
+    public CheckBox booleanChoice1;
+    public Button modBtn;
+    public TextArea cellInfoTxt;
     private VBox rowsBox;
     private HBox[] columnBoxes;
     private Label[][] cellsMatrix;
@@ -63,8 +69,15 @@ public class EditMazeController implements Initializable {
         for(MazeCellType cellType : MazeCellType.values())
             l.add(cellType.nome);
         cellTypeChoice.setItems(FXCollections.observableArrayList(l));
+        cellTypeChoice.setOnAction(e -> {
+            renderCellInputs();
+        });
         cellTypeChoice.getSelectionModel().selectFirst();
         mazePanel.setStyle("-fx-background-color: transparent");
+        booleanChoice.setVisible(false);
+        booleanChoice1.setVisible(false);
+        modBtn.setVisible(false);
+        cellInfoTxt.setEditable(false);
     }
 
     public void setMaze(Maze maze,String fileName) {
@@ -131,6 +144,8 @@ public class EditMazeController implements Initializable {
                 renderSet(setChoice1.getSelectionModel().getSelectedIndex(),false));
         setChoice1.getSelectionModel().selectFirst();
         setChoice.getSelectionModel().selectFirst();
+        var topoMap = maze.topologicalOrderOfWalkSets();
+        System.out.println("topoMap: "+topoMap+" "+maze.isValidTopoMap(topoMap));
     }
 
     private void setPutSpinners(int x,int y){
@@ -138,6 +153,38 @@ public class EditMazeController implements Initializable {
         ySpinner.getValueFactory().setValue(y);
         cellTypeChoice.getSelectionModel().select(
                 maze.cellAt(x,y).type().ordinal());
+        renderCellInfos(maze.cellAt(x,y));
+    }
+
+    private void renderCellInputs(){
+        MazeCellType type = MazeCellType.values()
+                [cellTypeChoice.getSelectionModel().getSelectedIndex()];
+        switch(type){
+            case LIMITE,MURO,PERCORSO ->
+                    booleanChoice.setVisible(false);
+            case INIZIO_FINE -> {
+                booleanChoice.setVisible(true);
+                booleanChoice.setText("Inizio");
+                booleanChoice.setSelected(true);
+            }
+        }
+    }
+
+    private void renderCellInfos(MazeCell cell){
+        cellInfoTxt.setText(cell.toString());
+        switch(cell.type()){
+            case LIMITE,MURO,PERCORSO,MURO_INVISIBILE -> {
+                booleanChoice1.setVisible(false);
+                modBtn.setVisible(false);
+            }
+            case INIZIO_FINE -> {
+                booleanChoice1.setVisible(true);
+                booleanChoice1.setVisible(true);
+                booleanChoice1.setText("Inizio");
+                booleanChoice1.setSelected(((InizioFine) cell).isStart);
+                modBtn.setVisible(true);
+            }
+        }
     }
 
     public void onDistanze(ActionEvent event) { //todo: vedere se togliere
@@ -176,6 +223,11 @@ public class EditMazeController implements Initializable {
     public void onOpp2WalkSet(ActionEvent event) {
         int idx = setChoice.getSelectionModel().getSelectedIndex();
         renderSet(idx,true);
+        var o2Set = maze.oppNoWalk2Set(maze.walkSets.get(idx));
+        if(o2Set == null){
+            GUIMethods.showError("Set troppo piccolo!");
+            return;
+        }
         for(MazeCell cell : maze.oppNoWalk2Set(maze.walkSets.get(idx)))
             cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: pink");
     }
@@ -183,7 +235,12 @@ public class EditMazeController implements Initializable {
     public void on3WalkSet(ActionEvent event) {
         int idx = setChoice.getSelectionModel().getSelectedIndex();
         renderSet(idx,true);
-        for(MazeCell cell : maze.noWalk3Set(maze.walkSets.get(idx)))
+        var w3Set = maze.noWalk3Set(maze.walkSets.get(idx));
+        if(w3Set == null){
+            GUIMethods.showError("Set troppo piccolo!");
+            return;
+        }
+        for(MazeCell cell : w3Set)
             cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: pink");
     }
 
@@ -297,10 +354,26 @@ public class EditMazeController implements Initializable {
         System.out.println(cell);
         MazeCellType type = MazeCellType.values()[cellTypeChoice.getSelectionModel().getSelectedIndex()];
         switch(type){
-            case LIMITE -> maze.cells[x][y] = new Limite(x,y); //todo: vedere se tenere o no
-            case MURO -> maze.cells[x][y] = new Muro(x,y);
+            case LIMITE -> {
+                if(maze.areCoordinateLimite(x,y))
+                    maze.cells[x][y] = new Limite(x,y);
+                else
+                    GUIMethods.showError("Coordinate invalide per Limite");
+            }
+            case MURO -> {
+                if(!maze.areCoordinateLimite(x,y))
+                    maze.cells[x][y] = new Muro(x,y);
+                else
+                    GUIMethods.showError("Coordinate invalide per Muro");
+            }
             case PERCORSO -> maze.cells[x][y] = new Percorso(x,y);
-            case INIZIO_FINE -> maze.cells[x][y] = new InizioFine(x,y,true); //todo: vedere se tenere o no
+            case INIZIO_FINE -> {
+                boolean start = booleanChoice.isSelected();
+                if(!maze.hasInizioOrFine(start))
+                    maze.cells[x][y] = new InizioFine(x,y,start);
+                else
+                    GUIMethods.showError(((start) ? "Inizio" : "Fine")+" già presente!");
+            }
             case PORTA -> {
                 if(maze.isOppNoWalk2(cell)) maze.cells[x][y] = new Porta(x,y,false,1);
                 //todo: gestire quali interruttori o quante chiavi
@@ -334,11 +407,32 @@ public class EditMazeController implements Initializable {
         resetSetChoice();
     }
 
+    public void onModCell(ActionEvent event) {
+        MazeCellType type = MazeCellType.values()[cellTypeChoice.getSelectionModel().getSelectedIndex()];
+        switch(type){
+            case INIZIO_FINE -> {
+                booleanChoice.setSelected(booleanChoice1.isSelected());
+                onPutTypeIn(null);
+            }
+        }
+    }
+
+    public void onShowSets(ActionEvent event) {
+        renderMaze(maze);
+        for(int i=0;i<maze.walkSets.size();i++)
+            for(MazeCell cell : maze.walkSets.get(i))
+                if(cell.type().isPercorso()) cellsMatrix[cell.x][cell.y]
+                        .setStyle("-fx-background-color: "+
+                                GUIMethods.setColors[i%GUIMethods.setColors.length]);
+    }
+
     public void onSave(ActionEvent event) {
-        if(maze.isSolvable())
-            Maze.mazeToXML(maze,fileName);
-        else
-            GUIMethods.showError("Labirinto irrisolvibile");
+        try{
+            if(maze.isSolvable())
+                Maze.mazeToXML(maze,fileName);
+        }catch (Exception e){
+            GUIMethods.showError(e.getMessage());
+        }
     }
 
     public void onBack(ActionEvent event) {

@@ -218,6 +218,7 @@ public class Maze {
     }
 
     public List<Set<MazeCell>> walkSets(List<MazeCell> walk){
+        setInizioAsFirst(walk);
         int d = walk.size();
         Set<MazeCell> visited = new HashSet<>();
         List<Set<MazeCell>> finalSets = new ArrayList<>();
@@ -239,6 +240,23 @@ public class Maze {
         walkSets.clear();
         walkSets.addAll(finalSets);
         return walkSets;
+    }
+
+    private void setInizioAsFirst(List<MazeCell> walk){
+        MazeCell inizio = null;
+        for(MazeCell cell : walk){
+            if(cell.type().isInizioFine()){
+                var initF = (InizioFine) cell;
+                if(initF.isStart) {
+                    inizio = cell;
+                    break;
+                }
+            }
+        }
+        if(inizio != null){
+            walk.remove(inizio);
+            walk.add(0,inizio);
+        }
     }
 
     public Set<MazeCell> oppNoWalk2Set(Set<MazeCell> walkSet){
@@ -419,8 +437,86 @@ public class Maze {
         return !set.isEmpty();
     }
 
-    public boolean isSolvable(){ //todo: implementare
+    public boolean areCoordinateLimite(int x, int y){
+        return x == 0 || x == h-1 || y == 0 || y == w-1;
+    }
+
+    public boolean hasInizioAndFine(){
+        var inF = getAllOfTypes(MazeCellType.INIZIO_FINE);
+        if(inF.size() != 2) return false;
+        InizioFine i = (InizioFine) inF.get(0),
+                f = (InizioFine) inF.get(1),
+                inizio = (i.isStart) ? i : f,
+                fine = (!i.isStart) ? i : f;
+        return inizio.isStart != fine.isStart;
+    }
+
+    public boolean hasInizioOrFine(boolean inizio){
+        var inF = getAllOfTypes(MazeCellType.INIZIO_FINE);
+        for(MazeCell cell : inF)
+            if(((InizioFine) cell).isStart == inizio)
+                return true;
+        return false;
+    }
+
+    public boolean isSolvable() throws Exception{ //todo: implementare
+        if(!hasInizioAndFine()){
+            throw new Exception("Manca l'Inizio o la Fine del Labirinto");
+        }
         return true;
+    }
+
+    public Map<Integer,List<Integer>> topologicalOrderOfWalkSets(){
+        Map<Integer,List<Integer>> topoMap = new HashMap<>();
+        walkSets();
+        for(int i=0;i<walkSets.size();i++)
+            topoMap.put(i,new ArrayList<>());
+        for(MazeCell cell : getAllOfTypes(MazeCellType.PORTA)){
+            var vicini = viciniFilter(cell,MazeCellType.PERCORSO);
+            if(vicini.size() == 2){
+                int setA = -1, setB = -1;
+                for(int i=0;i<walkSets.size();i++){
+                    Set<MazeCell> set = walkSets.get(i);
+                    if(set.contains(vicini.get(0))) setA = i;
+                    else if(set.contains(vicini.get(1))) setB = i;
+                }
+                if(setA != -1 && setB != -1 && setA != setB){
+                    var l = topoMap.get(setA);
+                    l.add(setB);
+                    l = topoMap.get(setB);
+                    l.add(setA);
+                }
+            }
+        }
+        Map<Integer,List<Integer>> risTopoMap = new HashMap<>();
+        List<Integer> queue = new ArrayList<>();
+        queue.add(0);
+        Set<Integer> tSet = new HashSet<>();
+        while(!queue.isEmpty()){
+            var cur = queue.remove(0);
+            var l = topoMap.get(cur);
+            tSet.add(cur);
+            var nL = new ArrayList<>(l);
+            nL.removeAll(tSet);
+            risTopoMap.put(cur,nL);
+            if(!l.isEmpty())
+                for(Integer next : l)
+                    if(!tSet.contains(next))
+                        queue.add(next);
+        }
+        return risTopoMap;
+    }
+
+    public boolean isValidTopoMap(Map<Integer,List<Integer>> topoMap){
+        Set<Integer> set = new HashSet<>();
+        for(Integer k : topoMap.keySet()){
+            set.add(k);
+            set.addAll(topoMap.get(k));
+            for(Integer v : topoMap.get(k))
+                if(!topoMap.containsKey(v))
+                    return false;
+        }
+        return walkSets.size() == set.size();
     }
 
     @Override

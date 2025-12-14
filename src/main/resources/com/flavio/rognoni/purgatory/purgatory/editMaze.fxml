@@ -11,7 +11,7 @@
             <Font name="Verdana" size="15.0" />
         </font>
     </Button>
-    <Button fx:id="distBtn" layoutX="94.0" layoutY="212.0" mnemonicParsing="false" onAction="#onDistanze" style="-fx-background-color: green;" text="Distanze" textFill="WHITE">
+    <Button fx:id="distBtn" layoutX="93.0" layoutY="109.0" mnemonicParsing="false" onAction="#onDistanze" style="-fx-background-color: green;" text="Distanze" textFill="WHITE">
         <font>
             <Font name="Verdana" size="15.0" />
         </font>
@@ -47,18 +47,18 @@
             <Font name="Verdana" size="15.0" />
         </font>
     </Button>
-    <ComboBox fx:id="cellTypeChoice" layoutX="60.0" layoutY="341.0" prefWidth="150.0" />
-    <Button fx:id="putTypeInBtn" layoutX="106.0" layoutY="422.0" mnemonicParsing="false" onAction="#onPutTypeIn" style="-fx-background-color: green;" text="Metti" textFill="WHITE">
+    <ComboBox fx:id="cellTypeChoice" layoutX="60.0" layoutY="162.0" prefWidth="150.0" />
+    <Button fx:id="putTypeInBtn" layoutX="106.0" layoutY="243.0" mnemonicParsing="false" onAction="#onPutTypeIn" style="-fx-background-color: green;" text="Metti" textFill="WHITE">
         <font>
             <Font name="Verdana" size="15.0" />
         </font>
     </Button>
-    <Spinner layoutX="60.0" layoutY="385.0" prefHeight="25.0" prefWidth="60.0" fx:id="xSpinner">
+    <Spinner layoutX="60.0" layoutY="206.0" prefHeight="25.0" prefWidth="60.0" fx:id="xSpinner">
         <valueFactory>
             <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
         </valueFactory>
     </Spinner>
-    <Spinner fx:id="ySpinner" layoutX="150.0" layoutY="385.0" prefHeight="25.0" prefWidth="60.0">
+    <Spinner fx:id="ySpinner" layoutX="150.0" layoutY="206.0" prefHeight="25.0" prefWidth="60.0">
         <valueFactory>
             <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
         </valueFactory>
@@ -108,12 +108,12 @@
          <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
       </valueFactory>
    </Spinner>
-    <Label layoutX="37.0" layoutY="385.0" text="x">
+    <Label layoutX="37.0" layoutY="206.0" text="x">
         <font>
             <Font name="Verdana" size="20.0" />
         </font>
     </Label>
-   <Label layoutX="131.0" layoutY="385.0" text="y">
+   <Label layoutX="131.0" layoutY="206.0" text="y">
       <font>
          <Font name="Verdana" size="20.0" />
       </font>
@@ -123,4 +123,20 @@
             <Font name="Verdana" size="15.0" />
         </font>
     </Button>
+   <Button fx:id="showSetsBtn" layoutX="1086.0" layoutY="509.0" mnemonicParsing="false" onAction="#onShowSets" style="-fx-background-color: green;" text="Mostra Insiemi" textFill="WHITE">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
+   <CheckBox fx:id="booleanChoice" layoutX="99.0" layoutY="288.0" mnemonicParsing="false" text="CheckBox" />
+   <CheckBox fx:id="booleanChoice1" layoutX="101.0" layoutY="617.0" mnemonicParsing="false" text="CheckBox" />
+   <Button fx:id="modBtn" layoutX="102.0" layoutY="650.0" mnemonicParsing="false" onAction="#onModCell" style="-fx-background-color: green;" text="Modifica" textFill="WHITE">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
+   <TextArea fx:id="cellInfoTxt" editable="false" layoutX="15.0" layoutY="409.0" prefHeight="200.0" prefWidth="257.0" promptText="Cell Infos">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font></TextArea>
 </AnchorPane>
