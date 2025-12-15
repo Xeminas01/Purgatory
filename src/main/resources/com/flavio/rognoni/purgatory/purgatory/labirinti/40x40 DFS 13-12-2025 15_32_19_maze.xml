@@ -116,7 +116,7 @@
     <Muro x="2" y="33"/>
     <Percorso x="2" y="34"/>
     <Muro x="2" y="35"/>
-    <Percorso x="2" y="36"/>
+    <Teletrasporto ex="10" ey="16" x="2" y="36"/>
     <Muro x="2" y="37"/>
     <Percorso x="2" y="38"/>
     <Limite x="2" y="39"/>
@@ -416,7 +416,7 @@
     <Percorso x="10" y="13"/>
     <Muro x="10" y="14"/>
     <Percorso x="10" y="15"/>
-    <Percorso x="10" y="16"/>
+    <Teletrasporto ex="2" ey="36" x="10" y="16"/>
     <Muro x="10" y="17"/>
     <Percorso x="10" y="18"/>
     <Percorso x="10" y="19"/>
@@ -702,7 +702,7 @@
     <Percorso x="17" y="19"/>
     <Muro x="17" y="20"/>
     <Muro x="17" y="21"/>
-    <Percorso x="17" y="22"/>
+    <Porta chiavi="1" interruttori="" open="false" type="0" x="17" y="22"/>
     <Muro x="17" y="23"/>
     <Muro x="17" y="24"/>
     <Percorso x="17" y="25"/>
@@ -870,7 +870,7 @@
     <Muro x="21" y="27"/>
     <Muro x="21" y="28"/>
     <Percorso x="21" y="29"/>
-    <Percorso x="21" y="30"/>
+    <Porta chiavi="1" interruttori="" open="false" type="0" x="21" y="30"/>
     <Percorso x="21" y="31"/>
     <Muro x="21" y="32"/>
     <Percorso x="21" y="33"/>
@@ -1001,7 +1001,7 @@
     <Muro x="24" y="38"/>
     <Limite x="24" y="39"/>
     <Limite x="25" y="0"/>
-    <Percorso x="25" y="1"/>
+    <Porta chiavi="1" interruttori="" open="false" type="0" x="25" y="1"/>
     <Muro x="25" y="2"/>
     <Muro x="25" y="3"/>
     <Muro x="25" y="4"/>
@@ -1544,7 +1544,7 @@
     <Percorso x="38" y="21"/>
     <Muro x="38" y="22"/>
     <Percorso x="38" y="23"/>
-    <Percorso x="38" y="24"/>
+    <Porta chiavi="1" interruttori="" open="false" type="0" x="38" y="24"/>
     <Percorso x="38" y="25"/>
     <Percorso x="38" y="26"/>
     <Muro x="38" y="27"/>

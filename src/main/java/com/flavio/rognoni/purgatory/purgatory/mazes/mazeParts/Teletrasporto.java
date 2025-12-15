@@ -5,14 +5,19 @@ import org.w3c.dom.Element;
 
 public class Teletrasporto extends MazeCell {
 
-    public final Teletrasporto endPoint;
+    public final int ex,ey;
 
-    public Teletrasporto(int x,int y,Teletrasporto endPoint){
+    public Teletrasporto(int x,int y,int ex,int ey){
         super(x,y);
-        this.endPoint = endPoint;
+        this.ex = ex;
+        this.ey = ey;
     }
 
-    public Teletrasporto(int x,int y){ this(x,y,null); }
+    public Teletrasporto(int x,int y){ this(x,y,-1,-1); }
+
+    public boolean noEndPoint(){
+        return ex == -1 && ey == -1;
+    }
 
     @Override
     public MazeCellType type() { return MazeCellType.TELETRASPORTO; }
@@ -24,17 +29,17 @@ public class Teletrasporto extends MazeCell {
     public String color() { return "DeepSkyBlue"; }
 
     @Override
-    public MazeCell copy() { return new Teletrasporto(x,y,endPoint); }
+    public MazeCell copy() { return new Teletrasporto(x,y,ex,ey); }
 
     @Override
     public MazeCell copyOf(int x, int y) {
-        return new Teletrasporto(x,y,null);
+        return new Teletrasporto(x,y,-1,-1);
     }
 
     @Override
     public String toString() {
-        String ep = (endPoint != null) ?
-                "{endPoint:"+endPoint.x+","+endPoint.y+"}" : "{endPoint:null}";
+        String ep = (ex != -1 && ey != -1) ?
+                "{endPoint:"+ex+","+ey+"}" : "{endPoint:miss}";
         return super.toString()+ep;
     }
 
@@ -43,7 +48,8 @@ public class Teletrasporto extends MazeCell {
         Element el = doc.createElement(this.getClass().getSimpleName());
         el.setAttribute("x",""+x);
         el.setAttribute("y",""+y);
-        el.setAttribute("endPoint",x+","+y);
+        el.setAttribute("ex",""+ex);
+        el.setAttribute("ey",""+ey);
         return el;
     }
 
@@ -54,8 +60,7 @@ public class Teletrasporto extends MazeCell {
             String[] eCoords = e.getAttribute("endPoint").split(",");
             int ex = Integer.parseInt(eCoords[0]),
                     ey = Integer.parseInt(eCoords[1]);
-            Teletrasporto t = new Teletrasporto(ex,ey);
-            return new Teletrasporto(x,y,t);
+            return new Teletrasporto(x,y,ex,ey);
         }
         else return null;
     }

@@ -87,13 +87,19 @@ public class Porta extends MazeCell{
         }else return false;
     }
 
-    public void openDoor(int chiavi){
-        if(isToOpen(chiavi)) open = true;
+//    public void openDoor(int chiavi){
+//        //if(isToOpen(chiavi))
+//        open = true;
+//    }
+
+    public void openDoor(){
+        //if(isToOpen(chiavi))
+        open = true;
     }
 
     public void closeDoor(){
-        if(isToClose() && type != PORTA_A_CHIAVI)
-            open = false;
+        //if(isToClose() && type != PORTA_A_CHIAVI)
+        open = false;
     }
 
     @Override

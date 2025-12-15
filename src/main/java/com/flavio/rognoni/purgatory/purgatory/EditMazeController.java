@@ -65,6 +65,7 @@ public class EditMazeController implements Initializable {
     private List<MazeCell> celle;
     private MazeCell[] teles;
     private String fileName;
+    private MazePanel mPanel;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -97,6 +98,14 @@ public class EditMazeController implements Initializable {
 
     public void setMaze(Maze maze,String fileName) {
         this.maze = maze;
+//        double lx = mazePanel.getLayoutX(),
+//                ly = mazePanel.getLayoutY(),
+//                ph = mazePanel.getPrefHeight(),
+//                pw = mazePanel.getPrefWidth();
+//        this.mPanel = new MazePanel(maze.h,maze.w,(int) ph,(int) pw);
+//        mPanel.setLayoutX(lx);
+//        mPanel.setLayoutY(ly);
+//        backgroundPane.getChildren().add(mPanel);
         this.fileName = fileName;
         this.cellDim = 720/Math.max(maze.h,maze.w);
         //System.out.println(cellDim);
@@ -273,7 +282,8 @@ public class EditMazeController implements Initializable {
                     Teletrasporto t = (Teletrasporto) cell;
                     var list = new ArrayList<String>();
                     var tCells = maze.getAllOfTypes(MazeCellType.TELETRASPORTO);
-                    tCells.remove(t.endPoint);
+                    tCells.remove(t);
+                    tCells.remove(maze.cellAt(t.ex,t.ey));
                     for(MazeCell tCell : tCells)
                         list.add(tCell.x+","+tCell.y);
                     if(list.isEmpty()) {
@@ -457,13 +467,12 @@ public class EditMazeController implements Initializable {
     public void onAddTele(ActionEvent event) {
         if(teles != null && teles.length == 2){
             cellTypeChoice.getSelectionModel().select(MazeCellType.TELETRASPORTO.ordinal());
-            for(MazeCell cell : teles){
-                xSpinner.getValueFactory().setValue(cell.x);
-                ySpinner.getValueFactory().setValue(cell.y);
-                onPutTypeIn(null);
-            }
+            maze.cells[teles[0].x][teles[0].y] = teles[0];
+            maze.cells[teles[1].x][teles[1].y] = teles[1];
             teles = null;
             addTeleBtn.setVisible(false);
+            renderMaze(maze);
+            resetSetChoice();
         }
     }
 
@@ -539,21 +548,22 @@ public class EditMazeController implements Initializable {
             }
             case TELETRASPORTO -> {
                 if(maze.isNoWalk3(cell)) {
-                    String[] ch = cellChoice.getValue().split(",");
-                    if(ch.length == 2){
+                    if(cellChoice.getValue() != null &&
+                            cellChoice.getValue().split(",").length == 2){
+                        String[] ch = cellChoice.getValue().split(",");
                         int tx = Integer.parseInt(ch[0]), ty = Integer.parseInt(ch[1]);
                         var tCell = maze.cellAt(tx,ty);
                         if(tCell.type().isTeletrasporto()){
-                            Teletrasporto teletrasporto = (Teletrasporto) cell;
-                            if(teletrasporto.x != x && teletrasporto.y != y){
-                                maze.cells[x][y] = new Teletrasporto(x,y,teletrasporto);
+                            Teletrasporto t = (Teletrasporto) tCell;
+                            if(t.x != x && t.y != y){
+                                maze.cells[x][y] = new Teletrasporto(x,y,t.x,t.y);
                             }else{
-                                maze.cells[x][y] = new Teletrasporto(x,y,null);
+                                maze.cells[x][y] = new Teletrasporto(x,y);
                                 GUIMethods.showWarning("Nessun end point specificato per questo teletrasporto");
                             }
                         }
                     }else{
-                        maze.cells[x][y] = new Teletrasporto(x,y,null);
+                        maze.cells[x][y] = new Teletrasporto(x,y);
                         GUIMethods.showWarning("Nessun end point specificato per questo teletrasporto");
                     }
                 }

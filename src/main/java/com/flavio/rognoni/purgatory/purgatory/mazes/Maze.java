@@ -146,6 +146,29 @@ public class Maze {
 
     public boolean isAllReachable(){ return unreachablePaths() == 0; }
 
+    public int unreachablePathsWithTele(){
+        List<MazeCell> paths = getAllWalkable(true),
+                start = getAllOfTypes(MazeCellType.INIZIO_FINE);
+        if(paths.isEmpty() || start.isEmpty()) return -1;
+        Set<MazeCell> visited = new HashSet<>();
+        List<MazeCell> walk = new ArrayList<>();
+        walk.add(start.get(0));
+        while(!walk.isEmpty()){
+            MazeCell cur = walk.remove(0);
+            if(visited.add(cur)) {
+                walk.addAll(viciniWalkable(cur,true));
+                if(cur.type().isTeletrasporto()) {
+                    var t = (Teletrasporto) cur;
+                    if(!t.noEndPoint())
+                        walk.add(cellAt(t.ex,t.ey));
+                }
+            }
+        }
+        return Math.abs(visited.size()-paths.size());
+    }
+
+    public boolean isAllReachableWithTele(){ return unreachablePathsWithTele() == 0; }
+
     public void fixMaze(){ //funziona che sistema il labirinto in fase di creazione con l'automa cellulare
         int best = unreachablePaths();
         while(best != 0){
@@ -425,8 +448,8 @@ public class Maze {
         var wall3BL = new ArrayList<>(wall3B);
         var ta = wall3AL.get(rand.nextInt(wall3AL.size()));
         var tb = wall3BL.get(rand.nextInt(wall3BL.size()));
-        teleports[0] = new Teletrasporto(ta.x,ta.y,teleports[1]); //questa rivedere
-        teleports[1] = new Teletrasporto(tb.x,tb.y,teleports[0]);
+        teleports[0] = new Teletrasporto(ta.x,ta.y,tb.x,tb.y); //questa rivedere
+        teleports[1] = new Teletrasporto(tb.x,tb.y,ta.x,ta.y);
         return teleports;
     }
 
@@ -491,6 +514,32 @@ public class Maze {
         return list;
     }
 
+    public List<Interruttore> topoCorrectInterruttori(Porta porta,Map<Integer, List<Integer>> topoMap){
+        List<Interruttore> list = new ArrayList<>(porta.interruttori);
+        var vicini = viciniFilter(porta,MazeCellType.PERCORSO);
+        if(vicini.size() == 2){
+            int setA = -1, setB = -1;
+            Map<Interruttore,Integer> interrSetMap = new HashMap<>();
+            for(int i=0;i<walkSets.size();i++){
+                Set<MazeCell> set = walkSets.get(i);
+                if(set.contains(vicini.get(0))) setA = i;
+                else if(set.contains(vicini.get(1))) setB = i;
+                for(Interruttore interruttore : list)
+                    if(set.contains(interruttore))
+                        interrSetMap.put(interruttore,i);
+            }
+            if(interrSetMap.size() != list.size())
+                return null;
+            int next = followInTopo(setA,setB,topoMap);
+            for(Interruttore interr : list){
+                int set = interrSetMap.get(interr);
+                if(!isPrevInTopo(set,next,topoMap))
+                    return null;
+            }
+        }else return null;
+        return list;
+    }
+
     private int followInTopo(int a,int b,Map<Integer, List<Integer>> topoMap){
         if(isFollowInTopo(a,b,topoMap)) return b;
         else if(isFollowInTopo(b,a,topoMap)) return a;
@@ -531,17 +580,65 @@ public class Maze {
         else return -1;
     }
 
-    public boolean isSolvable() throws Exception{ //todo: implementare
+    public boolean validTeleports(){
+        var tele = getAllOfTypes(MazeCellType.TELETRASPORTO);
+        if(tele.size() % 2 != 0) return false;
+        List<Teletrasporto> teleports = new ArrayList<>();
+        for(MazeCell cell : tele) teleports.add((Teletrasporto) cell);
+        for(Teletrasporto t : teleports){
+            if(t.noEndPoint()) return false;
+            else{
+                Teletrasporto ep = (Teletrasporto) cellAt(t.ex,t.ey);
+                System.out.println(ep);
+                if(!(ep.ex == t.x && ep.ey == t.y))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean validPorte(){
+        var port = getAllOfTypes(MazeCellType.PORTA);
+        List<Porta> porte = new ArrayList<>();
+        for(MazeCell cell : port) porte.add((Porta) cell);
+        var topoMap = topologicalOrderOfWalkSets();
+        for(Porta p : porte){
+            if(p.isInterruttori()){
+                if(topoCorrectInterruttori(p,topoMap) == null)
+                    return false;
+            }
+            p.openDoor();
+        }
+        if(getAllOfTypes(MazeCellType.TELETRASPORTO).isEmpty() &&
+                !isAllReachable())
+            return false;
+        else if(!isAllReachableWithTele()) {
+            System.out.println("not tele");
+            return false;
+        }
+        for(Porta p : porte) p.closeDoor();
+        return true;
+    }
+
+    private boolean validITT(){
+        for(MazeCell cell : getAllOfTypes(MazeCellType.INTERRUTTORE,
+                MazeCellType.TESORO,MazeCellType.TRAPPOLA)){
+            if(cell.type().isInterruttore()) if(((Interruttore) cell).isOn()) return false;
+            if(cell.type().isTesoro()) if(((Tesoro) cell).isTaken()) return false;
+            if(cell.type().isTrappola()) if(((Trappola) cell).isActivated()) return false;
+        }
+        return true;
+    }
+
+    public boolean isSolvable() throws Exception{
         if(!hasInizioAndFine())
             throw new Exception("Manca l'Inizio o la Fine del Labirinto");
-        //controllo teletrasporti (tutti con un endpoint nel labirinto e
-        // tutti accoppiati a -> b e b -> a, non  a -> b e b -> c)
-        //controllo porte (aprire tutte le porte e verificare che il labirinto
-        // sia tutto percorribile (anche con teletrasporti),
-        // controllare ordini topologici o tesori con chiavi in ordine topologico)
-        //controllo interruttori (spegnerli tutti)
-        //controllo tesori (controllare che siano tutti non presi)
-        //controllo trappole (tutte disattivate)
+        if(!validTeleports())
+            throw new Exception("Teletrasporti invalidi end points mancanti o errati");
+        if(!validPorte())
+            throw new Exception("Porte con interruttori invalide o non possibile calpestare tutto con le porte aperte");
+        if(!validITT())
+            throw new Exception("Interruttori non disattivati, tesori presi o trappole attivate");
         return true;
     }
 
@@ -578,11 +675,13 @@ public class Maze {
             var nL = new ArrayList<>(l);
             nL.removeAll(tSet);
             risTopoMap.put(cur,nL);
-            if(!l.isEmpty())
-                for(Integer next : l)
-                    if(!tSet.contains(next))
-                        queue.add(next);
+            for(Integer next : l)
+                if(!tSet.contains(next))
+                    queue.add(next);
         }
+        for(Integer k : topoMap.keySet())
+            if(risTopoMap.get(k) == null && topoMap.get(k).isEmpty())
+                risTopoMap.put(k,topoMap.get(k));
         return risTopoMap;
     }
 
@@ -693,13 +792,14 @@ public class Maze {
                         }
                     }else if(j.type().isTeletrasporto()){
                         Teletrasporto t = (Teletrasporto) j;
-                        if(t.endPoint != null){
-                            var cell = maze.cells[t.endPoint.x][t.endPoint.y];
-                            if(cell.type().isTeletrasporto()){
-                                Teletrasporto ep = (Teletrasporto) cell;
-                                maze.cells[t.x][t.y] = new Teletrasporto(t.x,t.y,ep);
-                            }
-                        }
+                        maze.cells[t.x][t.y] = new Teletrasporto(t.x,t.y,t.ex,t.ey);
+//                        if(!t.noEndPoint()){
+//                            var cell = maze.cells[t.ex][t.ey];
+//                            if(cell.type().isTeletrasporto()){
+//                                Teletrasporto ep = (Teletrasporto) cell;
+//                                maze.cells[t.x][t.y] = new Teletrasporto(t.x,t.y,t.ex,t.ey);
+//                            }
+//                        }
                     }
                 }
             }
