@@ -34,15 +34,12 @@ public class MazeGenController implements Initializable {
     public Button stopBtn;
     public Button backBtn;
     public Label timeTxt;
-    private int cellDim;
-    private VBox rowsBox;
-    private HBox[] columnBoxes;
-    private Label[][] cellsMatrix;
     private Maze maze;
     private MazeGen mazeGen;
     private MazeGenType genType;
     private Timer timer;
     private boolean gen;
+    private MazePanel mPanel;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -54,33 +51,17 @@ public class MazeGenController implements Initializable {
     public void setMaze(Maze maze, int sx, int sy, MazeGenType genType) {
 
         this.maze = maze;
+        double lx = mazePanel.getLayoutX(),
+                ly = mazePanel.getLayoutY(),
+                ph = mazePanel.getPrefHeight(),
+                pw = mazePanel.getPrefWidth();
+        this.mPanel = new MazePanel(maze.h,maze.w,(int) ph,(int) pw);
+        mPanel.setLayoutX(lx);
+        mPanel.setLayoutY(ly);
+        backgroundPane.getChildren().add(mPanel);
+        backgroundPane.getChildren().remove(mazePanel);
+        mazePanel = mPanel;
         this.genType = genType;
-        this.cellDim = 720/Math.max(maze.h,maze.w);
-        //System.out.println(cellDim);
-        this.rowsBox = new VBox();
-        mazePanel.getChildren().add(rowsBox);
-        this.columnBoxes = new HBox[maze.h];
-        this.cellsMatrix = new Label[maze.h][maze.w];
-        for (int i = 0; i < maze.h; i++) {
-            HBox hBox = new HBox();
-            for (int j = 0; j < maze.w; j++) {
-                Label label = new Label();
-                MazeCell cell = maze.cellAt(i,j);
-                label.setAlignment(Pos.CENTER);
-                label.setMinWidth(cellDim);
-                label.setPrefWidth(cellDim);
-                label.setMaxWidth(cellDim);
-                label.setMinHeight(cellDim);
-                label.setPrefHeight(cellDim);
-                label.setMaxHeight(cellDim);
-                label.setFont(new Font("Verdana",20));
-                label.setStyle("-fx-background-color: "+cell.color());
-                hBox.getChildren().add(label);
-                cellsMatrix[i][j] = label;
-            }
-            rowsBox.getChildren().add(hBox);
-            columnBoxes[i] = hBox;
-        }
 
         setGenerator(sx,sy);
 
@@ -91,42 +72,29 @@ public class MazeGenController implements Initializable {
             case DFS_GEN -> {
                 mazeGen = new DFSGen(this.maze,sx,sy);
                 ((DFSGen) mazeGen).start();
-                renderMaze(mazeGen.getMaze(),null);
+                mPanel.renderMaze(mazeGen.getMaze());
             }
             case FRACTAL_GEN -> {
                 int rounds = maze.h - 2;
                 rounds = (int) (Math.log(rounds)/Math.log(2));
                 mazeGen = new FractalTessellationGen(rounds,sx,sy);
-                renderMaze(mazeGen.getMaze(),null);
+                mPanel.renderMaze(mazeGen.getMaze());
             }
             case CELLULAR_GEN -> {
                 mazeGen = new CellularGen(this.maze,sx,sy);
-                renderMaze(this.maze,null);
+                mPanel.renderMaze(this.maze);
             }
             case I_R_KRUSKAL_GEN -> {
                 mazeGen = new IRKGen(this.maze,sx,sy);
-                renderMaze(this.maze,null);
+                mPanel.renderMaze(this.maze);
             }
             case I_R_PRIM_GEM -> {
                 mazeGen = new IRPGen(this.maze,sx,sy);
-                renderMaze(this.maze,null);
+                mPanel.renderMaze(this.maze);
             }
             case WILSON_GEN -> {
                 mazeGen = new WilsonGen(this.maze,sx,sy);
-                renderMaze(this.maze,null);
-            }
-        }
-    }
-
-    private void renderMaze(Maze maze, MazeCell cur){
-        if(maze == null) return;
-        for (int i = 0; i < maze.h; i++) {
-            for (int j = 0; j < maze.w; j++) {
-                MazeCell cell = maze.cellAt(i,j);
-                Label label = cellsMatrix[i][j];
-                label.setStyle("-fx-background-color: "+cell.color());
-                if(cell.equals(cur))
-                    label.setStyle("-fx-background-color: green");
+                mPanel.renderMaze(this.maze);
             }
         }
     }
@@ -144,20 +112,20 @@ public class MazeGenController implements Initializable {
                     timeTask(true);
                 });
             }
-        },0,genType.millis());
+        },0,genType.millis(maze.h*maze.w));
     }
 
     private void timeTask(boolean fromTimer){
         if(gen) return;
         int t;
         if (genType == MazeGenType.DFS_GEN) {
-            renderMaze(mazeGen.getMaze(), mazeGen.step());
+            mPanel.renderMaze(mazeGen.getMaze(), mazeGen.step());
             t = mazeGen.getT();
         } else {
             mazeGen.step();
             t = mazeGen.getT();
             maze = mazeGen.getMaze();
-            renderMaze(maze, null);
+            mPanel.renderMaze(maze);
         }
         gen = mazeGen.isGen();
         if (gen) {

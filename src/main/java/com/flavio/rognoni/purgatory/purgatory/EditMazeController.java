@@ -57,11 +57,7 @@ public class EditMazeController implements Initializable {
     public TextField cellTextInput;
     public TextArea cellListArea;
     private List<MazeCell> cellList;
-    private VBox rowsBox;
-    private HBox[] columnBoxes;
-    private Label[][] cellsMatrix;
     private Maze maze;
-    private int cellDim;
     private List<MazeCell> celle;
     private MazeCell[] teles;
     private String fileName;
@@ -98,61 +94,31 @@ public class EditMazeController implements Initializable {
 
     public void setMaze(Maze maze,String fileName) {
         this.maze = maze;
-//        double lx = mazePanel.getLayoutX(),
-//                ly = mazePanel.getLayoutY(),
-//                ph = mazePanel.getPrefHeight(),
-//                pw = mazePanel.getPrefWidth();
-//        this.mPanel = new MazePanel(maze.h,maze.w,(int) ph,(int) pw);
-//        mPanel.setLayoutX(lx);
-//        mPanel.setLayoutY(ly);
-//        backgroundPane.getChildren().add(mPanel);
         this.fileName = fileName;
-        this.cellDim = 720/Math.max(maze.h,maze.w);
-        //System.out.println(cellDim);
-        this.rowsBox = new VBox();
-        mazePanel.getChildren().add(rowsBox);
-        this.columnBoxes = new HBox[maze.h];
-        this.cellsMatrix = new Label[maze.h][maze.w];
+        double lx = mazePanel.getLayoutX(),
+                ly = mazePanel.getLayoutY(),
+                ph = mazePanel.getPrefHeight(),
+                pw = mazePanel.getPrefWidth();
+        this.mPanel = new MazePanel(maze.h,maze.w,(int) ph,(int) pw);
+        mPanel.setLayoutX(lx);
+        mPanel.setLayoutY(ly);
+        backgroundPane.getChildren().add(mPanel);
+        backgroundPane.getChildren().remove(mazePanel);
+        mazePanel = mPanel;
         GUIMethods.renderSpinner(xSpinner,0,maze.h);
         GUIMethods.renderSpinner(ySpinner,0,maze.h);
-        for (int i = 0; i < maze.h; i++) {
-            HBox hBox = new HBox();
-            for (int j = 0; j < maze.w; j++) {
-                Label label = new Label();
-                MazeCell cell = maze.cellAt(i,j);
-                label.setAlignment(Pos.CENTER);
-                label.setMinWidth(cellDim);
-                label.setPrefWidth(cellDim);
-                label.setMaxWidth(cellDim);
-                label.setMinHeight(cellDim);
-                label.setPrefHeight(cellDim);
-                label.setMaxHeight(cellDim);
-                label.setFont(new Font("Verdana",10));
-                label.setStyle("-fx-background-color: "+cell.color());
+        for(int i=0;i<mPanel.h;i++){
+            for(int j=0;j<mPanel.w;j++){
                 final int x = i, y = j;
-                label.setOnMouseClicked(e -> {
+                mPanel.cellsMatrix[i][j].setOnMouseClicked(e -> {
                     setPutSpinners(x,y);
                 });
-                hBox.getChildren().add(label);
-                cellsMatrix[i][j] = label;
             }
-            rowsBox.getChildren().add(hBox);
-            columnBoxes[i] = hBox;
         }
 
-        renderMaze(maze);
+        mPanel.renderMaze(maze);
         resetSetChoice();
 
-    }
-
-    private void renderMaze(Maze maze){
-        for (int i = 0; i < maze.h; i++) {
-            for (int j = 0; j < maze.w; j++) {
-                MazeCell cell = maze.cellAt(i,j);
-                Label label = cellsMatrix[i][j];
-                label.setStyle("-fx-background-color: "+cell.color());
-            }
-        }
     }
 
     private void resetSetChoice(){
@@ -314,36 +280,16 @@ public class EditMazeController implements Initializable {
     }
 
     public void onDistanze(ActionEvent event) { //todo: vedere se togliere
-        renderMaze(maze);
+        mPanel.renderMaze(maze);
         var middle = maze.middleDistancesInizioToFine().get(0).cell;
-        cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: yellow");
+        mPanel.cellsMatrix[middle.x][middle.y].setStyle("-fx-background-color: yellow");
     }
 
     private void renderSet(int idx,boolean choice){
         if(idx < 0) return;
-        renderMaze(maze);
+        mPanel.renderMaze(maze);
         var set = maze.walkSets.get(idx);
-        for(MazeCell cell : set){
-            if(choice){
-                if(cell.type().isPercorso())
-                    cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: red");
-                else if(cell.type().isInizioFine()){
-                    if(((InizioFine) cell).isStart)
-                        cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: yellow");
-                    else
-                        cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: orange");
-                }
-            }else{
-                if(cell.type().isPercorso())
-                    cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: blue");
-                else if(cell.type().isInizioFine()){
-                    if(((InizioFine) cell).isStart)
-                        cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: cyan");
-                    else
-                        cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: skyblue");
-                }
-            }
-        }
+        mPanel.renderSet(set,choice);
     }
 
     public void onOpp2WalkSet(ActionEvent event) {
@@ -354,8 +300,7 @@ public class EditMazeController implements Initializable {
             GUIMethods.showError("Set troppo piccolo!");
             return;
         }
-        for(MazeCell cell : maze.oppNoWalk2Set(maze.walkSets.get(idx)))
-            cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: pink");
+        mPanel.colorCells(maze.oppNoWalk2Set(maze.walkSets.get(idx)),"pink");
     }
 
     public void on3WalkSet(ActionEvent event) {
@@ -366,16 +311,15 @@ public class EditMazeController implements Initializable {
             GUIMethods.showError("Set troppo piccolo!");
             return;
         }
-        for(MazeCell cell : w3Set)
-            cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: pink");
+        mPanel.colorCells(w3Set,"pink");
     }
 
     public void onBestOpp2Sep(ActionEvent event) {
-        renderMaze(maze);
+        mPanel.renderMaze(maze);
         var bestOpp2 = maze.bestSeparatorOpp2(percSpinner.getValue(),
                 maze.walkSets.get(setChoice.getSelectionModel().getSelectedIndex()));
         if(bestOpp2 != null){
-            cellsMatrix[bestOpp2.x][bestOpp2.y].setStyle("-fx-background-color: turquoise");
+            mPanel.cellsMatrix[bestOpp2.x][bestOpp2.y].setStyle("-fx-background-color: turquoise");
             xSpinner.getValueFactory().setValue(bestOpp2.x);
             ySpinner.getValueFactory().setValue(bestOpp2.y);
             cellTypeChoice.getSelectionModel().select(MazeCellType.PORTA.ordinal());
@@ -386,7 +330,7 @@ public class EditMazeController implements Initializable {
     }
 
     public void onBest3(ActionEvent event) {
-        renderMaze(maze);
+        mPanel.renderMaze(maze);
         var set = maze.walkSets.get(setChoice.getSelectionModel().getSelectedIndex());
         var best3 = maze.bestsNoWalks3(set,best3QtySpinner.getValue());
         if(best3 != null && !best3.isEmpty()) {
@@ -396,13 +340,12 @@ public class EditMazeController implements Initializable {
             celle.clear();
             celle.addAll(best3);
             addCelleBtn.setVisible(true);
-            for(MazeCell cell : best3)
-                cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: turquoise");
+            mPanel.colorCells(best3,"turquoise");
         }
     }
 
     public void onRandomOpp2(ActionEvent event) {
-        renderMaze(maze);
+        mPanel.renderMaze(maze);
         var set = maze.walkSets.get(setChoice.getSelectionModel().getSelectedIndex());
         var ro2 = maze.randomOppNoWalk2(set, randomOpp2Spinner.getValue());
         if(ro2 != null && !ro2.isEmpty()){
@@ -414,24 +357,22 @@ public class EditMazeController implements Initializable {
             celle.clear();
             celle.addAll(ro2);
             addCelleBtn.setVisible(true);
-            for(MazeCell cell : ro2)
-                cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: turquoise");
+            mPanel.colorCells(ro2,"turquoise");
         }
     }
 
     public void onRandom3(ActionEvent event) {
-        renderMaze(maze);
+        mPanel.renderMaze(maze);
         var set = maze.walkSets.get(setChoice.getSelectionModel().getSelectedIndex());
-        var ro2 = maze.randomNoWalk3(set,random3Spinner.getValue());
-        if(ro2 != null && !ro2.isEmpty()){
-            xSpinner.getValueFactory().setValue(ro2.get(0).x);
-            ySpinner.getValueFactory().setValue(ro2.get(0).y);
+        var ro3 = maze.randomNoWalk3(set,random3Spinner.getValue());
+        if(ro3 != null && !ro3.isEmpty()){
+            xSpinner.getValueFactory().setValue(ro3.get(0).x);
+            ySpinner.getValueFactory().setValue(ro3.get(0).y);
             cellTypeChoice.getSelectionModel().select(MazeCellType.INTERRUTTORE.ordinal());
             celle.clear();
-            celle.addAll(ro2);
+            celle.addAll(ro3);
             addCelleBtn.setVisible(true);
-            for(MazeCell cell : ro2)
-                cellsMatrix[cell.x][cell.y].setStyle("-fx-background-color: turquoise");
+            mPanel.colorCells(ro3,"turquoise");
         }
     }
 
@@ -448,7 +389,7 @@ public class EditMazeController implements Initializable {
     }
 
     public void onTele(ActionEvent event) {
-        renderMaze(maze);
+        mPanel.renderMaze(maze);
         var setA = maze.walkSets.get(setChoice.getSelectionModel().getSelectedIndex());
         var setB = maze.walkSets.get(setChoice1.getSelectionModel().getSelectedIndex());
         var ts = maze.randomTeleports(setA,setB);
@@ -458,7 +399,7 @@ public class EditMazeController implements Initializable {
             ySpinner.getValueFactory().setValue(teles[0].y);
             cellTypeChoice.getSelectionModel().select(MazeCellType.TELETRASPORTO.ordinal());
             for(MazeCell ms : ts)
-                cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: turquoise");
+                mPanel.cellsMatrix[ms.x][ms.y].setStyle("-fx-background-color: turquoise");
             addTeleBtn.setVisible(true);
         }else
             GUIMethods.showError("I Set hanno intersezione");
@@ -471,7 +412,7 @@ public class EditMazeController implements Initializable {
             maze.cells[teles[1].x][teles[1].y] = teles[1];
             teles = null;
             addTeleBtn.setVisible(false);
-            renderMaze(maze);
+            mPanel.renderMaze(maze);
             resetSetChoice();
         }
     }
@@ -571,7 +512,7 @@ public class EditMazeController implements Initializable {
                     GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
             }
         }
-        renderMaze(maze);
+        mPanel.renderMaze(maze);
         resetSetChoice();
     }
 
@@ -618,10 +559,10 @@ public class EditMazeController implements Initializable {
     }
 
     public void onShowSets(ActionEvent event) {
-        renderMaze(maze);
+        mPanel.renderMaze(maze);
         for(int i=0;i<maze.walkSets.size();i++)
             for(MazeCell cell : maze.walkSets.get(i))
-                if(cell.type().isPercorso()) cellsMatrix[cell.x][cell.y]
+                if(cell.type().isPercorso()) mPanel.cellsMatrix[cell.x][cell.y]
                         .setStyle("-fx-background-color: "+
                                 GUIMethods.setColors[i%GUIMethods.setColors.length]);
     }

@@ -15,9 +15,9 @@ public enum MazeGenType {
 
     public String getNome() { return nome; }
 
-    public int millis(){
+    public int millis(int dim){
         switch(this){
-            case DFS_GEN,I_R_KRUSKAL_GEN,I_R_PRIM_GEM -> { return 10; }
+            case DFS_GEN,I_R_KRUSKAL_GEN,I_R_PRIM_GEM -> { return (dim > 40000) ? 20 : 10; }
             case FRACTAL_GEN -> { return 1000; }
             default -> { return 100; }
         }

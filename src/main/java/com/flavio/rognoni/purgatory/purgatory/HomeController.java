@@ -45,8 +45,8 @@ public class HomeController implements Initializable {
         mazeEditChoice.getSelectionModel().selectFirst();
         GUIMethods.renderSpinner(hSpinner, Maze.MIN_DIM, Maze.MAX_DIM);
         GUIMethods.renderSpinner(wSpinner, Maze.MIN_DIM, Maze.MAX_DIM);
-        GUIMethods.renderSpinner(sxSpinner, 1, Maze.MAX_DIM-2);
-        GUIMethods.renderSpinner(sySpinner, 1, Maze.MAX_DIM-2);
+        GUIMethods.renderSpinner(sxSpinner, 0, Maze.MAX_DIM);
+        GUIMethods.renderSpinner(sySpinner, 0, Maze.MAX_DIM);
     }
 
     public void onGenMaze(ActionEvent event) {

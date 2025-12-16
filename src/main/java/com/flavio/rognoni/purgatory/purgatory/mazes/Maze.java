@@ -24,13 +24,16 @@ public class Maze {
     public final List<Set<MazeCell>> walkSets;
     private final Random rand = new Random();
 
-    public static final int MIN_DIM = 10, MAX_DIM = 1000;
+    public static final int MIN_DIM = 10, MAX_DIM = 200;
+
+    // todo: controllare anche che inizio e fine siano nel limite,
+    //  posizionabili solo nel limite e partibili dal limite, non angoli limite
 
     public Maze(int h, int w, MazeGenType type) throws Exception{
         if(h < MIN_DIM || h > MAX_DIM)
-            throw new Exception("Invalid rows too less or too many [10,1000]");
+            throw new Exception("Invalid rows too less or too many [10,300]");
         if(w < MIN_DIM || w > MAX_DIM)
-            throw new Exception("Invalid columns too less or too many [10,1000]");
+            throw new Exception("Invalid columns too less or too many [10,300]");
         this.h = h;
         this.w = w;
         this.genType = type;
@@ -137,6 +140,7 @@ public class Maze {
         List<MazeCell> walk = new ArrayList<>();
         walk.add(start.get(0));
         while(!walk.isEmpty()){
+            //System.out.println(visited.size()+"/"+paths.size());
             MazeCell cur = walk.remove(0);
             if(visited.add(cur))
                 walk.addAll(viciniWalkable(cur,true));
