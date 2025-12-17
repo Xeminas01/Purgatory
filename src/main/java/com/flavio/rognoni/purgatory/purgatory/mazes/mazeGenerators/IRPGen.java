@@ -13,10 +13,11 @@ public class IRPGen extends MazeGen { //Iterative randomized Prim's algorithm (w
     private final List<MazeCell> walls;
     private final Set<MazeCell> visited;
 
-    public IRPGen(Maze maze, int x, int y){
-        super(maze,getInitCell(maze,x,y));
+    public IRPGen(Maze maze, int sx, int sy, int ex, int ey){
+        super(maze,getInitCell(maze,sx,sy),
+                getFinalCell(maze,ex,ey));
         this.maze.cells[initCell.x][initCell.y] = new InizioFine(initCell.x,initCell.y,true);
-        this.maze.cells[maze.h-2][maze.w-2] = new InizioFine(maze.h-2,maze.w-2,false); //da rivedere
+        this.maze.cells[finalCell.x][finalCell.y] = new InizioFine(finalCell.x,finalCell.y,false);
         this.walls = new ArrayList<>();
         this.walls.addAll(maze.viciniFilter(initCell, MazeCellType.MURO));
         this.visited = new HashSet<>();
@@ -24,10 +25,17 @@ public class IRPGen extends MazeGen { //Iterative randomized Prim's algorithm (w
     }
 
     private static MazeCell getInitCell(Maze maze, int x, int y){
-        if(!maze.cells[x][y].type().isLimite())
+        if(maze.cells[x][y].type().isLimite())
             return maze.cells[x][y];
         else
-            return maze.cells[1][1];
+            return maze.cells[1][0];
+    }
+
+    private static MazeCell getFinalCell(Maze maze, int x, int y){
+        if(maze.cells[x][y].type().isLimite())
+            return maze.cells[x][y];
+        else
+            return maze.cells[maze.h-1][maze.w-2];
     }
 
     @Override
@@ -35,6 +43,8 @@ public class IRPGen extends MazeGen { //Iterative randomized Prim's algorithm (w
         if(gen) return null;
         if(walls.isEmpty()){
             gen = true;
+            maze.fixInizioFine(true);
+            maze.fixInizioFine(false);
             return null;
         }
         MazeCell cur = walls.get(rand.nextInt(walls.size()));

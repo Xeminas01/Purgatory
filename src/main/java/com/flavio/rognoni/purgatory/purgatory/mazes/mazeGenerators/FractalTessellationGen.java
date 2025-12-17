@@ -12,8 +12,9 @@ public class FractalTessellationGen extends MazeGen {
     private final MazeCell[][] matrix;
     private int gStep;
 
-    public FractalTessellationGen(int rounds, int x, int y) {
-        super(null,getInitCell(rounds,x,y));
+    public FractalTessellationGen(int rounds, int sx, int sy, int ex, int ey) {
+        super(null,getInitCell(rounds,sx,sy),
+                getFinalCell(rounds,ex,ey));
         this.rounds = rounds;
         this.dim = (int) (Math.pow(2,rounds) + 2);
         this.matrix = new MazeCell[dim][dim];
@@ -35,7 +36,15 @@ public class FractalTessellationGen extends MazeGen {
         if(i == 0 || i == dim-1 || j == 0 || j == dim-1)
             return new Percorso(i,j);
         else
-            return new Percorso(1,1);
+            return new Percorso(0,1);
+    }
+
+    private static MazeCell getFinalCell(int rounds, int i, int j){
+        int dim = (int) (Math.pow(2,rounds) + 2);
+        if(i == 0 || i == dim-1 || j == 0 || j == dim-1)
+            return new Percorso(i,j);
+        else
+            return new Percorso(dim-1,dim-1);
     }
 
     @Override
@@ -121,10 +130,10 @@ public class FractalTessellationGen extends MazeGen {
                     if(!vP.isEmpty()) initCell = vP.get(0);
                     else initCell = maze.cellAt(1, 1);
                 }
-                System.out.println(initCell);
                 maze.cells[initCell.x][initCell.y] = new InizioFine(initCell.x,initCell.y,true);
-                var further = maze.furthestFromManhattan(maze.cellAt(initCell.x,initCell.y));
-                maze.cells[further.x][further.y] = new InizioFine(further.x,further.y,false);
+                maze.cells[finalCell.x][finalCell.y] = new InizioFine(finalCell.x,finalCell.y,false);
+                maze.fixInizioFine(true);
+                maze.fixInizioFine(false);
             }
             return maze;
         }catch (Exception e){

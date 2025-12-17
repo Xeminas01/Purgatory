@@ -35,6 +35,7 @@ public class HyperMaze { //todo: work in progress
     }
 
     private Maze[][] buildMazeMatrix(int d,List<Maze> mazes) throws Exception{
+        // todo : controllare anche inizio e fine corrispondenti per passare da una parte all'altra
         Maze[][] mm = new Maze[d][d];
         for(int i=0;i<d;i++) {
             for(int j=0;j<d;j++) {
@@ -88,7 +89,7 @@ public class HyperMaze { //todo: work in progress
             }
             sx += hh;
         }
-        //collegare togliendo i limiti, inizio e fine si collegano, inizio solo per [0][0] e fine solo per [d][d]
+        //inizio solo per [0][0] e fine solo per [d][d], gli altri inizi e fini diventano percorsi
     }
 
 }

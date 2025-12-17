@@ -48,7 +48,7 @@ public class MazeGenController implements Initializable {
         gen = false;
     }
 
-    public void setMaze(Maze maze, int sx, int sy, MazeGenType genType) {
+    public void setMaze(Maze maze, int sx, int sy, int ex, int ey,MazeGenType genType) {
 
         this.maze = maze;
         double lx = mazePanel.getLayoutX(),
@@ -63,37 +63,33 @@ public class MazeGenController implements Initializable {
         mazePanel = mPanel;
         this.genType = genType;
 
-        setGenerator(sx,sy);
+        setGenerator(sx,sy,ex,ey);
 
     }
 
-    private void setGenerator(int sx, int sy){
+    private void setGenerator(int sx, int sy, int ex,int ey){
         switch(genType){
             case DFS_GEN -> {
-                mazeGen = new DFSGen(this.maze,sx,sy);
+                mazeGen = new DFSGen(this.maze,sx,sy,ex,ey);
                 ((DFSGen) mazeGen).start();
                 mPanel.renderMaze(mazeGen.getMaze());
             }
             case FRACTAL_GEN -> {
                 int rounds = maze.h - 2;
                 rounds = (int) (Math.log(rounds)/Math.log(2));
-                mazeGen = new FractalTessellationGen(rounds,sx,sy);
+                mazeGen = new FractalTessellationGen(rounds,sx,sy,ex,ey);
                 mPanel.renderMaze(mazeGen.getMaze());
             }
             case CELLULAR_GEN -> {
-                mazeGen = new CellularGen(this.maze,sx,sy);
+                mazeGen = new CellularGen(this.maze,sx,sy,ex,ey);
                 mPanel.renderMaze(this.maze);
             }
             case I_R_KRUSKAL_GEN -> {
-                mazeGen = new IRKGen(this.maze,sx,sy);
+                mazeGen = new IRKGen(this.maze,sx,sy,ex,ey);
                 mPanel.renderMaze(this.maze);
             }
             case I_R_PRIM_GEM -> {
-                mazeGen = new IRPGen(this.maze,sx,sy);
-                mPanel.renderMaze(this.maze);
-            }
-            case WILSON_GEN -> {
-                mazeGen = new WilsonGen(this.maze,sx,sy);
+                mazeGen = new IRPGen(this.maze,sx,sy,ex,ey);
                 mPanel.renderMaze(this.maze);
             }
         }

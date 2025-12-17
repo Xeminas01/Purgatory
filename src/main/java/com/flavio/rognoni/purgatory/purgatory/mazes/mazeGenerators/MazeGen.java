@@ -9,9 +9,18 @@ public abstract class MazeGen {
 
     protected Maze maze;
     protected final Random rand;
-    protected MazeCell initCell;
+    protected MazeCell initCell,finalCell;
     protected boolean gen;
     protected int t;
+
+    protected MazeGen(Maze maze,MazeCell initCell,MazeCell finalCell){
+        this.maze = maze;
+        this.initCell = initCell;
+        this.finalCell = finalCell;
+        this.rand = new Random();
+        this.gen = false;
+        this.t = 0;
+    }
 
     protected MazeGen(Maze maze,MazeCell initCell){
         this.maze = maze;

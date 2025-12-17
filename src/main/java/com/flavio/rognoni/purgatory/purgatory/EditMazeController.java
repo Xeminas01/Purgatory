@@ -439,9 +439,24 @@ public class EditMazeController implements Initializable {
             case PERCORSO -> maze.cells[x][y] = new Percorso(x,y);
             case INIZIO_FINE -> {
                 boolean start = booleanChoice.isSelected();
-                if(!maze.hasInizioOrFine(start))
-                    maze.cells[x][y] = new InizioFine(x,y,start);
-                else
+                if(!maze.hasInizioOrFine(start)) {
+                    if(start){
+                        if(maze.isValidInizio(x,y))
+                            maze.cells[x][y] = new InizioFine(x,y,true);
+                        else
+                            GUIMethods.showError("Inizio non valido!");
+                    }else{
+                        var inizio = maze.getInizio();
+                        if(inizio == null){
+                            GUIMethods.showError("Fine non impostabile, manca l'Inizio!");
+                            return;
+                        }
+                        if(maze.isValidFine(inizio.x,inizio.y,x,y))
+                            maze.cells[x][y] = new InizioFine(x,y,false);
+                        else
+                            GUIMethods.showError("Fine non valida!");
+                    }
+                }else
                     GUIMethods.showError(((start) ? "Inizio" : "Fine")+" già presente!");
             }
             case PORTA -> {

@@ -5,12 +5,12 @@
 <?import javafx.scene.text.*?>
 
 <AnchorPane fx:id="backgroundPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.flavio.rognoni.purgatory.purgatory.HomeController">
-   <Button fx:id="genMazeBtn" layoutX="288.0" layoutY="404.0" mnemonicParsing="false" onAction="#onGenMaze" style="-fx-background-color: yellow;" text="Generate Maze">
+   <Button fx:id="genMazeBtn" layoutX="289.0" layoutY="432.0" mnemonicParsing="false" onAction="#onGenMaze" style="-fx-background-color: yellow;" text="Generate Maze">
       <font>
          <Font name="Verdana" size="15.0" />
       </font>
    </Button>
-   <ComboBox fx:id="genMazeChoice" layoutX="280.0" layoutY="364.0" prefWidth="150.0" />
+   <ComboBox fx:id="genMazeChoice" layoutX="281.0" layoutY="395.0" prefWidth="150.0" />
    <Spinner fx:id="hSpinner" layoutX="282.0" layoutY="288.0" prefHeight="25.0" prefWidth="60.0">
       <valueFactory>
          <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
@@ -60,6 +60,26 @@
    <Label fx:id="titleTxt" alignment="CENTER" layoutX="1.0" layoutY="14.0" prefHeight="65.0" prefWidth="1280.0" text="Maze Handler">
       <font>
          <Font name="Verdana" size="50.0" />
+      </font>
+   </Label>
+   <Spinner fx:id="exSpinner" layoutX="282.0" layoutY="360.0" prefHeight="25.0" prefWidth="60.0">
+      <valueFactory>
+         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+      </valueFactory>
+   </Spinner>
+   <Spinner fx:id="eySpinner" layoutX="395.0" layoutY="360.0" prefHeight="25.0" prefWidth="60.0">
+      <valueFactory>
+         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+      </valueFactory>
+   </Spinner>
+   <Label layoutX="253.0" layoutY="360.0" text="ex">
+      <font>
+         <Font name="Verdana" size="20.0" />
+      </font>
+   </Label>
+   <Label layoutX="369.0" layoutY="360.0" text="ey">
+      <font>
+         <Font name="Verdana" size="20.0" />
       </font>
    </Label>
 </AnchorPane>

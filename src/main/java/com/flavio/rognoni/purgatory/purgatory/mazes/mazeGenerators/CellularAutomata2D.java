@@ -249,55 +249,20 @@ public class CellularAutomata2D {
         }
     }
 
-    public Maze getMaze(int x, int y){
+    public Maze getMaze(int sx, int sy, int ex, int ey){
         try{
             Maze maze = getMazeRender();
-            var v = maze.viciniFilter(maze.cells[x][y], MazeCellType.PERCORSO);
-            if(!v.isEmpty()){
-                x = v.get(0).x;
-                y = v.get(0).y;
-            }else{
-                var gf0 = getFirst0();
-                if(gf0 != null){
-                    x = gf0.x+1;
-                    y = gf0.y+1;
-                }else{
-                    x = 1;
-                    y = 1;
-                }
-            }
-            maze.cells[x][y] = new InizioFine(x,y,true);
-            var mD = maze.furthestFromManhattan(maze.cells[x][y]);
-            maze.cells[mD.x][mD.y] = new InizioFine(mD.x,mD.y,false);
+            maze.cells[sx][sy] = new InizioFine(sx,sy,true);
+            maze.cells[ex][ey] = new InizioFine(ex,ey,false);
+            maze.fixInizioFine(true);
+            maze.fixInizioFine(false);
+            System.out.println(maze.getInizio() + " "+ maze.getFine());
             if(!maze.isAllReachable())
                 maze.fixMaze();
             return maze;
         }catch (Exception e){
             return null;
         }
-    }
-
-    private AutomataCell getFirst0(){
-        for(int i=0;i<h;i++){
-            for(int j=0;j<w;j++){
-                if(cells[i][j].getState() == 0)
-                    return cells[i][j];
-            }
-        }
-        return null;
-    }
-
-    private List<AutomataCell> viciniInMaze(AutomataCell cell){
-        List<AutomataCell> vicini = new ArrayList<>();
-        if(getCellAt(cell.x+1,cell.y) != null)
-            vicini.add(cells[cell.x+1][cell.y]);
-        if(getCellAt(cell.x-1,cell.y) != null)
-            vicini.add(cells[cell.x-1][cell.y]);
-        if(getCellAt(cell.x,cell.y+1) != null)
-            vicini.add(cells[cell.x][cell.y+1]);
-        if(getCellAt(cell.x,cell.y-1) != null)
-            vicini.add(cells[cell.x][cell.y-1]);
-        return vicini;
     }
 
     @Override

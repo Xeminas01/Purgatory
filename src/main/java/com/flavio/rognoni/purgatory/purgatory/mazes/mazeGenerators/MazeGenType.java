@@ -6,8 +6,7 @@ public enum MazeGenType {
     FRACTAL_GEN("Fractal"),
     CELLULAR_GEN("Cellular"),
     I_R_KRUSKAL_GEN("IRK"),
-    I_R_PRIM_GEM("IRP"),
-    WILSON_GEN("Wilson");
+    I_R_PRIM_GEM("IRP");
 
     private final String nome;
 

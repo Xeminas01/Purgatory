@@ -7,7 +7,7 @@
     <Limite x="0" y="4"/>
     <Limite x="0" y="5"/>
     <Limite x="0" y="6"/>
-    <Limite x="0" y="7"/>
+    <InizioFine start="true" x="0" y="7"/>
     <Limite x="0" y="8"/>
     <Limite x="0" y="9"/>
     <Limite x="0" y="10"/>
@@ -107,7 +107,7 @@
     <Muro x="1" y="4"/>
     <Muro x="1" y="5"/>
     <Muro x="1" y="6"/>
-    <InizioFine start="true" x="1" y="7"/>
+    <Percorso x="1" y="7"/>
     <Muro x="1" y="8"/>
     <Muro x="1" y="9"/>
     <Muro x="1" y="10"/>
@@ -9797,7 +9797,7 @@
     <Percorso x="97" y="94"/>
     <Percorso x="97" y="95"/>
     <Muro x="97" y="96"/>
-    <InizioFine start="false" x="97" y="97"/>
+    <Percorso x="97" y="97"/>
     <Muro x="97" y="98"/>
     <Limite x="97" y="99"/>
     <Limite x="98" y="0"/>
@@ -9987,7 +9987,7 @@
     <Limite x="99" y="84"/>
     <Limite x="99" y="85"/>
     <Limite x="99" y="86"/>
-    <Limite x="99" y="87"/>
+    <InizioFine start="false" x="99" y="87"/>
     <Limite x="99" y="88"/>
     <Limite x="99" y="89"/>
     <Limite x="99" y="90"/>

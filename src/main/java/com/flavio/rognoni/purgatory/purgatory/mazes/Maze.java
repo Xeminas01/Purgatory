@@ -59,7 +59,27 @@ public class Maze {
         return cells[x][y];
     }
 
-    public MazeCell defaultInit(){ return cells[h-2][1]; }
+    public MazeCell defaultInit(){ return cells[1][0]; }
+
+    public MazeCell defaultFinish(){ return cells[h-1][w-2]; }
+
+    public void fixInizioFine(boolean inizio){
+        MazeCell fi = (inizio) ? getInizio() : getFine();
+        if(fi != null){
+            var viciniP = viciniFilter(fi,MazeCellType.PERCORSO);
+            var viciniM = viciniFilter(fi,MazeCellType.MURO);
+
+            while(viciniP.isEmpty()){
+                if(!viciniM.isEmpty()){
+                    var muro = viciniM.get(0);
+                    cells[muro.x][muro.y] = new Percorso(muro.x,muro.y);
+                    fi = cells[muro.x][muro.y];
+                    viciniP = viciniFilter(fi,MazeCellType.PERCORSO);
+                    viciniM = viciniFilter(fi,MazeCellType.MURO);
+                }
+            }
+        }
+    }
 
     public List<MazeCell> getAllOfTypes(MazeCellType ...types){
         var l = new ArrayList<MazeCell>();
@@ -133,12 +153,12 @@ public class Maze {
     }
 
     public int unreachablePaths(){
-        List<MazeCell> paths = getAllWalkable(true),
-                start = getAllOfTypes(MazeCellType.INIZIO_FINE);
-        if(paths.isEmpty() || start.isEmpty()) return -1;
+        List<MazeCell> paths = getAllWalkable(true);
+        MazeCell start = getInizio();
+        if(paths.isEmpty() || start == null) return -1;
         Set<MazeCell> visited = new HashSet<>();
         List<MazeCell> walk = new ArrayList<>();
-        walk.add(start.get(0));
+        walk.add(start);
         while(!walk.isEmpty()){
             //System.out.println(visited.size()+"/"+paths.size());
             MazeCell cur = walk.remove(0);
@@ -177,11 +197,13 @@ public class Maze {
         int best = unreachablePaths();
         while(best != 0){
             var walls = getAllOfTypes(MazeCellType.MURO);
+            System.out.println("altro giro");
             while(!walls.isEmpty()){
                 var wall = walls.remove(0);
                 if(viciniWalkable(wall,true).size() >= 2){
                     cells[wall.x][wall.y] = new Percorso(wall.x,wall.y);
                     int delta = unreachablePaths();
+                    System.out.println(delta + " " + walls.size());
                     if(delta < best){
                         System.out.println("best: "+best +" delta: "+delta);
                         best = delta;
@@ -468,21 +490,55 @@ public class Maze {
         return x == 0 || x == h-1 || y == 0 || y == w-1;
     }
 
-    public boolean hasInizioAndFine(){
+    public InizioFine getInizio(){
         var inF = getAllOfTypes(MazeCellType.INIZIO_FINE);
-        if(inF.size() != 2) return false;
-        InizioFine i = (InizioFine) inF.get(0),
-                f = (InizioFine) inF.get(1),
-                inizio = (i.isStart) ? i : f,
-                fine = (!i.isStart) ? i : f;
-        return inizio.isStart != fine.isStart;
+        for(MazeCell cell : inF)
+            if(((InizioFine) cell).isStart)
+                return (InizioFine) cell;
+        return null;
+    }
+
+    public InizioFine getFine(){
+        var inF = getAllOfTypes(MazeCellType.INIZIO_FINE);
+        for(MazeCell cell : inF)
+            if(!((InizioFine) cell).isStart)
+                return (InizioFine) cell;
+        return null;
     }
 
     public boolean hasInizioOrFine(boolean inizio){
-        var inF = getAllOfTypes(MazeCellType.INIZIO_FINE);
-        for(MazeCell cell : inF)
-            if(((InizioFine) cell).isStart == inizio)
-                return true;
+        return (inizio) ?
+                getInizio() != null :
+                getFine() != null;
+    }
+
+    public boolean hasInizioAndFine(){
+        InizioFine i=getInizio(),f=getFine();
+        return i != null && f != null &&
+                isValidInizio(i.x, i.y) &&
+                isValidFine(i.x, i.y, f.x, f.y);
+    }
+
+    public boolean isValidInizio(int x,int y){
+        return isValidInizio(h,w,x,y);
+    }
+
+    public boolean isValidFine(int x,int y,int ex,int ey){
+        if(isValidInizio(ex,ey))
+            return x != ex || y != ey;
+        return false;
+    }
+
+    public static boolean isValidInizio(int h,int w,int x,int y){
+        if(x == 0 && y != 0 && y != w-1) return true;
+        if(x == h-1 && y != 0 && y != w-1) return true;
+        if(y == 0 && x != 0 && x != h-1) return true;
+        return y == w-1 && x != 0 && x != h-1;
+    }
+
+    public static boolean isValidFine(int h,int w,int x,int y,int ex,int ey){
+        if(isValidInizio(h,w,ex,ey))
+            return x != ex || y != ey;
         return false;
     }
 
@@ -636,7 +692,7 @@ public class Maze {
 
     public boolean isSolvable() throws Exception{
         if(!hasInizioAndFine())
-            throw new Exception("Manca l'Inizio o la Fine del Labirinto");
+            throw new Exception("Manca l'Inizio o la Fine del Labirinto o sono in posizioni errate");
         if(!validTeleports())
             throw new Exception("Teletrasporti invalidi end points mancanti o errati");
         if(!validPorte())

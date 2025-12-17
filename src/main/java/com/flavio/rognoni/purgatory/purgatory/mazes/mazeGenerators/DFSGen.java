@@ -13,22 +13,31 @@ public class DFSGen extends MazeGen {
     private final Set<MazeCell> visti;
     private final List<MazeCell> stack;
 
-    public DFSGen(Maze maze, int x, int y) {
-        super(maze,getInitCell(maze,x,y));
+    public DFSGen(Maze maze, int sx, int sy, int ex, int ey) {
+        super(maze,getInitCell(maze,sx,sy),
+                getFinalCell(maze,ex,ey));
         this.visti = new HashSet<>();
         this.stack = new ArrayList<>();
     }
 
     private static MazeCell getInitCell(Maze maze, int x,int y){
         var cell = maze.cellAt(x,y);
-        if(cell != null && !cell.type().isLimite())
+        if(cell != null && cell.type().isLimite())
             return cell;
         else
             return maze.defaultInit();
     }
 
+    private static MazeCell getFinalCell(Maze maze, int x,int y){
+        var cell = maze.cellAt(x,y);
+        if(cell != null && cell.type().isLimite())
+            return cell;
+        else
+            return maze.defaultFinish();
+    }
+
     public DFSGen(Maze maze) {
-        this(maze,maze.h-2,1);
+        this(maze,1,0,maze.h-1,maze.w-2);
     }
 
     public void start(){
@@ -43,10 +52,9 @@ public class DFSGen extends MazeGen {
         if(gen) return null;
         if(stack.isEmpty()) {
             gen = true;
-            MazeCell mostDist = maze.furthestFromManhattan(initCell);
-            maze.cells[mostDist.x][mostDist.y] = new InizioFine(mostDist.x,mostDist.y,false);
             maze.cells[initCell.x][initCell.y] = new InizioFine(initCell.x,initCell.y,true);
-            System.out.println(maze);
+            maze.cells[finalCell.x][finalCell.y] = new InizioFine(finalCell.x,finalCell.y,false);
+            maze.fixInizioFine(false);
             return null;
         }
         //System.out.println(stack);

@@ -26,7 +26,7 @@ public class HomeController implements Initializable {
     public AnchorPane backgroundPane;
     public Button genMazeBtn;
     public ComboBox<String> genMazeChoice;
-    public Spinner<Integer> hSpinner,wSpinner,sxSpinner,sySpinner;
+    public Spinner<Integer> hSpinner,wSpinner,sxSpinner,sySpinner,exSpinner,eySpinner;
     public ComboBox<String> mazeEditChoice;
     public Button editMazeBtn;
     public Label titleTxt;
@@ -47,6 +47,8 @@ public class HomeController implements Initializable {
         GUIMethods.renderSpinner(wSpinner, Maze.MIN_DIM, Maze.MAX_DIM);
         GUIMethods.renderSpinner(sxSpinner, 0, Maze.MAX_DIM);
         GUIMethods.renderSpinner(sySpinner, 0, Maze.MAX_DIM);
+        GUIMethods.renderSpinner(exSpinner, 0, Maze.MAX_DIM);
+        GUIMethods.renderSpinner(eySpinner, 0, Maze.MAX_DIM);
     }
 
     public void onGenMaze(ActionEvent event) {
@@ -58,19 +60,28 @@ public class HomeController implements Initializable {
             Parent parent = fxmlLoader.load();
             MazeGenController mazeGenController = fxmlLoader.getController();
             int h = hSpinner.getValue(), w = wSpinner.getValue(),
-                    sx = sxSpinner.getValue(), sy = sySpinner.getValue();
+                    sx = sxSpinner.getValue(), sy = sySpinner.getValue(),
+                    ex = exSpinner.getValue(), ey = eySpinner.getValue();
             if(genType == MazeGenType.FRACTAL_GEN){
                 int rounds = (int) (Math.log(h)/Math.log(2));
                 h = (int) (Math.pow(2,rounds) + 2);
                 w = h;
                 System.out.println(h+"x"+w+" "+rounds);
             }
+            if(!Maze.isValidInizio(h,w,sx,sy)){
+                GUIMethods.showError("Inizio non valido");
+                return;
+            }
+            if(!Maze.isValidFine(h,w,sx,sy,ex,ey)){
+                GUIMethods.showError("Fine non valida");
+                return;
+            }
             if(sx > h-2 || sy > w-2){
                 GUIMethods.showError("Invalid start point >h-2 or >w-2");
                 return;
             }
             Maze maze = new Maze(h,w,genType);
-            mazeGenController.setMaze(maze,sx,sy,genType);
+            mazeGenController.setMaze(maze,sx,sy,ex,ey,genType);
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
             stage.setTitle("Generate Maze with "+genType.getNome());

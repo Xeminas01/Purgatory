@@ -13,23 +13,32 @@ public class IRKGen extends MazeGen { //Iterative randomized Kruskal's algorithm
     private final List<Set<MazeCell>> sets;
     private final List<MazeCell> walls;
 
-    public IRKGen(Maze maze, int x, int y){
-        super(maze,getInitCell(maze,x,y));
+    public IRKGen(Maze maze, int sx, int sy, int ex, int ey){
+        super(maze,getInitCell(maze,sx,sy),
+                getFinalCell(maze,ex,ey));
         this.sets = new ArrayList<>();
         this.maze.setGridForIRK();
         this.maze.cells[initCell.x][initCell.y] = new InizioFine(initCell.x,initCell.y,true);
-        var far = this.maze.furthestFromManhattan(initCell);
-        this.maze.cells[far.x][far.y] = new InizioFine(far.x,far.y,false);
+        this.maze.cells[finalCell.x][finalCell.y] = new InizioFine(finalCell.x,finalCell.y,false);
+        this.maze.fixInizioFine(true);
+        this.maze.fixInizioFine(false);
         this.walls = maze.getAllOfTypes(MazeCellType.MURO);
         for(MazeCell cell : maze.getAllOfTypes(MazeCellType.PERCORSO,MazeCellType.INIZIO_FINE))
             sets.add(new HashSet<>(Collections.singletonList(cell)));
     }
 
     private static MazeCell getInitCell(Maze maze, int x, int y){
-        if(!maze.cells[x][y].type().isLimite())
+        if(maze.cells[x][y].type().isLimite())
             return maze.cells[x][y];
         else
-            return maze.cells[1][1];
+            return maze.cells[1][0];
+    }
+
+    private static MazeCell getFinalCell(Maze maze, int x, int y){
+        if(maze.cells[x][y].type().isLimite())
+            return maze.cells[x][y];
+        else
+            return maze.cells[maze.h-1][maze.w-2];
     }
 
     public MazeCell step(){

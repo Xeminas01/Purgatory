@@ -7,16 +7,24 @@ public class CellularGen extends MazeGen {
 
     private final CellularAutomata2D mazectric;
 
-    public CellularGen(Maze maze, int x, int y){
-        super(maze,getInitCell(maze,x,y));
+    public CellularGen(Maze maze, int sx, int sy, int ex, int ey){
+        super(maze,getInitCell(maze,sx,sy),
+                getFinalCell(maze,ex,ey));
         this.mazectric = CellularAutomata2D.mazectric(maze.h-2,maze.w-2);
     }
 
     private static MazeCell getInitCell(Maze maze, int x, int y){
-        if(!maze.cells[x][y].type().isLimite())
+        if(maze.cells[x][y].type().isLimite())
             return maze.cells[x][y];
         else
-            return maze.cells[1][1];
+            return maze.cells[1][0];
+    }
+
+    private static MazeCell getFinalCell(Maze maze, int x, int y){
+        if(maze.cells[x][y].type().isLimite())
+            return maze.cells[x][y];
+        else
+            return maze.cells[maze.h-1][maze.w-2];
     }
 
     @Override
@@ -26,7 +34,8 @@ public class CellularGen extends MazeGen {
         maze = mazectric.getMazeRender();
         t++;
         if(mazectric.getT() == 40){
-            maze = mazectric.getMaze(initCell.x,initCell.y);
+            maze = mazectric.getMaze(initCell.x,initCell.y,
+                    finalCell.x,finalCell.y);
             gen = true;
         }
         return null;
