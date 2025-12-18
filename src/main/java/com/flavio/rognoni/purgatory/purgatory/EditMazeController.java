@@ -56,6 +56,7 @@ public class EditMazeController implements Initializable {
     public Button minusBtn;
     public TextField cellTextInput;
     public TextArea cellListArea;
+    public Button bestOpp2SepBtn;
     private List<MazeCell> cellList;
     private Maze maze;
     private List<MazeCell> celle;

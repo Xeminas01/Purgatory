@@ -9,6 +9,7 @@ module com.flavio.rognoni.purgatory.purgatory {
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.bootstrapfx.core;
     requires com.almasb.fxgl.all;
+    requires java.desktop;
 
     opens com.flavio.rognoni.purgatory.purgatory to javafx.fxml;
     exports com.flavio.rognoni.purgatory.purgatory;

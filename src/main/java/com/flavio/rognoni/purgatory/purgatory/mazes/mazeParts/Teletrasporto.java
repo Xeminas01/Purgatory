@@ -56,10 +56,9 @@ public class Teletrasporto extends MazeCell {
     public static MazeCell fromXMLElement(Element e) {
         if(e.getTagName().equals(Teletrasporto.class.getSimpleName())){
             int x = Integer.parseInt(e.getAttribute("x")),
-                    y = Integer.parseInt(e.getAttribute("y"));
-            String[] eCoords = e.getAttribute("endPoint").split(",");
-            int ex = Integer.parseInt(eCoords[0]),
-                    ey = Integer.parseInt(eCoords[1]);
+                    y = Integer.parseInt(e.getAttribute("y")),
+                    ex = Integer.parseInt(e.getAttribute("ex")),
+                    ey = Integer.parseInt(e.getAttribute("ey"));
             return new Teletrasporto(x,y,ex,ey);
         }
         else return null;

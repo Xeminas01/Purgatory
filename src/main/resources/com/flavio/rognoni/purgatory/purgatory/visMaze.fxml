@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane fx:id="backgroundPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.flavio.rognoni.purgatory.purgatory.VisualizeMazeController">
+    <Button fx:id="screenShotBtn" layoutX="1100.0" layoutY="67.0" mnemonicParsing="false" onAction="#onScreenshot" style="-fx-background-color: red;" text="Screenshot" textFill="WHITE">
+        <font>
+            <Font name="Verdana" size="15.0" />
+        </font>
+    </Button>
+    <AnchorPane fx:id="mazePanel" layoutX="280.0" prefHeight="720.0" prefWidth="720.0" />
+    <Button fx:id="backBtn" layoutX="37.0" layoutY="38.0" mnemonicParsing="false" onAction="#onBack" style="-fx-background-color: gray;" text="Back" textFill="WHITE">
+        <font>
+            <Font name="Verdana" size="15.0" />
+        </font>
+    </Button>
+    <TextArea fx:id="cellInfoTxt" editable="false" layoutX="1009.0" layoutY="248.0" prefHeight="200.0" prefWidth="257.0" promptText="Cell Infos">
+        <font>
+            <Font name="Verdana" size="15.0" />
+        </font>
+    </TextArea>
+    <ChoiceBox fx:id="setChoice" layoutX="1114.0" layoutY="28.0" prefHeight="25.0" prefWidth="134.0" />
+    <Label layoutX="1044.0" layoutY="31.0" text="Insieme">
+        <font>
+            <Font name="Verdana" size="15.0" />
+        </font>
+    </Label>
+   <Button fx:id="showSetBtn" layoutX="1084.0" layoutY="108.0" mnemonicParsing="false" onAction="#onShowSet" style="-fx-background-color: red;" text="Mostra Insieme" textFill="WHITE">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
+   <Button fx:id="showSetsBtn" layoutX="1087.0" layoutY="151.0" mnemonicParsing="false" onAction="#onShowSets" style="-fx-background-color: red;" text="Mostra Insiemi" textFill="WHITE">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
+   <Button fx:id="topoOrdBtn" layoutX="1075.0" layoutY="192.0" mnemonicParsing="false" onAction="#onTopologicalOrder" style="-fx-background-color: red;" text="Ordine Topologico" textFill="WHITE">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
+</AnchorPane>

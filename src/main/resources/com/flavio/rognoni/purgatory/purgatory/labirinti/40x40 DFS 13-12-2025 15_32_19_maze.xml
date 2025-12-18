@@ -40,8 +40,8 @@
     <Limite x="0" y="37"/>
     <Limite x="0" y="38"/>
     <Limite x="0" y="39"/>
-    <Limite x="1" y="0"/>
-    <InizioFine start="true" x="1" y="1"/>
+    <InizioFine start="true" x="1" y="0"/>
+    <Percorso x="1" y="1"/>
     <Percorso x="1" y="2"/>
     <Muro x="1" y="3"/>
     <Percorso x="1" y="4"/>
@@ -1558,8 +1558,8 @@
     <Muro x="38" y="35"/>
     <Percorso x="38" y="36"/>
     <Percorso x="38" y="37"/>
-    <InizioFine start="false" x="38" y="38"/>
-    <Limite x="38" y="39"/>
+    <Percorso x="38" y="38"/>
+    <InizioFine start="false" x="38" y="39"/>
     <Limite x="39" y="0"/>
     <Limite x="39" y="1"/>
     <Limite x="39" y="2"/>

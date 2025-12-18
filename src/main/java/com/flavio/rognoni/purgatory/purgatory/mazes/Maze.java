@@ -12,6 +12,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -777,7 +778,7 @@ public class Maze {
         return m;
     }
 
-    public static void mazeToXML(Maze maze,String fn){
+    public static void mazeToXML(Maze maze,String fn){ // non usare nel jar
         try {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -815,13 +816,11 @@ public class Maze {
         }
     }
 
-
-    public static Maze mazeFromXML(String path){
+    public static Maze mazeFromXML(InputStream is){
         try{
-            File file = new File(path);
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(file);
+            Document doc = dBuilder.parse(is);
             doc.getDocumentElement().normalize();
             Element root = (Element) doc.getElementsByTagName("Maze").item(0);
             int h = Integer.parseInt(root.getAttribute("h")),
@@ -853,13 +852,6 @@ public class Maze {
                     }else if(j.type().isTeletrasporto()){
                         Teletrasporto t = (Teletrasporto) j;
                         maze.cells[t.x][t.y] = new Teletrasporto(t.x,t.y,t.ex,t.ey);
-//                        if(!t.noEndPoint()){
-//                            var cell = maze.cells[t.ex][t.ey];
-//                            if(cell.type().isTeletrasporto()){
-//                                Teletrasporto ep = (Teletrasporto) cell;
-//                                maze.cells[t.x][t.y] = new Teletrasporto(t.x,t.y,t.ex,t.ey);
-//                            }
-//                        }
                     }
                 }
             }

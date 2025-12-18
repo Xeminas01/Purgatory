@@ -82,4 +82,34 @@
          <Font name="Verdana" size="20.0" />
       </font>
    </Label>
+   <Button fx:id="visMazeBtn" layoutX="867.0" layoutY="393.0" mnemonicParsing="false" onAction="#onVisMaze" style="-fx-background-color: green;" text="Vis Maze" textFill="WHITE">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
+   <Spinner fx:id="mxSpinner" layoutX="284.0" layoutY="483.0" prefHeight="25.0" prefWidth="60.0">
+      <valueFactory>
+         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+      </valueFactory>
+   </Spinner>
+   <Spinner fx:id="mySpinner" layoutX="397.0" layoutY="483.0" prefHeight="25.0" prefWidth="60.0">
+      <valueFactory>
+         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+      </valueFactory>
+   </Spinner>
+   <Label layoutX="242.0" layoutY="483.0" text="mx">
+      <font>
+         <Font name="Verdana" size="20.0" />
+      </font>
+   </Label>
+   <Label layoutX="356.0" layoutY="483.0" text="my">
+      <font>
+         <Font name="Verdana" size="20.0" />
+      </font>
+   </Label>
+   <Button fx:id="createHyperMazeBtn" layoutX="276.0" layoutY="526.0" mnemonicParsing="false" onAction="#onCreHyMaze" style="-fx-background-color: yellow;" text="Create HyperMaze">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
 </AnchorPane>
