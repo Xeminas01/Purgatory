@@ -1,18 +1,19 @@
 package com.flavio.rognoni.purgatory.purgatory.mazes;
 
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.InizioFine;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Limite;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.MazeCell;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Percorso;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.MazeGenType;
+import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class HyperMaze { //todo: work in progress
 
     public final int d,h,w,sx,sy,ex,ey;
     public Maze[][] mazeMatrix;
     public final MazeCell[][] cells;
-    public static final int MIN_DIM = 50, MAX_DIM = 1000, MIN_D = 2, MAX_D = 5;
+    public static final int MIN_DIM = 20, MAX_DIM = 1000, MIN_D = 2, MAX_D = 5;
 
     public HyperMaze(int d,List<Maze> mazes,int sx,int sy,int ex,int ey) throws Exception{
         if(d < MIN_D || d > MAX_D)
@@ -26,9 +27,9 @@ public class HyperMaze { //todo: work in progress
         this.h = getHH(mm);
         this.w = getHW(mm);
         if(h < MIN_DIM || h > MAX_DIM)
-            throw new Exception("Invalid rows too less or too many [50,1000]");
+            throw new Exception("Invalid rows too less or too many [20,1000]");
         if(w < MIN_DIM || w > MAX_DIM)
-            throw new Exception("Invalid columns too less or too many [50,1000]");
+            throw new Exception("Invalid columns too less or too many [20,1000]");
         if(!Maze.isValidInizio(h,w,sx,sy))
             throw new Exception("Invalid Inizio");
         if(!Maze.isValidFine(h,w,sx,sy,ex,ey))
@@ -84,52 +85,188 @@ public class HyperMaze { //todo: work in progress
         return hw;
     }
 
-    private void buildHyperMaze(){
+    private void buildHyperMaze() throws Exception{
         int ix = 0, iy = 0;
-        int[] hRow = new int[d],
-                wColumn = new int[d];
+        int[] hRow = new int[d+1],
+                wColumn = new int[d+1];
         for(int i=0;i<d;i++) {
             int hh = mazeMatrix[i][0].h;
             for(int j=0;j<d;j++) {
                 var maze = mazeMatrix[i][j];
-                var init = maze.getInizio();
-                var fin = maze.getFine();
-                maze.cells[init.x][init.y] = new Limite(init.x,init.y);
-                maze.cells[fin.x][fin.y] = new Limite(fin.x,fin.y);
                 for(int x=0;x<maze.h;x++){
                     for(int y=0;y<maze.w;y++){
-                        cells[ix+x][iy+y] = mazeMatrix[i][j].cellAt(x,y);
+                        if(mazeMatrix[i][j].cellAt(x,y).type().isInizioFine())
+                            cells[ix+x][iy+y] = new Limite(ix+x,iy+y);
+                        else
+                            cells[ix+x][iy+y] = mazeMatrix[i][j]
+                                .cellAt(x,y).copyOf(ix+x,iy+y);
                     }
                 }
                 iy += maze.w;
             }
             ix += hh;
+            iy = 0;
         }
+        hRow[0] = 0;
+        wColumn[0] = 0;
         for(int i=0;i<d;i++) {
-            int hh = mazeMatrix[i][0].h,
-                    hw = mazeMatrix[0][i].w;
-            if(i != 0) hRow[i] = hRow[i-1] + hh;
-            else hRow[i] = hh;
-            if(i != 0) wColumn[i] = wColumn[i-1] + hw;
-            else wColumn[i] = hw;
+            hRow[i+1] = hRow[i] + mazeMatrix[i][0].h;
+            wColumn[i+1] = wColumn[i] + mazeMatrix[0][i].w;
         }
-        // todo: trovare un modo per aprire i limiti tra labirinti
+        System.out.println("hrow "+Arrays.toString(hRow));
+        System.out.println("wcolumn "+Arrays.toString(wColumn));
+        for(int i=0;i<h;i++){
+            for(int j=0;j<w;j++){
+                var cell = cells[i][j];
+                if(cell.type().isLimite() && i != 0 && i != h-1 && j != 0 && j != w-1){
+                    cells[i][j] = new Muro(cell.x,cell.y);
+                }
+            }
+        }
+        Random rand = new Random();
+
+        for(int i=0;i<d;i++)
+            for(int j=0;j<d-1;j++)
+                openRow(i,j,hRow,wColumn,rand);
+        for(int i=0;i<d;i++)
+            for(int j=0;j<d-1;j++)
+                openColumn(i,j,hRow,wColumn,rand);
         cells[sx][sy] = new InizioFine(sx,sy,true);
         cells[ex][ey] = new InizioFine(ex,ey,false);
         fixInizioFine(true);
         fixInizioFine(false);
+        System.out.println("ok");
     }
 
-    private void openRow(int idx){
-
+    private void openRow(int r, int c, int[] hRow, int[] wColumn, Random rand) throws Exception{
+        System.out.println("openRow: "+r+","+c+"\n");
+        List<MazeCell[]> cellsCouples = new ArrayList<>();
+        int y1 = wColumn[c+1]-1,y2 = wColumn[c+1];
+        for(int i=hRow[r]+1;i<=hRow[r+1]-2;i++){
+            MazeCell[] arr = new MazeCell[2];
+            arr[0] = cells[i][y1];
+            arr[1] = cells[i][y2];
+            cellsCouples.add(arr);
+        }
+        for(MazeCell[] mc : cellsCouples) System.out.println(Arrays.toString(mc));
+        cellsCouples = cellsCouples.stream().filter(couple ->
+                !viciniWalkable(couple[0],true).isEmpty() &&
+                !viciniWalkable(couple[1],true).isEmpty()).toList();
+        if(cellsCouples.isEmpty())
+            throw new Exception("seperazioni totalmente chiuse "+r+" row");
+        MazeCell[] winners = cellsCouples.get(rand.nextInt(cellsCouples.size()));
+        cells[winners[0].x][winners[0].y] = new Percorso(winners[0].x,winners[0].y);
+        cells[winners[1].x][winners[1].y] = new Percorso(winners[1].x,winners[1].y);
     }
 
-    public void openColumn(int idx){
-
+    public void openColumn(int c, int r, int[] hRow,int[] wColumn, Random rand) throws Exception{
+        System.out.println("openCol: "+r+","+c+"\n");
+        List<MazeCell[]> cellsCouples = new ArrayList<>();
+        int x1 = hRow[r+1]-1,x2 = hRow[r+1];
+        System.out.println(x1+" "+x2);
+        for(int i=wColumn[c]+1;i<=wColumn[c+1]-2;i++){
+            MazeCell[] arr = new MazeCell[2];
+            arr[0] = cells[x1][i];
+            arr[1] = cells[x2][i];
+            cellsCouples.add(arr);
+        }
+        System.out.println("openCol: "+c+"\n");
+        for(MazeCell[] mc : cellsCouples) System.out.println(Arrays.toString(mc));
+        cellsCouples = cellsCouples.stream().filter(couple ->
+                !viciniWalkable(couple[0],true).isEmpty() &&
+                        !viciniWalkable(couple[1],true).isEmpty()).toList();
+        if(cellsCouples.isEmpty())
+            throw new Exception("seperazioni totalmente chiuse "+c+" row");
+        MazeCell[] winners = cellsCouples.get(rand.nextInt(cellsCouples.size()));
+        cells[winners[0].x][winners[0].y] = new Percorso(winners[0].x,winners[0].y);
+        cells[winners[1].x][winners[1].y] = new Percorso(winners[1].x,winners[1].y);
     }
 
-    private void fixInizioFine(boolean inizio){
+    private void fixInizioFine(boolean inizio) throws Exception{
+        MazeCell fi = (inizio) ? getInizio() : getFine();
+        //System.out.println(fi);
+        if(fi != null){
+            var viciniW = viciniWalkable(fi,true);
+            var viciniM = viciniFilter(fi,MazeCellType.MURO);
+            //System.out.println(viciniM+" "+viciniW);
+            if(viciniM.isEmpty() && viciniW.isEmpty())
+                throw new Exception("Inizio o Fine non disostruibile");
+            while(viciniW.isEmpty()) {
+                if(!viciniM.isEmpty()) {
+                    var muro = viciniM.get(0);
+                    cells[muro.x][muro.y] = new Percorso(muro.x, muro.y);
+                    fi = cells[muro.x][muro.y];
+                    viciniW = viciniWalkable(fi, true);
+                    viciniM = viciniFilter(fi, MazeCellType.MURO);
+                }else
+                    throw new Exception("Inizio o Fine non disostruibile");
+            }
+        }
+    }
 
+    public List<MazeCell> vicini(MazeCell cell){
+        List<MazeCell> v = new ArrayList<>();
+        if(cell.x + 1 < h) v.add(cells[cell.x+1][cell.y]);
+        if(cell.x - 1 >= 0) v.add(cells[cell.x-1][cell.y]);
+        if(cell.y + 1 < w) v.add(cells[cell.x][cell.y+1]);
+        if(cell.y - 1 >= 0) v.add(cells[cell.x][cell.y-1]);
+        return v;
+    }
+
+    public List<MazeCell> viciniFilter(MazeCell cell, MazeCellType...types){
+        return new ArrayList<>(vicini(cell).stream()
+                .filter(p -> MazeCellType.isOneOfTheTypes(p.type(),types))
+                .toList());
+    }
+
+    public List<MazeCell> viciniNotFilter(MazeCell cell,MazeCellType ...types){
+        return new ArrayList<>(vicini(cell).stream()
+                .filter(p -> MazeCellType.isNotOneOfTheTypes(p.type(),types))
+                .toList());
+    }
+
+    public List<MazeCell> viciniWalkable(MazeCell cell,boolean walkable){
+        return new ArrayList<>(vicini(cell).stream()
+                .filter(p -> p.isWalkable() == walkable)
+                .toList());
+    }
+
+    public InizioFine getInizio(){
+        var inF = getAllOfTypes(MazeCellType.INIZIO_FINE);
+        for(MazeCell cell : inF)
+            if(((InizioFine) cell).isStart)
+                return (InizioFine) cell;
+        return null;
+    }
+
+    public InizioFine getFine(){
+        var inF = getAllOfTypes(MazeCellType.INIZIO_FINE);
+        for(MazeCell cell : inF)
+            if(!((InizioFine) cell).isStart)
+                return (InizioFine) cell;
+        return null;
+    }
+
+    public List<MazeCell> getAllOfTypes(MazeCellType ...types){
+        var l = new ArrayList<MazeCell>();
+        for(MazeCell[] i : cells)
+            for(MazeCell p : i)
+                if(MazeCellType.isOneOfTheTypes(p.type(),types))
+                    l.add(p);
+        return l;
+    }
+
+    public Maze getMaze() throws Exception{
+        Maze maze = new Maze(h,w,MazeGenType.HYPER_MAZE);
+        for(int i=0;i<h;i++){
+            for(int j=0;j<w;j++){
+                maze.cells[i][j] = cells[i][j];
+            }
+        }
+        System.out.println(maze.unreachablePaths());
+        if(!maze.isAllReachable())
+            throw new Exception("not all reachable");
+        return maze;
     }
 
 }

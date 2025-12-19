@@ -1,6 +1,11 @@
 package com.flavio.rognoni.purgatory.purgatory;
 
+import com.flavio.rognoni.purgatory.purgatory.mazes.HyperMaze;
+import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Porta;
+
+import java.io.InputStream;
+import java.util.List;
 
 public class Script {
 
@@ -34,66 +39,29 @@ public class Script {
 //            for(int i=1;i<=1024;i++){
 //                System.out.println(i+" "+(Math.log(i)/Math.log(4)));
 //            }
-            System.out.println(Porta.class.getSimpleName());
+            InputStream is = App.class.getResourceAsStream("labirinti/hm1.xml");
+            Maze maze = Maze.mazeFromXML(is);
+            is = App.class.getResourceAsStream("labirinti/hm2.xml");
+            Maze maze2 = Maze.mazeFromXML(is);
+            is = App.class.getResourceAsStream("labirinti/hm3.xml");
+            Maze maze3 = Maze.mazeFromXML(is);
+            is = App.class.getResourceAsStream("labirinti/hm4.xml");
+            Maze maze4 = Maze.mazeFromXML(is);
+            if(maze != null && maze2 != null && maze3 != null && maze4 != null){
+                HyperMaze hyperMaze = new HyperMaze(5,List.of(
+                        maze,maze2,maze3,maze4,maze,
+                        maze2,maze3,maze4,maze,maze2,
+                        maze3,maze4,maze,maze2,maze3,
+                        maze4,maze,maze2,maze3,maze4,
+                        maze,maze2,maze3,maze4,maze),
+                        1,0,20,99);
+                Maze m = hyperMaze.getMaze();
+                System.out.println(m);
+                Maze.mazeToXML(m,null);
+            }
         }catch (Exception e){
-
+            e.printStackTrace();
         }
-    }
-
-    private static boolean tautology(){ //1
-        return true;
-    }
-
-    private static boolean contradiction(){ //2
-        return false;
-    }
-
-    private static boolean prop(boolean a){ //3,4 sia per a che per b
-        return a;
-    }
-
-    private static boolean not(boolean a){ //5,6 sia per a che per b
-        return !a;
-    }
-
-    private static boolean and(boolean a,boolean b){ //7
-        return a && b;
-    }
-
-    private static boolean nand(boolean a,boolean b){ //8
-        return !(a && b);
-    }
-
-    private static boolean or(boolean a,boolean b){ //9
-        return a || b;
-    }
-
-    private static boolean nor(boolean a,boolean b){ //10
-        return !(a || b);
-    }
-
-    public static boolean imply(boolean a,boolean b){ //11
-        return !a || b;
-    }
-
-    public static boolean nimply(boolean a,boolean b){ //12
-        return !(!a || b);
-    }
-
-    public static boolean converse(boolean a,boolean b){ //13
-        return a || !b;
-    }
-
-    public static boolean nconverse(boolean a,boolean b){ //14
-        return !(a || !b);
-    }
-
-    public static boolean xor(boolean a,boolean b){ //15
-        return a ^ b;
-    }
-
-    public static boolean iff(boolean a,boolean b){ //16
-        return a == b;
     }
 
 }
