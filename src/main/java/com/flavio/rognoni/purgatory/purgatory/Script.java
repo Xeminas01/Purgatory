@@ -39,22 +39,37 @@ public class Script {
 //            for(int i=1;i<=1024;i++){
 //                System.out.println(i+" "+(Math.log(i)/Math.log(4)));
 //            }
-            InputStream is = App.class.getResourceAsStream("labirinti/hm1.xml");
+//            InputStream is = App.class.getResourceAsStream("labirinti/hm1.xml");
+//            Maze maze = Maze.mazeFromXML(is);
+//            is = App.class.getResourceAsStream("labirinti/hm2.xml");
+//            Maze maze2 = Maze.mazeFromXML(is);
+//            is = App.class.getResourceAsStream("labirinti/hm3.xml");
+//            Maze maze3 = Maze.mazeFromXML(is);
+//            is = App.class.getResourceAsStream("labirinti/hm4.xml");
+//            Maze maze4 = Maze.mazeFromXML(is);
+            InputStream is = App.class.getResourceAsStream("labirinti/200x200 DFS 17-12-2025 22_33_09_maze.xml");
             Maze maze = Maze.mazeFromXML(is);
-            is = App.class.getResourceAsStream("labirinti/hm2.xml");
-            Maze maze2 = Maze.mazeFromXML(is);
-            is = App.class.getResourceAsStream("labirinti/hm3.xml");
-            Maze maze3 = Maze.mazeFromXML(is);
-            is = App.class.getResourceAsStream("labirinti/hm4.xml");
-            Maze maze4 = Maze.mazeFromXML(is);
-            if(maze != null && maze2 != null && maze3 != null && maze4 != null){
+            //40x40 DFS 13-12-2025 15_32_19_maze.xml
+//            if(maze != null && maze2 != null && maze3 != null && maze4 != null){
+//                HyperMaze hyperMaze = new HyperMaze(5,List.of(
+//                        maze,maze2,maze3,maze4,maze,
+//                        maze2,maze3,maze4,maze,maze2,
+//                        maze3,maze4,maze,maze2,maze3,
+//                        maze4,maze,maze2,maze3,maze4,
+//                        maze,maze2,maze3,maze4,maze),
+//                        1,0,20,99);
+//                Maze m = hyperMaze.getMaze();
+//                System.out.println(m);
+//                Maze.mazeToXML(m,null);
+//            }
+            if(maze != null){
                 HyperMaze hyperMaze = new HyperMaze(5,List.of(
-                        maze,maze2,maze3,maze4,maze,
-                        maze2,maze3,maze4,maze,maze2,
-                        maze3,maze4,maze,maze2,maze3,
-                        maze4,maze,maze2,maze3,maze4,
-                        maze,maze2,maze3,maze4,maze),
-                        1,0,20,99);
+                        maze,maze,maze,maze,maze,
+                        maze,maze,maze,maze,maze,
+                        maze,maze,maze,maze,maze,
+                        maze,maze,maze,maze,maze,
+                        maze,maze,maze,maze,maze),
+                        1,0,20,999);
                 Maze m = hyperMaze.getMaze();
                 System.out.println(m);
                 Maze.mazeToXML(m,null);

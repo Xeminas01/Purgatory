@@ -158,7 +158,7 @@ public class Maze {
         List<MazeCell> walk = new ArrayList<>();
         walk.add(start);
         while(!walk.isEmpty()){
-            //System.out.println(visited.size()+"/"+paths.size());
+            System.out.println(visited.size()+"/"+paths.size());
             MazeCell cur = walk.remove(0);
             if(visited.add(cur))
                 walk.addAll(viciniWalkable(cur,true));
@@ -169,12 +169,12 @@ public class Maze {
     public boolean isAllReachable(){ return unreachablePaths() == 0; }
 
     public int unreachablePathsWithTele(){
-        List<MazeCell> paths = getAllWalkable(true),
-                start = getAllOfTypes(MazeCellType.INIZIO_FINE);
-        if(paths.isEmpty() || start.isEmpty()) return -1;
+        List<MazeCell> paths = getAllWalkable(true);
+        MazeCell start = getInizio();
+        if(paths.isEmpty() || start == null) return -1;
         Set<MazeCell> visited = new HashSet<>();
         List<MazeCell> walk = new ArrayList<>();
-        walk.add(start.get(0));
+        walk.add(start);
         while(!walk.isEmpty()){
             MazeCell cur = walk.remove(0);
             if(visited.add(cur)) {
@@ -274,6 +274,7 @@ public class Maze {
             List<MazeCell> queue = new ArrayList<>();
             queue.add(walk.remove(0));
             while(!queue.isEmpty()){
+                System.out.println(visited.size()+"/"+d);
                 MazeCell cur = queue.remove(0);
                 if(visited.add(cur)){
                     set.add(cur);
@@ -691,12 +692,16 @@ public class Maze {
     public boolean isSolvable() throws Exception{
         if(!hasInizioAndFine())
             throw new Exception("Manca l'Inizio o la Fine del Labirinto o sono in posizioni errate");
+        System.out.println("ok fi");
         if(!validTeleports())
             throw new Exception("Teletrasporti invalidi end points mancanti o errati");
+        System.out.println("ok tele");
         if(!validPorte())
             throw new Exception("Porte con interruttori invalide o non possibile calpestare tutto con le porte aperte");
+        System.out.println("ok porte");
         if(!validITT())
             throw new Exception("Interruttori non disattivati, tesori presi o trappole attivate");
+        System.out.println("ok itt");
         return true;
     }
 

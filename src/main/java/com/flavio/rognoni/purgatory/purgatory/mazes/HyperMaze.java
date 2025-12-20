@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class HyperMaze { //todo: work in progress
+public class HyperMaze {
 
     public final int d,h,w,sx,sy,ex,ey;
     public Maze[][] mazeMatrix;
@@ -51,8 +51,9 @@ public class HyperMaze { //todo: work in progress
         for(int i=0;i<d;i++) {
             for(int j=0;j<d;j++) {
                 var maze = mazes.get(i*d+j);
-                if(!maze.isSolvable())
-                    return null;
+                //System.out.println(maze);
+//                if(!maze.isSolvable())
+//                    return null;
                 mm[i][j] = mazes.get(i*d+j);
             }
         }
@@ -90,16 +91,24 @@ public class HyperMaze { //todo: work in progress
         int[] hRow = new int[d+1],
                 wColumn = new int[d+1];
         for(int i=0;i<d;i++) {
+            System.out.println(i);
             int hh = mazeMatrix[i][0].h;
             for(int j=0;j<d;j++) {
+                System.out.println(j);
                 var maze = mazeMatrix[i][j];
                 for(int x=0;x<maze.h;x++){
                     for(int y=0;y<maze.w;y++){
-                        if(mazeMatrix[i][j].cellAt(x,y).type().isInizioFine())
+                        var cell = mazeMatrix[i][j].cellAt(x,y);
+                        if(cell.type().isInizioFine())
                             cells[ix+x][iy+y] = new Limite(ix+x,iy+y);
-                        else
-                            cells[ix+x][iy+y] = mazeMatrix[i][j]
-                                .cellAt(x,y).copyOf(ix+x,iy+y);
+                        else {
+                            if(cell.type().isTeletrasporto()){
+                                Teletrasporto t = (Teletrasporto) cell;
+                                cells[ix+x][iy+y] = new Teletrasporto(ix+x,iy+y,
+                                        ix+t.ex,iy+t.ey);
+                            }else
+                                cells[ix+x][iy+y] = cell.copyOf(ix+x,iy+y);
+                        }
                     }
                 }
                 iy += maze.w;
@@ -258,14 +267,10 @@ public class HyperMaze { //todo: work in progress
 
     public Maze getMaze() throws Exception{
         Maze maze = new Maze(h,w,MazeGenType.HYPER_MAZE);
-        for(int i=0;i<h;i++){
-            for(int j=0;j<w;j++){
-                maze.cells[i][j] = cells[i][j];
-            }
-        }
-        System.out.println(maze.unreachablePaths());
-        if(!maze.isAllReachable())
-            throw new Exception("not all reachable");
+        for(int i=0;i<h;i++)
+            System.arraycopy(cells[i], 0, maze.cells[i], 0, cells[i].length);
+        if(!maze.isSolvable())
+            throw new Exception("not solvable");
         return maze;
     }
 
