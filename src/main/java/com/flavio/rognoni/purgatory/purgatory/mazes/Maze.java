@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 public class Maze {
 
+    private String id;
     public final int h,w;
     public final MazeGenType genType;
     public final MazeCell[][] cells;
@@ -27,11 +28,12 @@ public class Maze {
 
     public static final int MIN_DIM = 10, MAX_DIM = 200, MAX_H_DIM = 1000;
 
-    public Maze(int h, int w, MazeGenType type) throws Exception{
+    public Maze(String id,int h, int w, MazeGenType type) throws Exception{
         if(h < MIN_DIM || h > MAX_H_DIM)
             throw new Exception("Invalid rows too less or too many [10,1000]");
         if(w < MIN_DIM || w > MAX_H_DIM)
             throw new Exception("Invalid columns too less or too many [10,1000]");
+        this.id = id;
         this.h = h;
         this.w = w;
         this.genType = type;
@@ -41,6 +43,10 @@ public class Maze {
                 cells[i][j] = (isLimit(i,j)) ? new Limite(i,j) : new Muro(i,j);
         this.walkSets = new ArrayList<>();
         walkSets();
+    }
+
+    public Maze(int h, int w, MazeGenType type) throws Exception{
+        this(null,h,w,type);
     }
 
     public boolean isLimit(int x,int y){
@@ -133,32 +139,25 @@ public class Maze {
                 .toList());
     }
 
-    public MazeCell furthestFromManhattan(MazeCell cell){
-        int d = Integer.MIN_VALUE;
-        MazeCell furthest = null;
-        for(MazeCell[] i : cells) {
-            for(MazeCell p : i) {
-                if(p.isWalkable()){
-                    int dist = cell.manhattanDistance(p);
-                    if(dist >= d){
-                        d = dist;
-                        furthest = p;
-                    }
-                }
-            }
-        }
-        return furthest;
-    }
-
     public int unreachablePaths(){
         List<MazeCell> paths = getAllWalkable(true);
         MazeCell start = getInizio();
         if(paths.isEmpty() || start == null) return -1;
+        if(paths.size() > 150000){
+            int c = 0;
+            for(MazeCell p : paths) {
+                if(!viciniWalkable(p,true).isEmpty()) {
+                    c++;
+                    System.out.println("up "+c+"/"+paths.size());
+                }
+            }
+            return Math.abs(c-paths.size());
+        }
         Set<MazeCell> visited = new HashSet<>();
         List<MazeCell> walk = new ArrayList<>();
         walk.add(start);
         while(!walk.isEmpty()){
-            System.out.println(visited.size()+"/"+paths.size());
+            System.out.println("up "+visited.size()+"/"+paths.size());
             MazeCell cur = walk.remove(0);
             if(visited.add(cur))
                 walk.addAll(viciniWalkable(cur,true));
@@ -172,6 +171,17 @@ public class Maze {
         List<MazeCell> paths = getAllWalkable(true);
         MazeCell start = getInizio();
         if(paths.isEmpty() || start == null) return -1;
+        if(paths.size() > 150000){
+            int c = 0;
+            for(MazeCell p : paths) {
+                if(!viciniWalkable(p,true).isEmpty() ||
+                        p.type().isTeletrasporto()) {
+                    c++;
+                    System.out.println("up "+c+"/"+paths.size());
+                }
+            }
+            return Math.abs(c-paths.size());
+        }
         Set<MazeCell> visited = new HashSet<>();
         List<MazeCell> walk = new ArrayList<>();
         walk.add(start);
@@ -660,13 +670,15 @@ public class Maze {
         var port = getAllOfTypes(MazeCellType.PORTA);
         List<Porta> porte = new ArrayList<>();
         for(MazeCell cell : port) porte.add((Porta) cell);
-        var topoMap = topologicalOrderOfWalkSets();
-        for(Porta p : porte){
-            if(p.isInterruttori()){
-                if(topoCorrectInterruttori(p,topoMap) == null)
-                    return false;
+        if(!porte.isEmpty()){
+            var topoMap = topologicalOrderOfWalkSets();
+            for(Porta p : porte){
+                if(p.isInterruttori()){
+                    if(topoCorrectInterruttori(p,topoMap) == null)
+                        return false;
+                }
+                p.openDoor();
             }
-            p.openDoor();
         }
         if(getAllOfTypes(MazeCellType.TELETRASPORTO).isEmpty() &&
                 !isAllReachable())
@@ -675,7 +687,8 @@ public class Maze {
             System.out.println("not tele");
             return false;
         }
-        for(Porta p : porte) p.closeDoor();
+        if(!porte.isEmpty())
+            for(Porta p : porte) p.closeDoor();
         return true;
     }
 
@@ -760,6 +773,15 @@ public class Maze {
         return walkSets.size() == set.size();
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        if(this.id == null)
+            this.id = id;
+    }
+
     @Override
     public String toString() {
         String s = "h:"+h+",w:"+w+"\n";
@@ -782,6 +804,10 @@ public class Maze {
 
     public static void mazeToXML(Maze maze,String fn){ // non usare nel jar
         try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH_mm_ss");
+            fn = (fn != null) ? fn : maze.h+"x"+maze.w+" "+maze.genType.getNome()+" "+
+                    sdf.format(new Date())+"_maze.xml";
+            maze.setId(fn.replace(".xml",""));
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.newDocument();
@@ -789,25 +815,28 @@ public class Maze {
             doc.appendChild(element);
             Attr hAttr = doc.createAttribute("h"),
                     wAttr = doc.createAttribute("w"),
-                    gtAttr = doc.createAttribute("genType");
+                    gtAttr = doc.createAttribute("genType"),
+                    idAttr = doc.createAttribute("id");
             hAttr.setValue(maze.h+"");
             wAttr.setValue(maze.w+"");
             gtAttr.setValue(maze.genType.ordinal()+"");
+            idAttr.setValue(maze.id);
             element.setAttributeNode(hAttr);
             element.setAttributeNode(wAttr);
             element.setAttributeNode(gtAttr);
-            for(MazeCell[] i : maze.cells)
-                for(MazeCell j : i)
+            element.setAttributeNode(idAttr);
+            for(MazeCell[] i : maze.cells) {
+                for(MazeCell j : i) {
+                    System.out.println(j);
                     element.appendChild(j.toXMLElement(doc));
+                }
+            }
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
             transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
             transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION,"no");
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             DOMSource source = new DOMSource(doc);
-            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH_mm_ss");
-            fn = (fn != null) ? fn : maze.h+"x"+maze.w+" "+maze.genType.getNome()+" "+
-                    sdf.format(new Date())+"_maze.xml";
             StreamResult result = new StreamResult(new File(
                     "src/main/resources/com/flavio/rognoni/purgatory/purgatory/labirinti/"+fn));
             transformer.transform(source,result);
@@ -828,7 +857,8 @@ public class Maze {
             int h = Integer.parseInt(root.getAttribute("h")),
                     w = Integer.parseInt(root.getAttribute("w")),
                     gType = Integer.parseInt(root.getAttribute("genType"));
-            Maze maze = new Maze(h,w,MazeGenType.values()[gType]);
+            String id = root.getAttribute("id");
+            Maze maze = new Maze(id,h,w,MazeGenType.values()[gType]);
             NodeList childs = root.getChildNodes();
             for(int i=0;i<childs.getLength();i++){
                 if (childs.item(i).getNodeType() == Node.ELEMENT_NODE) {
@@ -858,6 +888,22 @@ public class Maze {
                 }
             }
             return maze;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Integer[] hwFromXML(InputStream is){
+        try{
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(is);
+            doc.getDocumentElement().normalize();
+            Element root = (Element) doc.getElementsByTagName("Maze").item(0);
+            int h = Integer.parseInt(root.getAttribute("h")),
+                    w = Integer.parseInt(root.getAttribute("w"));
+            return new Integer[]{h,w};
         }catch (Exception e){
             e.printStackTrace();
             return null;

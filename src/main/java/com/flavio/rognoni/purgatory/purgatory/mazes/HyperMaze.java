@@ -3,10 +3,7 @@ package com.flavio.rognoni.purgatory.purgatory.mazes;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.MazeGenType;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class HyperMaze {
 
@@ -16,6 +13,8 @@ public class HyperMaze {
     public static final int MIN_DIM = 20, MAX_DIM = 1000, MIN_D = 2, MAX_D = 5;
 
     public HyperMaze(int d,List<Maze> mazes,int sx,int sy,int ex,int ey) throws Exception{
+        //todo: sviluppare una versione con dimensioni di matrice anche diverse
+        // 2,3;3,2;2,4;4,2;2,5;5,2;3,4;4,3;3,5;5,3;4,5;5,4
         if(d < MIN_D || d > MAX_D)
             throw new Exception("hyper matrix wrong dim");
         if(mazes == null || mazes.size() != d*d)
@@ -30,6 +29,7 @@ public class HyperMaze {
             throw new Exception("Invalid rows too less or too many [20,1000]");
         if(w < MIN_DIM || w > MAX_DIM)
             throw new Exception("Invalid columns too less or too many [20,1000]");
+        //System.out.println(h+" "+w+" "+sx+" "+sy+" "+ex+" "+ey);
         if(!Maze.isValidInizio(h,w,sx,sy))
             throw new Exception("Invalid Inizio");
         if(!Maze.isValidFine(h,w,sx,sy,ex,ey))
@@ -48,26 +48,30 @@ public class HyperMaze {
 
     private Maze[][] buildMazeMatrix(int d,List<Maze> mazes) throws Exception{
         Maze[][] mm = new Maze[d][d];
+        Set<String> set = new HashSet<>();
         for(int i=0;i<d;i++) {
             for(int j=0;j<d;j++) {
                 var maze = mazes.get(i*d+j);
                 //System.out.println(maze);
-//                if(!maze.isSolvable())
-//                    return null;
+                if(!set.contains(maze.getId()) &&
+                        !maze.isSolvable())
+                    return null;
                 mm[i][j] = mazes.get(i*d+j);
+                set.add(maze.getId());
+                System.out.println(set);
             }
         }
         for(int i=0;i<d;i++){
             int hRow = mm[i][0].h;
             for(int j=0;j<d;j++)
                 if(mm[i][j].h != hRow)
-                    return null;
+                    throw new Exception(i+","+j+" wrong row size "+mm[i][j].h+" != "+hRow);
         }
         for(int i=0;i<d;i++){
             int wCol = mm[0][i].w;
             for(int j=0;j<d;j++)
                 if(mm[j][i].w != wCol)
-                    return null;
+                    throw new Exception(j+","+i+" wrong column size "+mm[j][i].w+" != "+wCol);
         }
         return mm;
     }
@@ -185,7 +189,7 @@ public class HyperMaze {
                 !viciniWalkable(couple[0],true).isEmpty() &&
                         !viciniWalkable(couple[1],true).isEmpty()).toList();
         if(cellsCouples.isEmpty())
-            throw new Exception("seperazioni totalmente chiuse "+c+" row");
+            throw new Exception("seperazioni totalmente chiuse "+c+" column");
         MazeCell[] winners = cellsCouples.get(rand.nextInt(cellsCouples.size()));
         cells[winners[0].x][winners[0].y] = new Percorso(winners[0].x,winners[0].y);
         cells[winners[1].x][winners[1].y] = new Percorso(winners[1].x,winners[1].y);

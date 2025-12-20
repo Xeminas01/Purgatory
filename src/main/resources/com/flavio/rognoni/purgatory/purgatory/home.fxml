@@ -112,4 +112,14 @@
          <Font name="Verdana" size="15.0" />
       </font>
    </Button>
+   <Spinner fx:id="dSpinner" layoutX="205.0" layoutY="528.0" prefHeight="25.0" prefWidth="60.0">
+      <valueFactory>
+         <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+      </valueFactory>
+   </Spinner>
+   <Label layoutX="179.0" layoutY="528.0" text="d">
+      <font>
+         <Font name="Verdana" size="20.0" />
+      </font>
+   </Label>
 </AnchorPane>

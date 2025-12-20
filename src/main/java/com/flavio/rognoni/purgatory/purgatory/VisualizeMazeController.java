@@ -73,9 +73,10 @@ public class VisualizeMazeController implements Initializable {
         System.out.println("rendermaze");
         mPanel.renderMaze(maze);
         System.out.println("fine rendermaze inizio combo");
-        setChoiceCombo();
+        int d = maze.h* maze.w;
+        if(d <= 40000) setChoiceCombo();
         System.out.println("fine combo calcolo topo");
-        topoMap = maze.topologicalOrderOfWalkSets();
+        if(d <= 40000) topoMap = maze.topologicalOrderOfWalkSets();
         System.out.println("fine calcolo topo");
 
     }

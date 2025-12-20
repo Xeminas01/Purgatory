@@ -29,11 +29,11 @@ public class HomeController implements Initializable {
     public Button genMazeBtn;
     public ComboBox<String> genMazeChoice;
     public Spinner<Integer> hSpinner,wSpinner,sxSpinner,sySpinner,
-            exSpinner,eySpinner,mxSpinner,mySpinner;
+            exSpinner,eySpinner,mxSpinner,mySpinner,dSpinner;
     public ComboBox<String> mazeEditChoice;
     public Button editMazeBtn;
     public Label titleTxt;
-    private static final String
+    public static final String
             MAZE_PATH = "src/main/resources/com/flavio/rognoni/purgatory/purgatory/labirinti/",
             MAZE_PATH_RES = "labirinti/";
     public Button visMazeBtn;
@@ -58,12 +58,17 @@ public class HomeController implements Initializable {
         GUIMethods.renderSpinner(eySpinner, 0, Maze.MAX_DIM);
         GUIMethods.renderSpinner(mxSpinner, HyperMaze.MIN_D, HyperMaze.MAX_D);
         GUIMethods.renderSpinner(mySpinner, HyperMaze.MIN_D, HyperMaze.MAX_D);
+        GUIMethods.renderSpinner(dSpinner, HyperMaze.MIN_D, HyperMaze.MAX_D);
     }
 
     public void onGenMaze(ActionEvent event) {
         MazeGenType genType =
                 MazeGenType.values()[genMazeChoice
                         .getSelectionModel().getSelectedIndex()];
+        if(genType == MazeGenType.HYPER_MAZE){
+            onCreHyMaze(event);
+            return;
+        }
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("mazeGen.fxml"));
             Parent parent = fxmlLoader.load();
@@ -141,7 +146,19 @@ public class HomeController implements Initializable {
     }
 
     public void onCreHyMaze(ActionEvent event) {
-
+        try{
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("editHyperMaze.fxml"));
+            Parent parent = fxmlLoader.load();
+            EditHyperMazeController editMazeController = fxmlLoader.getController();
+            editMazeController.setD(dSpinner.getValue());
+            Scene scene = new Scene(parent, 1280, 720);
+            Stage stage = (Stage) backgroundPane.getScene().getWindow();
+            stage.setTitle("Vis Maze");
+            stage.setScene(scene);
+            stage.show();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
 }
