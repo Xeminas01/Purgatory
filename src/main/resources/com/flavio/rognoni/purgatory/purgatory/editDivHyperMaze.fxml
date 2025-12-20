@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane fx:id="backgroundPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.flavio.rognoni.purgatory.purgatory.EditDivHyperMazeController">
+    <AnchorPane fx:id="matrixPanel" layoutX="280.0" prefHeight="720.0" prefWidth="720.0" />
+    <Button fx:id="backBtn" layoutX="37.0" layoutY="38.0" mnemonicParsing="false" onAction="#onBack" style="-fx-background-color: gray;" text="Back" textFill="WHITE">
+        <font>
+            <Font name="Verdana" size="15.0" />
+        </font>
+    </Button>
+    <TextArea fx:id="mazeInfoTxt" editable="false" layoutX="1011.0" layoutY="343.0" prefHeight="200.0" prefWidth="257.0" promptText="Maze Infos">
+        <font>
+            <Font name="Verdana" size="15.0" />
+        </font>
+    </TextArea>
+    <ChoiceBox fx:id="mazeChoice" layoutX="1010.0" layoutY="171.0" prefHeight="25.0" prefWidth="257.0" />
+    <Label layoutX="1084.0" layoutY="135.0" text="Labirinto">
+        <font>
+            <Font name="Verdana" size="25.0" />
+        </font>
+    </Label>
+    <Button fx:id="saveBtn" layoutX="1110.0" layoutY="553.0" mnemonicParsing="false" onAction="#onSaveHyperMaze" style="-fx-background-color: red;" text="Save" textFill="WHITE">
+        <font>
+            <Font name="Verdana" size="15.0" />
+        </font>
+    </Button>
+    <Spinner fx:id="sxSpinner" layoutX="1068.0" layoutY="252.0" prefHeight="25.0" prefWidth="60.0">
+        <valueFactory>
+            <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+        </valueFactory>
+    </Spinner>
+    <Spinner fx:id="sySpinner" layoutX="1181.0" layoutY="252.0" prefHeight="25.0" prefWidth="60.0">
+        <valueFactory>
+            <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+        </valueFactory>
+    </Spinner>
+    <Label layoutX="1039.0" layoutY="252.0" text="sx">
+        <font>
+            <Font name="Verdana" size="20.0" />
+        </font>
+    </Label>
+    <Label layoutX="1155.0" layoutY="252.0" text="sy">
+        <font>
+            <Font name="Verdana" size="20.0" />
+        </font>
+    </Label>
+    <Spinner fx:id="exSpinner" layoutX="1068.0" layoutY="289.0" prefHeight="25.0" prefWidth="60.0">
+        <valueFactory>
+            <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+        </valueFactory>
+    </Spinner>
+    <Spinner fx:id="eySpinner" layoutX="1181.0" layoutY="289.0" prefHeight="25.0" prefWidth="60.0">
+        <valueFactory>
+            <SpinnerValueFactory.IntegerSpinnerValueFactory amountToStepBy="1" initialValue="1" max="10" min="1" />
+        </valueFactory>
+    </Spinner>
+    <Label layoutX="1039.0" layoutY="289.0" text="ex">
+        <font>
+            <Font name="Verdana" size="20.0" />
+        </font>
+    </Label>
+    <Label layoutX="1155.0" layoutY="289.0" text="ey">
+        <font>
+            <Font name="Verdana" size="20.0" />
+        </font>
+    </Label>
+    <Label fx:id="hTxt" alignment="CENTER" layoutX="1041.0" layoutY="211.0" prefHeight="25.0" prefWidth="87.0" text="h=0">
+        <font>
+            <Font name="Verdana" size="20.0" />
+        </font>
+    </Label>
+    <Label fx:id="wTxt" alignment="CENTER" layoutX="1157.0" layoutY="211.0" prefHeight="25.0" prefWidth="87.0" text="w=0">
+        <font>
+            <Font name="Verdana" size="20.0" />
+        </font>
+    </Label>
+</AnchorPane>

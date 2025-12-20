@@ -1,8 +1,8 @@
 package com.flavio.rognoni.purgatory.purgatory;
 
+import com.flavio.rognoni.purgatory.purgatory.mazes.DivHyperMaze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.HyperMaze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
-import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.MazeGenType;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
 
-public class EditHyperMazeController implements Initializable {
+public class EditDivHyperMazeController implements Initializable {
 
     public AnchorPane backgroundPane;
     public AnchorPane matrixPanel;
@@ -35,7 +35,7 @@ public class EditHyperMazeController implements Initializable {
             exSpinner,eySpinner;
     public Label hTxt;
     public Label wTxt;
-    private int d;
+    private int dh,dw;
     private Integer h,w;
     private Label[][] matrixCells;
     private MatrixContent[][] contents;
@@ -45,7 +45,7 @@ public class EditHyperMazeController implements Initializable {
         mazeChoice.setItems(FXCollections.observableArrayList(
                 Arrays.asList(Objects.requireNonNull(new File(HomeController.MAZE_PATH).list())))
         );
-        GUIMethods.renderSpinner(sxSpinner,0,HyperMaze.MAX_DIM-1);
+        GUIMethods.renderSpinner(sxSpinner,0, HyperMaze.MAX_DIM-1);
         GUIMethods.renderSpinner(sySpinner,0,HyperMaze.MAX_DIM-1);
         GUIMethods.renderSpinner(exSpinner,0,HyperMaze.MAX_DIM-1);
         GUIMethods.renderSpinner(eySpinner,0,HyperMaze.MAX_DIM-1);
@@ -53,30 +53,31 @@ public class EditHyperMazeController implements Initializable {
         w = null;
     }
 
-    public void setD(int d) {
-        this.d = d;
+    public void setD(int dh,int dw) {
+        this.dh = dh;
+        this.dw = dw;
         buildHyperMatrix();
         mazeChoice.setOnAction(e -> {
             setHW();
         });
         mazeChoice.getSelectionModel().selectFirst();
-        contents = new MatrixContent[d][d];
-        for(int i=0;i<d;i++)
-            for(int j=0;j<d;j++)
+        contents = new MatrixContent[dh][dw];
+        for(int i=0;i<dh;i++)
+            for(int j=0;j<dw;j++)
                 contents[i][j] = null;
     }
 
     private void buildHyperMatrix(){
-        matrixCells = new Label[d][d];
+        matrixCells = new Label[dh][dw];
         int aph = (int) matrixPanel.getPrefHeight(),
                 apw = (int) matrixPanel.getPrefWidth(),
-                ch = (aph-d*10)/d,cw = (apw-d*10)/d;
+                ch = (aph-dh*10)/dh,cw = (apw-dw*10)/dw;
         VBox vBox = new VBox();
         vBox.setSpacing(10);
-        for(int i=0;i<d;i++){
+        for(int i=0;i<dh;i++){
             HBox hBox = new HBox();
             hBox.setSpacing(10);
-            for(int j=0;j<d;j++){
+            for(int j=0;j<dw;j++){
                 Label mCell = new Label(i+","+j);
                 final int x = i, y = j;
                 mCell.setOnMouseClicked(e -> setMaze(x,y));
@@ -132,13 +133,13 @@ public class EditHyperMazeController implements Initializable {
 
     private boolean invalidAddToMatrix(int r,int c){
         Integer hr = null, wc = null;
-        for(int i=0;i<d;i++){
+        for(int i=0;i<dw;i++){
             if(contents[r][i] != null){
                 hr = contents[r][i].h;
                 break;
             }
         }
-        for(int i=0;i<d;i++){
+        for(int i=0;i<dh;i++){
             if(contents[i][c] != null){
                 wc = contents[i][c].w;
                 break;
@@ -177,8 +178,8 @@ public class EditHyperMazeController implements Initializable {
         try{
             List<Maze> mazeList = new ArrayList<>();
             Map<String,Maze> mazeMap = new HashMap<>();
-            for(int i=0;i<d;i++){
-                for(int j=0;j<d;j++){
+            for(int i=0;i<dh;i++){
+                for(int j=0;j<dw;j++){
                     if(mazeMap.get(contents[i][j].mId) == null){
                         InputStream is = App.class.getResourceAsStream("labirinti/"+contents[i][j].mId);
                         mazeMap.put(contents[i][j].mId,Maze.mazeFromXML(is));
@@ -187,7 +188,7 @@ public class EditHyperMazeController implements Initializable {
                         mazeList.add(mazeMap.get(contents[i][j].mId));
                 }
             }
-            HyperMaze hm = new HyperMaze(d,mazeList,
+            DivHyperMaze hm = new DivHyperMaze(dh,dw,mazeList,
                     sxSpinner.getValue(),sySpinner.getValue(),
                     exSpinner.getValue(),eySpinner.getValue());
             Maze m = hm.getMaze();

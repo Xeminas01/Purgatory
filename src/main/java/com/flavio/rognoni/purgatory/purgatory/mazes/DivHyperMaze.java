@@ -5,24 +5,27 @@ import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.*;
 
 import java.util.*;
 
-public class HyperMaze {
+public class DivHyperMaze{
 
-    public final int d,h,w,sx,sy,ex,ey;
+    public final int dh,dw,h,w,sx,sy,ex,ey;
     public Maze[][] mazeMatrix;
     public final MazeCell[][] cells;
-    public static final int MIN_DIM = 20, MAX_DIM = 1000, MIN_D = 2, MAX_D = 5;
+    public static final int MIN_DIM = 10, MAX_DIM = 1000, MIN_D = 1, MAX_D = 5;
 
-    public HyperMaze(int d,List<Maze> mazes,int sx,int sy,int ex,int ey) throws Exception{
-        //todo: sviluppare una versione con dimensioni di matrice anche diverse
-        // 2,3;3,2;2,4;4,2;2,5;5,2;3,4;4,3;3,5;5,3;4,5;5,4
-        if(d < MIN_D || d > MAX_D)
-            throw new Exception("hyper matrix wrong dim");
-        if(mazes == null || mazes.size() != d*d)
-            throw new Exception("missing mazes [needed mazes:"+(d*d)+"]");
-        var mm = buildMazeMatrix(d,mazes);
+    public DivHyperMaze(int dh,int dw,List<Maze> mazes,int sx,int sy,int ex,int ey) throws Exception{
+        if(dh < MIN_D || dh > MAX_D)
+            throw new Exception("hyper matrix wrong h");
+        if(dw < MIN_D || dw > MAX_D)
+            throw new Exception("hyper matrix wrong w");
+        if(dh == 1 && dh == dw)
+            throw new Exception("hyper matrix should be more than 1x1");
+        if(mazes == null || mazes.size() != dh*dw)
+            throw new Exception("missing mazes [needed mazes:"+(dh*dw)+"]");
+        var mm = buildMazeMatrix(dh,dw,mazes);
         if(mm == null)
             throw new Exception("wrong mazes size");
-        this.d = d;
+        this.dh = dh;
+        this.dw = dw;
         this.h = getHH(mm);
         this.w = getHW(mm);
         if(h < MIN_DIM || h > MAX_DIM)
@@ -46,12 +49,12 @@ public class HyperMaze {
         buildHyperMaze();
     }
 
-    private Maze[][] buildMazeMatrix(int d,List<Maze> mazes) throws Exception{
-        Maze[][] mm = new Maze[d][d];
+    private Maze[][] buildMazeMatrix(int dh,int dw,List<Maze> mazes) throws Exception{
+        Maze[][] mm = new Maze[dh][dw];
         Set<String> set = new HashSet<>();
-        for(int i=0;i<d;i++) {
-            for(int j=0;j<d;j++) {
-                var maze = mazes.get(i*d+j);
+        for(int i=0;i<dh;i++) {
+            for(int j=0;j<dw;j++) {
+                var maze = mazes.get(i*dw+j);
                 //System.out.println(maze);
                 if(!set.contains(maze.getId()) &&
                         !maze.isSolvable())
@@ -61,15 +64,15 @@ public class HyperMaze {
                 System.out.println(set);
             }
         }
-        for(int i=0;i<d;i++){
+        for(int i=0;i<dh;i++){
             int hRow = mm[i][0].h;
-            for(int j=0;j<d;j++)
+            for(int j=0;j<dw;j++)
                 if(mm[i][j].h != hRow)
                     throw new Exception(i+","+j+" wrong row size "+mm[i][j].h+" != "+hRow);
         }
-        for(int i=0;i<d;i++){
+        for(int i=0;i<dw;i++){
             int wCol = mm[0][i].w;
-            for(int j=0;j<d;j++)
+            for(int j=0;j<dh;j++)
                 if(mm[j][i].w != wCol)
                     throw new Exception(j+","+i+" wrong column size "+mm[j][i].w+" != "+wCol);
         }
@@ -78,26 +81,26 @@ public class HyperMaze {
 
     private int getHH(Maze[][] mm){
         int hh = 0;
-        for(int i=0;i<d;i++)
+        for(int i=0;i<dh;i++)
             hh += mm[i][0].h;
         return hh;
     }
 
     private int getHW(Maze[][] mm){
         int hw = 0;
-        for(int i=0;i<d;i++)
+        for(int i=0;i<dw;i++)
             hw += mm[0][i].w;
         return hw;
     }
 
     private void buildHyperMaze() throws Exception{
         int ix = 0, iy = 0;
-        int[] hRow = new int[d+1],
-                wColumn = new int[d+1];
-        for(int i=0;i<d;i++) {
+        int[] hRow = new int[dh+1],
+                wColumn = new int[dw+1];
+        for(int i=0;i<dh;i++) {
             System.out.println(i);
             int hh = mazeMatrix[i][0].h;
-            for(int j=0;j<d;j++) {
+            for(int j=0;j<dw;j++) {
                 System.out.println(j);
                 var maze = mazeMatrix[i][j];
                 for(int x=0;x<maze.h;x++){
@@ -122,11 +125,11 @@ public class HyperMaze {
         }
         hRow[0] = 0;
         wColumn[0] = 0;
-        for(int i=0;i<d;i++) {
+        for(int i=0;i<dh;i++)
             hRow[i+1] = hRow[i] + mazeMatrix[i][0].h;
+        for(int i=0;i<dw;i++)
             wColumn[i+1] = wColumn[i] + mazeMatrix[0][i].w;
-        }
-        System.out.println("hrow "+Arrays.toString(hRow));
+        System.out.println("hrow "+ Arrays.toString(hRow));
         System.out.println("wcolumn "+Arrays.toString(wColumn));
         for(int i=0;i<h;i++){
             for(int j=0;j<w;j++){
@@ -138,11 +141,11 @@ public class HyperMaze {
         }
         Random rand = new Random();
 
-        for(int i=0;i<d;i++)
-            for(int j=0;j<d-1;j++)
+        for(int i=0;i<dh;i++)
+            for(int j=0;j<dw-1;j++)
                 openRow(i,j,hRow,wColumn,rand);
-        for(int i=0;i<d;i++)
-            for(int j=0;j<d-1;j++)
+        for(int i=0;i<dw;i++)
+            for(int j=0;j<dh-1;j++)
                 openColumn(i,j,hRow,wColumn,rand);
         cells[sx][sy] = new InizioFine(sx,sy,true);
         cells[ex][ey] = new InizioFine(ex,ey,false);
@@ -164,7 +167,7 @@ public class HyperMaze {
         for(MazeCell[] mc : cellsCouples) System.out.println(Arrays.toString(mc));
         cellsCouples = cellsCouples.stream().filter(couple ->
                 !viciniWalkable(couple[0],true).isEmpty() &&
-                !viciniWalkable(couple[1],true).isEmpty()).toList();
+                        !viciniWalkable(couple[1],true).isEmpty()).toList();
         if(cellsCouples.isEmpty())
             throw new Exception("seperazioni totalmente chiuse "+r+" row");
         MazeCell[] winners = cellsCouples.get(rand.nextInt(cellsCouples.size()));
@@ -274,11 +277,11 @@ public class HyperMaze {
     }
 
     public Maze getMaze() throws Exception{
-        Maze maze = new Maze(h,w,MazeGenType.HYPER_MAZE);
+        Maze maze = new Maze(h,w, MazeGenType.HYPER_MAZE);
         for(int i=0;i<h;i++)
             System.arraycopy(cells[i], 0, maze.cells[i], 0, cells[i].length);
-        if(!maze.isSolvable())
-            throw new Exception("not solvable");
+//        if(!maze.isSolvable())
+//            throw new Exception("not solvable");
         return maze;
     }
 

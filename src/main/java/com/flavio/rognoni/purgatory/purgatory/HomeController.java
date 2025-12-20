@@ -1,5 +1,6 @@
 package com.flavio.rognoni.purgatory.purgatory;
 
+import com.flavio.rognoni.purgatory.purgatory.mazes.DivHyperMaze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.HyperMaze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators.MazeGenType;
@@ -38,6 +39,7 @@ public class HomeController implements Initializable {
             MAZE_PATH_RES = "labirinti/";
     public Button visMazeBtn;
     public Button createHyperMazeBtn;
+    public Button createDivHyperMazeBtn;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -56,8 +58,8 @@ public class HomeController implements Initializable {
         GUIMethods.renderSpinner(sySpinner, 0, Maze.MAX_DIM);
         GUIMethods.renderSpinner(exSpinner, 0, Maze.MAX_DIM);
         GUIMethods.renderSpinner(eySpinner, 0, Maze.MAX_DIM);
-        GUIMethods.renderSpinner(mxSpinner, HyperMaze.MIN_D, HyperMaze.MAX_D);
-        GUIMethods.renderSpinner(mySpinner, HyperMaze.MIN_D, HyperMaze.MAX_D);
+        GUIMethods.renderSpinner(mxSpinner, DivHyperMaze.MIN_D, DivHyperMaze.MAX_D);
+        GUIMethods.renderSpinner(mySpinner, DivHyperMaze.MIN_D, DivHyperMaze.MAX_D);
         GUIMethods.renderSpinner(dSpinner, HyperMaze.MIN_D, HyperMaze.MAX_D);
     }
 
@@ -114,8 +116,13 @@ public class HomeController implements Initializable {
             EditMazeController editMazeController = fxmlLoader.getController();
             InputStream is = getClass().getResourceAsStream(MAZE_PATH_RES+mazeEditChoice.getValue());
             Maze maze = Maze.mazeFromXML(is);
-            if(maze != null)
+            if(maze != null) {
+                if(maze.h*maze.w > 40000 && maze.genType == MazeGenType.HYPER_MAZE) {
+                    GUIMethods.showError("Labirinto troppo grande per essere modificato");
+                    return;
+                }
                 editMazeController.setMaze(maze,mazeEditChoice.getValue());
+            }
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
             stage.setTitle("Edit Maze");
@@ -153,7 +160,28 @@ public class HomeController implements Initializable {
             editMazeController.setD(dSpinner.getValue());
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
-            stage.setTitle("Vis Maze");
+            stage.setTitle("Edit HyperMaze");
+            stage.setScene(scene);
+            stage.show();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void onCreDivHyMaze(ActionEvent event) {
+        try{
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("editDivHyperMaze.fxml"));
+            Parent parent = fxmlLoader.load();
+            EditDivHyperMazeController editMazeController = fxmlLoader.getController();
+            int dh = mxSpinner.getValue(), dw = mySpinner.getValue();
+            if(dh == 1 && dh == dw){
+                GUIMethods.showError("matrice 1x1 non valida per DivHyperMaze");
+                return;
+            }
+            editMazeController.setD(mxSpinner.getValue(),mySpinner.getValue());
+            Scene scene = new Scene(parent, 1280, 720);
+            Stage stage = (Stage) backgroundPane.getScene().getWindow();
+            stage.setTitle("Edit DivHyperMaze");
             stage.setScene(scene);
             stage.show();
         }catch (Exception e){

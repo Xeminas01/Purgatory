@@ -148,7 +148,7 @@ public class Maze {
             for(MazeCell p : paths) {
                 if(!viciniWalkable(p,true).isEmpty()) {
                     c++;
-                    System.out.println("up "+c+"/"+paths.size());
+                    System.out.println("up 150k "+c+"/"+paths.size());
                 }
             }
             return Math.abs(c-paths.size());

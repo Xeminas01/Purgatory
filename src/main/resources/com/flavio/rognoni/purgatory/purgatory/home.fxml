@@ -122,4 +122,9 @@
          <Font name="Verdana" size="20.0" />
       </font>
    </Label>
+   <Button fx:id="createDivHyperMazeBtn" layoutX="473.0" layoutY="481.0" mnemonicParsing="false" onAction="#onCreDivHyMaze" style="-fx-background-color: yellow;" text="Create DivHyperMaze">
+      <font>
+         <Font name="Verdana" size="15.0" />
+      </font>
+   </Button>
 </AnchorPane>
