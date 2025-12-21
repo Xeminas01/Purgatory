@@ -1,5 +1,7 @@
 package com.flavio.rognoni.purgatory.purgatory;
 
+import com.flavio.rognoni.purgatory.purgatory.dices.Dado;
+import com.flavio.rognoni.purgatory.purgatory.elements.Elemento;
 import com.flavio.rognoni.purgatory.purgatory.mazes.HyperMaze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.Porta;
@@ -113,6 +115,17 @@ public class Script {
 //                InputStream is = App.class.getResourceAsStream("labirinti/"+fileName);
 //                Maze.tmpFixIdXML(is,fileName.replace(".xml",""));
 //            }
+//            var spm = Dado.sumProbMap(6,6,6,6,6);
+//            System.out.println(spm);
+//            var spm2 = Dado.sumProbMap2(5,6);
+//            System.out.println(spm2);
+//            System.out.println(Dado.binomialCoefficient(90,6));
+//            System.out.println(Dado.fact(6));
+//            Dado d6 = new Dado(-1,6);
+//            for(int i=0;i<1000;i++){
+//                System.out.println("ris:"+(d6.roll()+d6.roll()));
+//            }
+            System.out.println(Elemento.danni(Elemento.FUOCO,Elemento.ACQUA,3));
         }catch (Exception e){
             e.printStackTrace();
         }
