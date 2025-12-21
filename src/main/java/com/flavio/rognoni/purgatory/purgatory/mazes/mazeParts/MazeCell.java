@@ -56,6 +56,7 @@ public abstract class MazeCell {
                 case "Trappola" -> { return Trappola.fromXMLElement(e); }
                 case "MuroInvisibile" -> { return MuroInvisibile.fromXMLElement(e); }
                 case "Teletrasporto" -> { return Teletrasporto.fromXMLElement(e); }
+                case "Ostacolo" -> { return Ostacolo.fromXMLElement(e); }
                 default -> { return null; }
             }
         }catch (Exception ex){

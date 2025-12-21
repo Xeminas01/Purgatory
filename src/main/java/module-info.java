@@ -16,5 +16,7 @@ module com.flavio.rognoni.purgatory.purgatory {
     exports com.flavio.rognoni.purgatory.purgatory.mazes;
     exports com.flavio.rognoni.purgatory.purgatory.mazes.mazeGenerators;
     exports com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts;
+    exports com.flavio.rognoni.purgatory.purgatory.dices;
+    exports com.flavio.rognoni.purgatory.purgatory.elements;
 
 }

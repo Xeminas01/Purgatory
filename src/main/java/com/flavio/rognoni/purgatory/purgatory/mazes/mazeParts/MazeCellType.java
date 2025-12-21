@@ -9,7 +9,7 @@ public enum MazeCellType {
     INIZIO_FINE("Inizio-Fine"), PORTA("Porta"),
     INTERRUTTORE("Interruttore"), TESORO("Tesoro"),
     TRAPPOLA("Trappola"), MURO_INVISIBILE("Muro Invisibile"),
-    TELETRASPORTO("Teletrasporto");
+    TELETRASPORTO("Teletrasporto"), OSTACOLO("Ostacolo");
 
     public final String nome;
 
@@ -27,6 +27,7 @@ public enum MazeCellType {
     public boolean isTrappola(){ return this == TRAPPOLA; }
     public boolean isMuroInvisibile(){ return this == MURO_INVISIBILE; }
     public boolean isTeletrasporto(){ return this == TELETRASPORTO; }
+    public boolean isOstacolo(){ return this == OSTACOLO; }
 
     public static boolean isOneOfTheTypes(MazeCellType type, MazeCellType ...types){
         return Arrays.asList(types).contains(type);

@@ -40,6 +40,7 @@ public class HomeController implements Initializable {
     public Button visMazeBtn;
     public Button createHyperMazeBtn;
     public Button createDivHyperMazeBtn;
+    public Button deleteBtn;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -61,6 +62,15 @@ public class HomeController implements Initializable {
         GUIMethods.renderSpinner(mxSpinner, DivHyperMaze.MIN_D, DivHyperMaze.MAX_D);
         GUIMethods.renderSpinner(mySpinner, DivHyperMaze.MIN_D, DivHyperMaze.MAX_D);
         GUIMethods.renderSpinner(dSpinner, HyperMaze.MIN_D, HyperMaze.MAX_D);
+    }
+
+    public void setChoice(String fn){
+        for(int i=0;i<mazeEditChoice.getItems().size();i++){
+            if(mazeEditChoice.getItems().get(i).startsWith(fn)){
+                mazeEditChoice.getSelectionModel().select(i);
+                return;
+            }
+        }
     }
 
     public void onGenMaze(ActionEvent event) {
@@ -125,7 +135,7 @@ public class HomeController implements Initializable {
             }
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
-            stage.setTitle("Edit Maze");
+            stage.setTitle("Edit Maze "+mazeEditChoice.getValue());
             stage.setScene(scene);
             stage.show();
         }catch (Exception e){
@@ -144,7 +154,7 @@ public class HomeController implements Initializable {
                 editMazeController.setMaze(maze,mazeEditChoice.getValue());
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
-            stage.setTitle("Vis Maze");
+            stage.setTitle("Vis Maze "+mazeEditChoice.getValue());
             stage.setScene(scene);
             stage.show();
         }catch (Exception e){
@@ -187,6 +197,23 @@ public class HomeController implements Initializable {
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    public void onDeleteMaze(ActionEvent event) { //togliere nel jar
+        var fl = new File(MAZE_PATH).list();
+        if(fl == null) return;
+        for(String s : fl){
+            if(s.equals(mazeEditChoice.getValue())){
+                var ris = new File(MAZE_PATH+s).delete();
+                if(ris){
+                    System.out.println("eliminato "+mazeEditChoice.getValue());
+                }
+            }
+        }
+        var l = new ArrayList<>(Arrays.asList(
+                Objects.requireNonNull(new File(MAZE_PATH).list())));
+        mazeEditChoice.setItems(FXCollections.observableArrayList(l));
+        mazeEditChoice.getSelectionModel().selectFirst();
     }
 
 }

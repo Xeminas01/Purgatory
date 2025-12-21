@@ -143,12 +143,12 @@ public class Maze {
         List<MazeCell> paths = getAllWalkable(true);
         MazeCell start = getInizio();
         if(paths.isEmpty() || start == null) return -1;
-        if(paths.size() > 150000){
+        if(paths.size() > 10000){
             int c = 0;
             for(MazeCell p : paths) {
                 if(!viciniWalkable(p,true).isEmpty()) {
                     c++;
-                    System.out.println("up 150k "+c+"/"+paths.size());
+                    System.out.println("up 40k "+c+"/"+paths.size());
                 }
             }
             return Math.abs(c-paths.size());
@@ -558,7 +558,15 @@ public class Maze {
                 list.add((Interruttore) cell);
             else return null;
         }
-        var topoMap = topologicalOrderOfWalkSets();
+        return topoCorrectInterruttori(porta,list,topologicalOrderOfWalkSets());
+    }
+
+    public List<Interruttore> topoCorrectInterruttori(Porta porta,Map<Integer, List<Integer>> topoMap){
+        return topoCorrectInterruttori(porta,new ArrayList<>(porta.interruttori),topoMap);
+    }
+
+    private List<Interruttore> topoCorrectInterruttori(Porta porta,List<Interruttore> list,
+                                                       Map<Integer, List<Integer>> topoMap){
         var vicini = viciniFilter(porta,MazeCellType.PERCORSO);
         if(vicini.size() == 2){
             int setA = -1, setB = -1;
@@ -583,31 +591,7 @@ public class Maze {
         return list;
     }
 
-    public List<Interruttore> topoCorrectInterruttori(Porta porta,Map<Integer, List<Integer>> topoMap){
-        List<Interruttore> list = new ArrayList<>(porta.interruttori);
-        var vicini = viciniFilter(porta,MazeCellType.PERCORSO);
-        if(vicini.size() == 2){
-            int setA = -1, setB = -1;
-            Map<Interruttore,Integer> interrSetMap = new HashMap<>();
-            for(int i=0;i<walkSets.size();i++){
-                Set<MazeCell> set = walkSets.get(i);
-                if(set.contains(vicini.get(0))) setA = i;
-                else if(set.contains(vicini.get(1))) setB = i;
-                for(Interruttore interruttore : list)
-                    if(set.contains(interruttore))
-                        interrSetMap.put(interruttore,i);
-            }
-            if(interrSetMap.size() != list.size())
-                return null;
-            int next = followInTopo(setA,setB,topoMap);
-            for(Interruttore interr : list){
-                int set = interrSetMap.get(interr);
-                if(!isPrevInTopo(set,next,topoMap))
-                    return null;
-            }
-        }else return null;
-        return list;
-    }
+    //todo: ck porte con chiavi se vuoi farlo
 
     private int followInTopo(int a,int b,Map<Integer, List<Integer>> topoMap){
         if(isFollowInTopo(a,b,topoMap)) return b;
@@ -677,6 +661,12 @@ public class Maze {
                     if(topoCorrectInterruttori(p,topoMap) == null)
                         return false;
                 }
+                // todo: fare anche il check con i tesori con le chiavi?
+                //  1. lista con tutti i tesori con chiavi
+                //  2. mappa degli insiemi successivi alle porte con chivi per ogni porta
+                //  3. mappa con porte a chiavi e liste di tesori negli insiemi precedenti
+                //  4. apro le porte da quella più vicino all'inizio eliminando dalle liste i tesori già usati
+                //  5. se la mappa è vuota (riesco ad aprire tutto) allora ritorno vero altrimeti falso
                 p.openDoor();
             }
         }
@@ -692,12 +682,13 @@ public class Maze {
         return true;
     }
 
-    private boolean validITT(){
+    private boolean validITTO(){
         for(MazeCell cell : getAllOfTypes(MazeCellType.INTERRUTTORE,
                 MazeCellType.TESORO,MazeCellType.TRAPPOLA)){
             if(cell.type().isInterruttore()) if(((Interruttore) cell).isOn()) return false;
             if(cell.type().isTesoro()) if(((Tesoro) cell).isTaken()) return false;
             if(cell.type().isTrappola()) if(((Trappola) cell).isActivated()) return false;
+            if(cell.type().isOstacolo()) if(((Ostacolo) cell).isDisable()) return false;
         }
         return true;
     }
@@ -712,7 +703,7 @@ public class Maze {
         if(!validPorte())
             throw new Exception("Porte con interruttori invalide o non possibile calpestare tutto con le porte aperte");
         System.out.println("ok porte");
-        if(!validITT())
+        if(!validITTO())
             throw new Exception("Interruttori non disattivati, tesori presi o trappole attivate");
         System.out.println("ok itt");
         return true;
@@ -771,6 +762,22 @@ public class Maze {
                     return false;
         }
         return walkSets.size() == set.size();
+    }
+
+    public Set<MazeCell> wallSet(Set<MazeCell> walkSet,int nw){
+        if(nw < 0 || nw > 4) nw = 2;
+        int finalNw = nw;
+        var oppNoWalkSet = walkSet.stream().filter(
+                cell -> wallOf(cell, finalNw))
+                .collect(Collectors.toSet());
+        oppNoWalkSet.removeIf(e -> !e.type().isPercorso());
+        //System.out.println(oppNoWalkSet);
+        return oppNoWalkSet;
+    }
+
+    public boolean wallOf(MazeCell cell,int nw){
+        var viciniNoWalk = viciniFilter(cell,MazeCellType.MURO,MazeCellType.LIMITE);
+        return viciniNoWalk.size() == nw;
     }
 
     public String getId() {

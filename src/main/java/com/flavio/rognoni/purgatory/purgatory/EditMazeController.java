@@ -1,5 +1,6 @@
 package com.flavio.rognoni.purgatory.purgatory;
 
+import com.flavio.rognoni.purgatory.purgatory.elements.Elemento;
 import com.flavio.rognoni.purgatory.purgatory.mazes.Maze;
 import com.flavio.rognoni.purgatory.purgatory.mazes.mazeParts.*;
 import javafx.collections.FXCollections;
@@ -57,6 +58,8 @@ public class EditMazeController implements Initializable {
     public TextField cellTextInput;
     public TextArea cellListArea;
     public Button bestOpp2SepBtn;
+    public Button wallSetBtn;
+    public Spinner<Integer> wallSetSpinner;
     private List<MazeCell> cellList;
     private Maze maze;
     private List<MazeCell> celle;
@@ -91,6 +94,7 @@ public class EditMazeController implements Initializable {
         cellTextInput.setVisible(false);
         cellListArea.setVisible(false);
         cellList = new ArrayList<>();
+        GUIMethods.renderSpinner(wallSetSpinner,0,4);
     }
 
     public void setMaze(Maze maze,String fileName) {
@@ -272,6 +276,23 @@ public class EditMazeController implements Initializable {
                     cellChoice.getSelectionModel().selectFirst();
                 }
             }
+            case OSTACOLO -> {
+                cellSubTypeChoice.setOnAction(e -> {});
+                elementsVis(true,nSpinner,cellSubTypeChoice);
+                elementsVis(false,booleanChoice,
+                        plusBtn,minusBtn,cellTextInput,cellListArea);
+                var l = new ArrayList<String>();
+                for(Elemento el : Elemento.values()) l.add(el.nome);
+                cellSubTypeChoice.setItems(FXCollections.observableArrayList(l));
+                if(!typeFromChoice){
+                    Ostacolo ostacolo = (Ostacolo) cell;
+                    cellSubTypeChoice.getSelectionModel().select(ostacolo.elemento.ordinal());
+                    nSpinner.getValueFactory().setValue(ostacolo.danni);
+                }else{
+                    cellSubTypeChoice.getSelectionModel().selectFirst();
+                    nSpinner.getValueFactory().setValue(1);
+                }
+            }
         }
     }
 
@@ -301,7 +322,7 @@ public class EditMazeController implements Initializable {
             GUIMethods.showError("Set troppo piccolo!");
             return;
         }
-        mPanel.colorCells(maze.oppNoWalk2Set(maze.walkSets.get(idx)),"pink");
+        mPanel.colorCells(o2Set,"pink");
     }
 
     public void on3WalkSet(ActionEvent event) {
@@ -463,7 +484,7 @@ public class EditMazeController implements Initializable {
             case PORTA -> {
                 if(maze.isOppNoWalk2(cell)){
                     int subType = cellSubTypeChoice.getSelectionModel().getSelectedIndex();
-                    if(subType == Porta.PORTA_A_CHIAVI){
+                    if(subType == Porta.PORTA_A_CHIAVI){ //todo: controllo chiavi nei tesori precedenti topologicamente?
                         maze.cells[x][y] = new Porta(x,y,false,nSpinner.getValue());
                     }else if(subType == Porta.PORTA_A_INTERRUTTORI){
                         if(cell.type().isPorta()){
@@ -527,6 +548,11 @@ public class EditMazeController implements Initializable {
                 else
                     GUIMethods.showError("Invalid cell for Interruttore,Tesoro,Trappola o Teletrasporto");
             }
+            case OSTACOLO -> {
+                int danni = nSpinner.getValue();
+                Elemento el = Elemento.values()[cellSubTypeChoice.getSelectionModel().getSelectedIndex()];
+                maze.cells[x][y] = new Ostacolo(x,y,el,danni);
+            }
         }
         mPanel.renderMaze(maze);
         resetSetChoice();
@@ -535,6 +561,10 @@ public class EditMazeController implements Initializable {
     public void onPlusCell(ActionEvent event) {
         if(cellList.size() >= 10){
             GUIMethods.showError("Lista piena! (max 10 elementi)");
+            return;
+        }
+        if(cellChoice.getValue() == null){
+            GUIMethods.showError("Nessuna cella selezionata");
             return;
         }
         String[] ch = cellChoice.getValue().split(",");
@@ -596,7 +626,8 @@ public class EditMazeController implements Initializable {
         try{
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("home.fxml"));
             Parent parent = fxmlLoader.load();
-            //HomeController homeController = fxmlLoader.getController();
+            HomeController homeController = fxmlLoader.getController();
+            homeController.setChoice(fileName);
             Scene scene = new Scene(parent, 1280, 720);
             Stage stage = (Stage) backgroundPane.getScene().getWindow();
             stage.setTitle("Mazes Handler");
@@ -605,6 +636,17 @@ public class EditMazeController implements Initializable {
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    public void onWallSet(ActionEvent event) {
+        int idx = setChoice.getSelectionModel().getSelectedIndex();
+        renderSet(idx,true);
+        var wSet = maze.wallSet(maze.walkSets.get(idx),wallSetSpinner.getValue());
+        if(wSet == null){
+            GUIMethods.showError("Set troppo piccolo!");
+            return;
+        }
+        mPanel.colorCells(wSet,"pink");
     }
 
 }
